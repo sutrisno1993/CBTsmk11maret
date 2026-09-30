@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: cbt_app
+    restart: always
+    ports:
+      - "80:80"
+    environment:
+      DB_HOST: db
+      DB_USER: root
+      DB_PASS: rootpassword
+      DB_NAME: zyacbtpublic
+    volumes:
+      - .:/var/www/html
+      - ./uploads:/var/www/html/uploads
+      - ./application/logs:/var/www/html/application/logs
+      - ./application/cache:/var/www/html/application/cache
+    depends_on:
+      - db
+
+  db:
+    image: mariadb:10.6
+    container_name: cbt_db
+    restart: always
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --sql-mode="NO_ENGINE_SUBSTITUTION"
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: zyacbtpublic
+    volumes:
+      - cbt_db_data:/var/lib/mysql
+      - ./zyacbt-public-2024-05-05-dengan-database.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "3306:3306"
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: cbt_pma
+    restart: always
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      UPLOAD_LIMIT: 100M
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+
+volumes:
+  cbt_db_data:
