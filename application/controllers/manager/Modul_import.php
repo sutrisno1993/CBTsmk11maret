@@ -22,6 +22,9 @@ class Modul_import extends Member_Controller {
         $data['url'] = $this->url;
 		
 
+        $selected_topik_id = $this->input->get('topik_id');
+        $data['selected_topik_id'] = $selected_topik_id;
+
         $query_user = $this->users_model->get_user_by_username($this->access->get_username());
         $select = '';
         $counter = 0;
@@ -52,7 +55,8 @@ class Modul_import extends Member_Controller {
                             $grade = 'X';
                         }
 
-                        $select = $select.'<option value="'.$topik->topik_id.'" data-modul="'.htmlspecialchars($topik->modul_nama).'" data-hari="'.$hari.'" data-grade="'.$grade.'">'.$topik->modul_nama.' - '.$topik->topik_nama.' ['.$jml_soal.']</option>';
+                        $sel = (!empty($selected_topik_id) && $selected_topik_id == $topik->topik_id) ? 'selected' : '';
+                        $select = $select.'<option value="'.$topik->topik_id.'" '.$sel.' data-modul="'.htmlspecialchars($topik->modul_nama).'" data-hari="'.$hari.'" data-grade="'.$grade.'">'.$topik->modul_nama.' - '.$topik->topik_nama.' ['.$jml_soal.']</option>';
                     }
                 }
             }else{
@@ -85,7 +89,8 @@ class Modul_import extends Member_Controller {
                                     $grade = 'X';
                                 }
 
-                                $select = $select.'<option value="'.$topik->topik_id.'" data-modul="'.htmlspecialchars($temp->modul_nama).'" data-hari="'.$hari.'" data-grade="'.$grade.'">'.$temp->modul_nama.' - '.$topik->topik_nama.' ['.$jml_soal.']</option>';
+                                $sel = (!empty($selected_topik_id) && $selected_topik_id == $topik->topik_id) ? 'selected' : '';
+                                $select = $select.'<option value="'.$topik->topik_id.'" '.$sel.' data-modul="'.htmlspecialchars($temp->modul_nama).'" data-hari="'.$hari.'" data-grade="'.$grade.'">'.$temp->modul_nama.' - '.$topik->topik_nama.' ['.$jml_soal.']</option>';
                             }
 
                             $select = $select.'</optgroup>';

@@ -20,77 +20,51 @@ class Modul_daftar extends Member_Controller {
         $data['url'] = $this->url;
         $data['mode'] = $mode;
 
+        $selected_topik = $this->input->get('topik_id');
+
         $query_user = $this->users_model->get_user_by_username($this->access->get_username());
         $select = '';
         $counter = 0;
+        $user_obj = null;
+
         if($query_user->num_rows()>0){
-            $query_user = $query_user->row();
+            $user_obj = $query_user->row();
             $level = $this->session->userdata('cbt_level');
 
-            if($level == 'guru'){
-                if($mode == 'panitia'){
-                    // MODE UJIAN RESMI PANITIA (QC & Preview Soal Naskah Panitia)
-                    $data['judul_halaman'] = 'Preview Soal Panitia (Ujian Resmi SAS / PAS)';
-                    $data['subjudul_halaman'] = 'Validasi naskah soal resmi dan kunci jawaban sebelum diujikan serentak';
-                    $query_topik = $this->cbt_topik_model->get_by_tipe_user('panitia');
-                    if($query_topik->num_rows() > 0){
-                        foreach ($query_topik->result() as $topik) {
-                            $jml_soal = $this->cbt_soal_model->count_by_kolom('soal_topik_id', $topik->topik_id)->row()->hasil;
-                            $counter++;
-                            $select = $select.'<option value="'.$topik->topik_id.'">'.$topik->modul_nama.' - '.$topik->topik_nama.' ['.$jml_soal.' soal]</option>';
-                        }
-                    }
-                }else{
-                    // MODE ULANGAN HARIAN (MANDIRI GURU)
-                    // JANGAN TAMPILKAN SOAL DARI PANITIA!
-                    $data['judul_halaman'] = 'Bank Soal Ulangan Harian';
-                    $data['subjudul_halaman'] = 'Daftar soal ulangan harian mandiri Anda (tanpa soal panitia)';
-                    $query_topik = $this->cbt_topik_model->get_by_tipe_user('uh', $query_user->id);
-                    if($query_topik->num_rows() > 0){
-                        foreach ($query_topik->result() as $topik) {
-                            $jml_soal = $this->cbt_soal_model->count_by_kolom('soal_topik_id', $topik->topik_id)->row()->hasil;
-                            $counter++;
-                            $select = $select.'<option value="'.$topik->topik_id.'">'.$topik->topik_nama.' ['.$jml_soal.' soal]</option>';
-                        }
+            $data['judul_halaman'] = 'Manajemen & Monitoring Bank Soal';
+            $data['subjudul_halaman'] = 'Pantau kelengkapan butir soal per topik dan kelola naskah ujian STS Ganjil';
+
+            // Mengecek apakah user dibatasi hanya mengentry beberapa topik
+            if(!empty($user_obj->opsi1)){
+                $user_topik = explode(',', $user_obj->opsi1);
+                foreach ($user_topik as $topik_id) {
+                    $query_topik = $this->cbt_topik_model->get_by_kolom_join_modul('topik_id', $topik_id);
+                    if($query_topik->num_rows()>0){
+                        $topik = $query_topik->row();
+                        $jml_soal = $this->cbt_soal_model->count_by_kolom('soal_topik_id', $topik->topik_id)->row()->hasil;
+                        $counter++;
+                        $sel = (!empty($selected_topik) && $selected_topik == $topik->topik_id) ? 'selected' : '';
+                        $select = $select.'<option value="'.$topik->topik_id.'" '.$sel.'>'.$topik->modul_nama.' - '.$topik->topik_nama.' ['.$jml_soal.' butir]</option>';
                     }
                 }
             }else{
-                // USER OPERATOR / ADMIN
-                $data['judul_halaman'] = 'Daftar Soal';
-                $data['subjudul_halaman'] = 'Daftar soal dan jawaban berdasarkan Modul dan Topik';
-
-                // Mengecek apakah user dibatasi hanya mengentry beberapa topik
-                if(!empty($query_user->opsi1)){
-                    $user_topik = explode(',', $query_user->opsi1);
-                    foreach ($user_topik as $topik_id) {
-                        $query_topik = $this->cbt_topik_model->get_by_kolom_join_modul('topik_id', $topik_id);
-                        if($query_topik->num_rows()>0){
-                            $topik = $query_topik->row();
-                            $jml_soal = $this->cbt_soal_model->count_by_kolom('soal_topik_id', $topik->topik_id)->row()->hasil;
-                            $counter++;
-                            $select = $select.'<option value="'.$topik->topik_id.'">'.$topik->modul_nama.' - '.$topik->topik_nama.' ['.$jml_soal.']</option>';
-                        }
-                    }
-                }else{
-                    // Jika user tidak dibatasi mengedit soal sesuai topik
-                    $query_modul = $this->cbt_modul_model->get_modul();
-                    if($query_modul->num_rows()>0){
-                        $select = '';
-                        $query_modul = $query_modul->result();
-                        foreach ($query_modul as $temp) {
-                            $query_topik = $this->cbt_topik_model->get_by_kolom_join_modul('topik_modul_id', $temp->modul_id);
-                            if($query_topik->num_rows()){
-                                $select = $select.'<optgroup label="Modul '.$temp->modul_nama.'">';
-
-                                $query_topik = $query_topik->result();
-                                foreach ($query_topik as $topik) {
-                                    $jml_soal = $this->cbt_soal_model->count_by_kolom('soal_topik_id', $topik->topik_id)->row()->hasil;
-                                    $counter++;
-                                    $select = $select.'<option value="'.$topik->topik_id.'">'.$topik->modul_nama.' - '.$topik->topik_nama.' ['.$jml_soal.']</option>';
-                                }
-
-                                $select = $select.'</optgroup>';
+                // Tampilkan semua topik terkelompok per modul
+                $query_modul = $this->cbt_modul_model->get_modul();
+                if($query_modul->num_rows()>0){
+                    $select = '';
+                    $query_modul = $query_modul->result();
+                    foreach ($query_modul as $temp) {
+                        $query_topik = $this->cbt_topik_model->get_by_kolom_join_modul('topik_modul_id', $temp->modul_id);
+                        if($query_topik->num_rows()){
+                            $select = $select.'<optgroup label="Modul '.$temp->modul_nama.'">';
+                            $query_topik = $query_topik->result();
+                            foreach ($query_topik as $topik) {
+                                $jml_soal = $this->cbt_soal_model->count_by_kolom('soal_topik_id', $topik->topik_id)->row()->hasil;
+                                $counter++;
+                                $sel = (!empty($selected_topik) && $selected_topik == $topik->topik_id) ? 'selected' : '';
+                                $select = $select.'<option value="'.$topik->topik_id.'" '.$sel.'>'.$topik->modul_nama.' - '.$topik->topik_nama.' ['.$jml_soal.' butir]</option>';
                             }
+                            $select = $select.'</optgroup>';
                         }
                     }
                 }
@@ -98,16 +72,54 @@ class Modul_daftar extends Member_Controller {
         }
 
         if($counter==0){
-            if(!empty($level) && $level == 'guru' && $mode != 'panitia'){
-                $select = '<option value="kosong">Belum Ada Topik UH (Klik tombol "+ Topik UH Baru" di atas)</option>';
-            }else{
-                $select = '<option value="kosong">Tidak Ada Data Topik</option>';
-            }
+            $select = '<option value="kosong">Tidak Ada Data Topik</option>';
         }
         
         $data['select_topik'] = $select;
+
+        // Query Komprehensif untuk Tabel Monitoring & Manajemen Soal
+        $sql = "SELECT t.topik_id, t.topik_modul_id, t.topik_nama, t.topik_detail, t.topik_aktif,
+                       m.modul_id, m.modul_nama,
+                       COUNT(s.soal_id) AS jml_soal
+                FROM cbt_topik t
+                JOIN cbt_modul m ON t.topik_modul_id = m.modul_id
+                LEFT JOIN cbt_soal s ON s.soal_topik_id = t.topik_id";
+
+        if(!empty($user_obj) && !empty($user_obj->opsi1)){
+            $allowed_ids = array_map('intval', explode(',', $user_obj->opsi1));
+            if(!empty($allowed_ids)){
+                $sql .= " WHERE t.topik_id IN (" . implode(',', $allowed_ids) . ")";
+            }
+        }
+        $sql .= " GROUP BY t.topik_id ORDER BY m.modul_nama ASC, t.topik_nama ASC";
+        $query_monitor = $this->db->query($sql)->result();
+
+        $stat_total = count($query_monitor);
+        $stat_kosong = 0;
+        $stat_kurang = 0;
+        $stat_lengkap = 0;
+        $stat_total_soal = 0;
+
+        foreach($query_monitor as $m_row){
+            $stat_total_soal += $m_row->jml_soal;
+            if($m_row->jml_soal == 0){
+                $stat_kosong++;
+            }else if($m_row->jml_soal < 40){
+                $stat_kurang++;
+            }else{
+                $stat_lengkap++;
+            }
+        }
+
+        $data['monitoring_topik'] = $query_monitor;
+        $data['stat_total'] = $stat_total;
+        $data['stat_kosong'] = $stat_kosong;
+        $data['stat_kurang'] = $stat_kurang;
+        $data['stat_lengkap'] = $stat_lengkap;
+        $data['stat_total_soal'] = $stat_total_soal;
+        $data['selected_topik'] = $selected_topik;
         
-        $this->template->display_admin($this->kelompok.'/modul_daftar_view', !empty($data['judul_halaman']) ? $data['judul_halaman'] : 'Daftar Soal', $data);
+        $this->template->display_admin($this->kelompok.'/modul_daftar_view', !empty($data['judul_halaman']) ? $data['judul_halaman'] : 'Manajemen & Daftar Soal', $data);
 	}
 
 	function preview($topik_id=null){

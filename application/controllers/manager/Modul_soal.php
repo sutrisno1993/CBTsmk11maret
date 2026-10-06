@@ -42,6 +42,13 @@ class Modul_soal extends Member_Controller {
         	}
         }
 
+        if(empty($data['data_topik'])){
+            $topik_param = $this->input->get('topik_id');
+            if(!empty($topik_param)){
+                $data['data_topik'] = intval($topik_param);
+            }
+        }
+
         $query_user = $this->users_model->get_user_by_username($this->access->get_username());
         $select = '';
         $counter = 0;
@@ -50,15 +57,34 @@ class Modul_soal extends Member_Controller {
             $level = $this->session->userdata('cbt_level');
 
             if($level == 'guru'){
-                // GURU: HANYA TAMPILKAN TOPIK ULANGAN HARIAN MILIK GURU INI
-                $query_topik = $this->cbt_topik_model->get_by_tipe_user('uh', $query_user->id);
-                if($query_topik->num_rows() > 0){
-                    foreach ($query_topik->result() as $topik) {
-                        $counter++;
-                        if(!empty($data['data_topik']) && $data['data_topik'] == $topik->topik_id){
-                            $select = $select.'<option value="'.$topik->topik_id.'" selected>'.$topik->topik_nama.'</option>';
-                        }else{
-                            $select = $select.'<option value="'.$topik->topik_id.'">'.$topik->topik_nama.'</option>';
+                // Jika guru dibatasi opsi1
+                if(!empty($query_user->opsi1)){
+                    $user_topik = explode(',', $query_user->opsi1);
+                    foreach ($user_topik as $topik_id) {
+                        $query_topik = $this->cbt_topik_model->get_by_kolom_join_modul('topik_id', $topik_id);
+                        if($query_topik->num_rows()>0){
+                            $topik = $query_topik->row();
+                            $counter++;
+                            $sel = (!empty($data['data_topik']) && $data['data_topik']==$topik->topik_id) ? 'selected' : '';
+                            $select = $select.'<option value="'.$topik->topik_id.'" '.$sel.'>'.$topik->modul_nama.' - '.$topik->topik_nama.'</option>';
+                        }
+                    }
+                }else{
+                    // Guru dapat menginput soal untuk semua modul resmi
+                    $query_modul = $this->cbt_modul_model->get_modul();
+                    if($query_modul->num_rows()>0){
+                        $query_modul = $query_modul->result();
+                        foreach ($query_modul as $temp) {
+                            $query_topik = $this->cbt_topik_model->get_by_kolom_join_modul('topik_modul_id', $temp->modul_id);
+                            if($query_topik->num_rows()){
+                                $select = $select.'<optgroup label="Modul '.$temp->modul_nama.'">';
+                                foreach ($query_topik->result() as $topik) {
+                                    $counter++;
+                                    $sel = (!empty($data['data_topik']) && $data['data_topik']==$topik->topik_id) ? 'selected' : '';
+                                    $select = $select.'<option value="'.$topik->topik_id.'" '.$sel.'>'.$topik->modul_nama.' - '.$topik->topik_nama.'</option>';
+                                }
+                                $select = $select.'</optgroup>';
+                            }
                         }
                     }
                 }

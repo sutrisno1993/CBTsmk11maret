@@ -22,6 +22,9 @@ class Modul_import_word extends Member_Controller {
         $data['url'] = $this->url;
 		
 
+        $selected_topik_id = $this->input->get('topik_id');
+        $data['selected_topik_id'] = $selected_topik_id;
+
         $query_user = $this->users_model->get_user_by_username($this->access->get_username());
         $select = '';
         $counter = 0;
@@ -29,14 +32,16 @@ class Modul_import_word extends Member_Controller {
             $query_user = $query_user->row();
             $level = $this->session->userdata('cbt_level');
 
-            if($level == 'guru'){
-                // GURU: HANYA TAMPILKAN TOPIK ULANGAN HARIAN MILIK GURU INI
-                $query_topik = $this->cbt_topik_model->get_by_tipe_user('uh', $query_user->id);
-                if($query_topik->num_rows() > 0){
-                    foreach ($query_topik->result() as $topik) {
+            if($level == 'guru' && !empty($query_user->opsi1)){
+                $user_topik = explode(',', $query_user->opsi1);
+                foreach ($user_topik as $topik_id) {
+                    $query_topik = $this->cbt_topik_model->get_by_kolom_join_modul('topik_id', $topik_id);
+                    if($query_topik->num_rows()>0){
+                        $topik = $query_topik->row();
                         $counter++;
                         $jml_soal = $this->cbt_soal_model->count_by_kolom('soal_topik_id', $topik->topik_id)->row()->hasil;
-                        $select = $select.'<option value="'.$topik->topik_id.'">'.$topik->topik_nama.' ['.$jml_soal.']</option>';
+                        $sel = (!empty($selected_topik_id) && $selected_topik_id == $topik->topik_id) ? 'selected' : '';
+                        $select = $select.'<option value="'.$topik->topik_id.'" '.$sel.'>'.$topik->modul_nama.' - '.$topik->topik_nama.' ['.$jml_soal.']</option>';
                     }
                 }
             }else{
@@ -85,7 +90,8 @@ class Modul_import_word extends Member_Controller {
                                         $grade = 'X';
                                     }
 
-                                    $select = $select.'<option value="'.$topik->topik_id.'" data-modul="'.htmlspecialchars($temp->modul_nama).'" data-hari="'.$hari.'" data-grade="'.$grade.'">'.$temp->modul_nama.' - '.$topik->topik_nama.' ['.$jml_soal.']</option>';
+                                    $sel = (!empty($selected_topik_id) && $selected_topik_id == $topik->topik_id) ? 'selected' : '';
+                                    $select = $select.'<option value="'.$topik->topik_id.'" '.$sel.' data-modul="'.htmlspecialchars($temp->modul_nama).'" data-hari="'.$hari.'" data-grade="'.$grade.'">'.$temp->modul_nama.' - '.$topik->topik_nama.' ['.$jml_soal.']</option>';
                                 }
 
                                 $select = $select.'</optgroup>';
