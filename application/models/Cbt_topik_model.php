@@ -92,18 +92,26 @@ class Cbt_topik_model extends CI_Model{
         return $this->db->get();
     }
 	
-	function get_datatable($start, $rows, $kolom, $isi, $modul){
-		$this->db->where('('.$kolom.' LIKE "%'.$isi.'%" AND topik_modul_id='.$modul.')')
-                 ->from($this->table)
-				 ->order_by($kolom, 'ASC')
+	function get_datatable($start, $rows, $kolom, $isi, $modul=null){
+		$this->db->select('cbt_topik.*, cbt_modul.modul_nama')
+		         ->join('cbt_modul', 'cbt_topik.topik_modul_id = cbt_modul.modul_id', 'left')
+		         ->where('('.$kolom.' LIKE "%'.$isi.'%")');
+		if(!empty($modul) && $modul != 'semua'){
+			$this->db->where('topik_modul_id', $modul);
+		}
+		$this->db->from($this->table)
+				 ->order_by('topik_id', 'ASC')
                  ->limit($rows, $start);
         return $this->db->get();
 	}
     
-    function get_datatable_count($kolom, $isi, $modul){
+    function get_datatable_count($kolom, $isi, $modul=null){
 		$this->db->select('COUNT(*) AS hasil')
-                 ->where('('.$kolom.' LIKE "%'.$isi.'%" AND topik_modul_id='.$modul.')')
-                 ->from($this->table);
+                 ->where('('.$kolom.' LIKE "%'.$isi.'%")');
+		if(!empty($modul) && $modul != 'semua'){
+			$this->db->where('topik_modul_id', $modul);
+		}
+		$this->db->from($this->table);
         return $this->db->get();
 	}
 

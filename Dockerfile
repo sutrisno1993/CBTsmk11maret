@@ -15,8 +15,8 @@ RUN apt-get update && apt-get install -y \
 # Enable Apache mod_rewrite for CodeIgniter URL routing
 RUN a2enmod rewrite
 
-# Configure PHP settings for file uploads and execution timeout
-RUN echo "upload_max_filesize = 100M\npost_max_size = 100M\nmax_execution_time = 300\nmemory_limit = 256M" > /usr/local/etc/php/conf.d/custom.ini
+# Configure PHP settings and OPcache for high concurrency
+RUN echo "upload_max_filesize = 100M\npost_max_size = 100M\nmax_execution_time = 300\nmemory_limit = 512M\nopcache.enable = 1\nopcache.memory_consumption = 128\nopcache.interned_strings_buffer = 16\nopcache.max_accelerated_files = 10000" > /usr/local/etc/php/conf.d/custom.ini
 
 # Set working directory
 WORKDIR /var/www/html

@@ -50,7 +50,7 @@ class Cbt_modul_model extends CI_Model{
     function get_modul(){
         $this->db->where('(modul_aktif=1)')
                  ->from($this->table)
-                 ->order_by('modul_id', 'DESC');
+                 ->order_by('modul_id', 'ASC');
         return $this->db->get();
     }
 

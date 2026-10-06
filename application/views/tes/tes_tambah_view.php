@@ -1,3 +1,46 @@
+<style>
+.smart-group-box {
+    border: 1px solid #d2d6de;
+    border-radius: 4px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.filter-pill-btn {
+    border-radius: 12px !important;
+    padding: 2px 9px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    margin-right: 4px;
+    margin-bottom: 4px;
+    transition: all 0.15s ease-in-out;
+}
+.group-card {
+    display: flex;
+    align-items: center;
+    padding: 7px 10px;
+    border: 1px solid #d9e2ec;
+    border-radius: 5px;
+    background: #fff;
+    cursor: pointer;
+    margin-bottom: 0;
+    font-weight: normal;
+    transition: all 0.15s ease-in-out;
+}
+.group-card:hover {
+    border-color: #3c8dbc !important;
+    background-color: #f0f7fd !important;
+}
+.group-card.item-checked {
+    border-color: #00a65a !important;
+    background-color: #eef9f2 !important;
+    box-shadow: 0 1px 3px rgba(0, 166, 90, 0.15);
+}
+.group-card input[type="checkbox"] {
+    margin: 0 8px 0 0;
+    cursor: pointer;
+}
+</style>
+
 <!-- Content Header (Page header) -->
 <section class="content-header">
 	<h1>
@@ -90,11 +133,116 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Group</label>
+                            <label class="col-sm-3 control-label">Pilih Group / Kelas</label>
                             <div class="col-sm-9">
-                                <select class="form-control input-sm" id="tambah-group" name="tambah-group[]" size="22" multiple>
-                                    <?php if(!empty($select_group)){ echo $select_group; } ?>
-                                </select>
+                                <div class="smart-group-box">
+                                    <!-- Filter Toolbar -->
+                                    <div style="background: #f7f9fa; padding: 10px 12px; border-bottom: 1px solid #e1e6eb;">
+                                        <!-- Tingkat (Grade) Filter -->
+                                        <div style="margin-bottom: 6px; display: flex; align-items: center; flex-wrap: wrap;">
+                                            <span style="font-size: 11px; font-weight: bold; color: #555; text-transform: uppercase; margin-right: 8px;">
+                                                <i class="fa fa-graduation-cap text-primary"></i> Tingkat:
+                                            </span>
+                                            <div>
+                                                <button type="button" class="btn btn-primary btn-xs filter-pill-btn btn-filter-tingkat active" data-tingkat="ALL">Semua</button>
+                                                <button type="button" class="btn btn-default btn-xs filter-pill-btn btn-filter-tingkat" data-tingkat="X">Kelas X</button>
+                                                <button type="button" class="btn btn-default btn-xs filter-pill-btn btn-filter-tingkat" data-tingkat="XI">Kelas XI</button>
+                                                <button type="button" class="btn btn-default btn-xs filter-pill-btn btn-filter-tingkat" data-tingkat="XII">Kelas XII</button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Jurusan (Major) Filter -->
+                                        <div style="margin-bottom: 8px; display: flex; align-items: center; flex-wrap: wrap;">
+                                            <span style="font-size: 11px; font-weight: bold; color: #555; text-transform: uppercase; margin-right: 8px;">
+                                                <i class="fa fa-briefcase text-primary"></i> Jurusan:
+                                            </span>
+                                            <div id="filter-jurusan-container" style="display: flex; flex-wrap: wrap;">
+                                                <button type="button" class="btn btn-primary btn-xs filter-pill-btn btn-filter-jurusan active" data-jurusan="ALL">Semua Jurusan</button>
+                                                <?php if(!empty($jurusan_list)){ foreach($jurusan_list as $jur){ ?>
+                                                    <button type="button" class="btn btn-default btn-xs filter-pill-btn btn-filter-jurusan" data-jurusan="<?php echo htmlspecialchars($jur); ?>"><?php echo htmlspecialchars($jur); ?></button>
+                                                <?php } } ?>
+                                            </div>
+                                        </div>
+
+                                        <!-- Search & Action Toolbar -->
+                                        <div class="row" style="margin-left: -4px; margin-right: -4px;">
+                                            <div class="col-xs-7" style="padding-left: 4px; padding-right: 4px;">
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-addon" style="background:#fff; border-right:none; padding: 4px 8px;"><i class="fa fa-search text-muted"></i></span>
+                                                    <input type="text" id="filter-grup-search" class="form-control input-sm" placeholder="🔍 Ketik cari nama kelas..." style="border-left:none;">
+                                                </div>
+                                            </div>
+                                            <div class="col-xs-5 text-right" style="padding-left: 4px; padding-right: 4px;">
+                                                <div class="btn-group btn-group-sm">
+                                                    <button type="button" id="btn-select-all-filtered" class="btn btn-default btn-sm" title="Pilih semua kelas yang tampil" style="font-size: 11px; padding: 4px 7px;">
+                                                        <i class="fa fa-check-square-o text-green"></i> Pilih Semua
+                                                    </button>
+                                                    <button type="button" id="btn-deselect-all-filtered" class="btn btn-default btn-sm" title="Batal pilih kelas yang tampil" style="font-size: 11px; padding: 4px 7px;">
+                                                        <i class="fa fa-square-o text-red"></i> Batal
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Status Bar -->
+                                    <div style="background: #eef2f7; padding: 5px 12px; font-size: 11px; border-bottom: 1px solid #e1e6eb; display:flex; justify-content:space-between; align-items:center;">
+                                        <div class="text-muted">
+                                            Menampilkan <b id="stat-grup-visible" class="text-dark">0</b> dari <b id="stat-grup-total" class="text-dark">0</b> kelas
+                                        </div>
+                                        <div>
+                                            <span class="badge bg-green" id="stat-grup-selected" style="font-size: 11px; padding: 3px 8px;">0 Kelas Terpilih</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Group Cards Container -->
+                                    <div id="group-list-container" style="max-height: 240px; overflow-y: auto; padding: 8px; background: #fafbfc;">
+                                        <div class="row" id="group-cards-row" style="margin-left: -4px; margin-right: -4px;">
+                                            <?php 
+                                            if(!empty($group_list)){ 
+                                                foreach($group_list as $g){ 
+                                                    $isChecked = !empty($g['selected']) ? 'checked' : '';
+                                                    $activeClass = !empty($g['selected']) ? 'item-checked' : '';
+                                            ?>
+                                                <div class="col-xs-6 group-item" 
+                                                     data-id="<?php echo $g['id']; ?>"
+                                                     data-nama="<?php echo htmlspecialchars(strtolower($g['nama'])); ?>"
+                                                     data-tingkat="<?php echo htmlspecialchars($g['tingkat']); ?>"
+                                                     data-jurusan="<?php echo htmlspecialchars($g['jurusan']); ?>"
+                                                     style="padding-left: 4px; padding-right: 4px; margin-bottom: 6px;">
+                                                    <label class="group-card <?php echo $activeClass; ?>">
+                                                        <input type="checkbox" name="tambah-group[]" value="<?php echo $g['id']; ?>" class="check-group" <?php echo $isChecked; ?>>
+                                                        <div style="flex: 1; min-width: 0;">
+                                                            <div style="font-weight: 600; font-size: 12px; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                                                <?php echo htmlspecialchars($g['nama']); ?>
+                                                            </div>
+                                                            <div style="margin-top: 2px;">
+                                                                <?php 
+                                                                    if(!empty($g['tingkat'])){ echo '<span class="label label-default" style="font-size:9px; padding:1px 4px; margin-right:3px;">Kelas '.$g['tingkat'].'</span>'; }
+                                                                    if(!empty($g['jurusan'])){ echo '<span class="label label-info" style="font-size:9px; padding:1px 4px;">'.$g['jurusan'].'</span>'; }
+                                                                ?>
+                                                            </div>
+                                                        </div>
+                                                    </label>
+                                                </div>
+                                            <?php 
+                                                } 
+                                            } else { 
+                                            ?>
+                                                <div class="col-xs-12 text-center text-muted" style="padding: 20px;">
+                                                    Belum ada data grup/kelas yang tersedia.
+                                                </div>
+                                            <?php } ?>
+                                        </div>
+                                        <div id="group-empty-search" class="text-center text-muted" style="display: none; padding: 25px 10px;">
+                                            <i class="fa fa-filter" style="font-size: 24px; color: #ccc; display:block; margin-bottom: 6px;"></i>
+                                            Tidak ada kelas yang cocok dengan filter yang aktif.
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="help-block" style="margin-top: 4px; font-size: 11px;">
+                                    <i class="fa fa-info-circle text-primary"></i> Klik tombol Tingkat & Jurusan di atas untuk memilih rombel sekaligus secara instan.
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -337,6 +485,15 @@
                     $('#tambah-token').prop("checked", false);
                 }
 
+                // Restore grup yang dipilih pada saat edit
+                if(data.group_ids && data.group_ids.length > 0){
+                    $('.check-group').prop('checked', false);
+                    $.each(data.group_ids, function(i, gid){
+                        $('.check-group[value="' + gid + '"]').prop('checked', true);
+                    });
+                }
+                updateGroupSummary();
+
                 refresh_topik();
                 refresh_table();
 
@@ -360,6 +517,61 @@
         });
     }
 
+    var currentTingkatFilter = 'ALL';
+    var currentJurusanFilter = 'ALL';
+
+    function applyGroupFilters() {
+        var query = ($('#filter-grup-search').val() || '').toLowerCase().trim();
+        var visibleCount = 0;
+        var totalCount = $('.group-item').length;
+
+        $('.group-item').each(function() {
+            var item = $(this);
+            var nama = (item.data('nama') || '').toString().toLowerCase();
+            var tingkat = (item.data('tingkat') || '').toString().toUpperCase();
+            var jurusan = (item.data('jurusan') || '').toString().toUpperCase();
+
+            var matchSearch = (query === '' || nama.indexOf(query) !== -1);
+            var matchTingkat = (currentTingkatFilter === 'ALL' || tingkat === currentTingkatFilter);
+            var matchJurusan = (currentJurusanFilter === 'ALL' || jurusan === currentJurusanFilter);
+
+            if (matchSearch && matchTingkat && matchJurusan) {
+                item.show();
+                visibleCount++;
+            } else {
+                item.hide();
+            }
+        });
+
+        $('#stat-grup-visible').text(visibleCount);
+        $('#stat-grup-total').text(totalCount);
+        if (visibleCount === 0 && totalCount > 0) {
+            $('#group-empty-search').show();
+        } else {
+            $('#group-empty-search').hide();
+        }
+    }
+
+    function updateGroupSummary() {
+        var selectedCount = $('.check-group:checked').length;
+        $('#stat-grup-selected').text(selectedCount + ' Kelas Terpilih');
+        if(selectedCount > 0){
+            $('#stat-grup-selected').removeClass('bg-gray').addClass('bg-green');
+        } else {
+            $('#stat-grup-selected').removeClass('bg-green').addClass('bg-gray');
+        }
+
+        // Sinkronisasi styling kartu
+        $('.check-group').each(function() {
+            var card = $(this).closest('.group-card');
+            if ($(this).is(':checked')) {
+                card.addClass('item-checked');
+            } else {
+                card.removeClass('item-checked');
+            }
+        });
+    }
+
     function selesai(){
         $('#tambah-id').val('');
         $('#tambah-nama').val('');
@@ -373,7 +585,19 @@
         $('#tambah-hari').val('');
         $('#tambah-shift').val('');
         $('#tambah-jam-ke').val('');
-        $('#tambah-group option:selected').removeAttr('selected');
+        
+        // Reset pilihan group & filter
+        $('.check-group').prop('checked', false);
+        currentTingkatFilter = 'ALL';
+        currentJurusanFilter = 'ALL';
+        $('.btn-filter-tingkat').removeClass('btn-primary active').addClass('btn-default');
+        $('.btn-filter-tingkat[data-tingkat="ALL"]').removeClass('btn-default').addClass('btn-primary active');
+        $('.btn-filter-jurusan').removeClass('btn-primary active').addClass('btn-default');
+        $('.btn-filter-jurusan[data-jurusan="ALL"]').removeClass('btn-default').addClass('btn-primary active');
+        $('#filter-grup-search').val('');
+        applyGroupFilters();
+        updateGroupSummary();
+
         $('#tambah-acak-jawaban').prop("checked", true);
 
         $('#soal-tes-id').val('');
@@ -394,6 +618,49 @@
                 $('#tambah-hari').val(hariTerpilih);
             }
         });
+
+        // Inisialisasi tampilan Group Selector
+        applyGroupFilters();
+        updateGroupSummary();
+
+        // Event Filter Tingkat
+        $('.btn-filter-tingkat').click(function() {
+            $('.btn-filter-tingkat').removeClass('btn-primary active').addClass('btn-default');
+            $(this).removeClass('btn-default').addClass('btn-primary active');
+            currentTingkatFilter = $(this).data('tingkat');
+            applyGroupFilters();
+        });
+
+        // Event Filter Jurusan
+        $('.btn-filter-jurusan').click(function() {
+            $('.btn-filter-jurusan').removeClass('btn-primary active').addClass('btn-default');
+            $(this).removeClass('btn-default').addClass('btn-primary active');
+            currentJurusanFilter = $(this).data('jurusan');
+            applyGroupFilters();
+        });
+
+        // Event Live Search
+        $('#filter-grup-search').on('input propertychange', function() {
+            applyGroupFilters();
+        });
+
+        // Event Checkbox Group Perubahan
+        $(document).on('change', '.check-group', function() {
+            updateGroupSummary();
+        });
+
+        // Tombol Pilih Semua yang Tampil
+        $('#btn-select-all-filtered').click(function() {
+            $('.group-item:visible .check-group').prop('checked', true);
+            updateGroupSummary();
+        });
+
+        // Tombol Batal Pilih yang Tampil
+        $('#btn-deselect-all-filtered').click(function() {
+            $('.group-item:visible .check-group').prop('checked', false);
+            updateGroupSummary();
+        });
+
         $('#btn-tambah-selesai').click(function(){
             window.open("<?php echo site_url(); ?>/manager/tes_tambah", "_self");
         });
@@ -422,6 +689,10 @@
         });
 
         $('#form-tambah-tes').submit(function(){
+            if($('.check-group:checked').length === 0){
+                notify_error('Pilih minimal satu Group / Kelas untuk tes ini!');
+                return false;
+            }
             $("#modal-proses").modal('show');
             $.ajax({
                     url:"<?php echo site_url().'/'.$url; ?>/tambah_tes",

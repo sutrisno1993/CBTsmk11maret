@@ -27,6 +27,11 @@
                                     <?php if(!empty($select_modul)){ echo $select_modul; } ?>
                                 </select>
                             </div>
+                            <div style="margin-top: 8px;">
+                                <a href="<?php echo site_url('manager/modul_mapel'); ?>" class="btn btn-default btn-xs btn-block" title="Kelola / Tambah Modul Mata Pelajaran">
+                                    <i class="fa fa-pencil-square-o text-primary"></i> Kelola / Tambah Modul
+                                </a>
+                            </div>
                         </div>
                     </div>
                     <div class="box-footer">
@@ -200,9 +205,15 @@
     }
 
     function tambah(){
+        var selModul = $('#modul').val();
+        if(!selModul || selModul === 'semua'){
+            alert('Silahkan pilih salah satu Mata Pelajaran (Modul) di sebelah kiri terlebih dahulu sebelum menambah topik baru!');
+            $('#modul').focus();
+            return false;
+        }
         $('#form-pesan').html('');
         $('#tambah-topik').val('');
-        $('#tambah-modul-id').val('');
+        $('#tambah-modul-id').val(selModul);
         $('#tambah-deskripsi').val('');
 
         $("#modal-tambah").modal("show");
@@ -239,6 +250,11 @@
                 $('#check').val('0');
             }
         });
+
+        var urlParams = new URLSearchParams(window.location.search);
+        if(urlParams.has('modul')){
+            $('#modul').val(urlParams.get('modul'));
+        }
 
         $("#modul").change(function(){
             refresh_table();

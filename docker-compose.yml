@@ -24,7 +24,7 @@ services:
     image: mariadb:10.6
     container_name: cbt_db
     restart: always
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --sql-mode="NO_ENGINE_SUBSTITUTION"
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --sql-mode="NO_ENGINE_SUBSTITUTION" --max-connections=500 --innodb-buffer-pool-size=1G --innodb-flush-log-at-trx-commit=2
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_DATABASE: zyacbtpublic

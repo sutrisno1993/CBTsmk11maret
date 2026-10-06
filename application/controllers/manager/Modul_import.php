@@ -39,7 +39,20 @@ class Modul_import extends Member_Controller {
 
                         $jml_soal = $this->cbt_soal_model->count_by_kolom('soal_topik_id', $topik->topik_id)->row()->hasil;
 
-                        $select = $select.'<option value="'.$topik->topik_id.'">'.$topik->modul_nama.' - '.$topik->topik_nama.' ['.$jml_soal.']</option>';
+                        $hari = '';
+                        if(preg_match('/\[(SENIN|SELASA|RABU|KAMIS|JUMAT)/i', $topik->topik_nama, $m_hari)){
+                            $hari = strtoupper($m_hari[1]);
+                        }
+                        $grade = '';
+                        if(preg_match('/\b(XII)\b/i', $topik->topik_nama)){
+                            $grade = 'XII';
+                        }else if(preg_match('/\b(XI)\b/i', $topik->topik_nama)){
+                            $grade = 'XI';
+                        }else if(preg_match('/\b(X)\b/i', $topik->topik_nama)){
+                            $grade = 'X';
+                        }
+
+                        $select = $select.'<option value="'.$topik->topik_id.'" data-modul="'.htmlspecialchars($topik->modul_nama).'" data-hari="'.$hari.'" data-grade="'.$grade.'">'.$topik->modul_nama.' - '.$topik->topik_nama.' ['.$jml_soal.']</option>';
                     }
                 }
             }else{
@@ -58,7 +71,21 @@ class Modul_import extends Member_Controller {
                                 $counter++;
 
                                 $jml_soal = $this->cbt_soal_model->count_by_kolom('soal_topik_id', $topik->topik_id)->row()->hasil;
-                                $select = $select.'<option value="'.$topik->topik_id.'">'.$topik->modul_nama.' - '.$topik->topik_nama.' ['.$jml_soal.']</option>';
+
+                                $hari = '';
+                                if(preg_match('/\[(SENIN|SELASA|RABU|KAMIS|JUMAT)/i', $topik->topik_nama, $m_hari)){
+                                    $hari = strtoupper($m_hari[1]);
+                                }
+                                $grade = '';
+                                if(preg_match('/\b(XII)\b/i', $topik->topik_nama)){
+                                    $grade = 'XII';
+                                }else if(preg_match('/\b(XI)\b/i', $topik->topik_nama)){
+                                    $grade = 'XI';
+                                }else if(preg_match('/\b(X)\b/i', $topik->topik_nama)){
+                                    $grade = 'X';
+                                }
+
+                                $select = $select.'<option value="'.$topik->topik_id.'" data-modul="'.htmlspecialchars($temp->modul_nama).'" data-hari="'.$hari.'" data-grade="'.$grade.'">'.$temp->modul_nama.' - '.$topik->topik_nama.' ['.$jml_soal.']</option>';
                             }
 
                             $select = $select.'</optgroup>';

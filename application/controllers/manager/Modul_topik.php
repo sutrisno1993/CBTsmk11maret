@@ -28,7 +28,7 @@ class Modul_topik extends Member_Controller {
 
 		$query_modul = $this->cbt_modul_model->get_modul();
         if($query_modul->num_rows()>0){
-        	$select = '';
+        	$select = '<option value="semua">-- Semua Mata Pelajaran (Modul) --</option>';
         	$query_modul = $query_modul->result();
         	foreach ($query_modul as $temp) {
         		$select = $select.'<option value="'.$temp->modul_id.'">'.$temp->modul_nama.'</option>';
@@ -52,6 +52,12 @@ class Modul_topik extends Member_Controller {
         
         if($this->form_validation->run() == TRUE){
         	$data['topik_modul_id'] = $this->input->post('tambah-modul-id', true);
+            if(empty($data['topik_modul_id']) || $data['topik_modul_id'] == 'semua'){
+                $status['status'] = 0;
+                $status['pesan'] = 'Silahkan pilih Mata Pelajaran spesifik di dropdown Modul terlebih dahulu!';
+                echo json_encode($status);
+                return;
+            }
             $data['topik_nama'] = $this->input->post('tambah-topik', true);
             $data['topik_detail'] = $this->input->post('tambah-deskripsi', true);
             $data['topik_aktif'] = 1;
@@ -263,13 +269,14 @@ class Modul_topik extends Member_Controller {
 
 			$jml_soal = $this->cbt_soal_model->count_by_kolom('soal_topik_id', $temp->topik_id)->row()->hasil;
 
-            $record[] = $temp->topik_nama;
+            $badge_modul = !empty($temp->modul_nama) ? ' <span class="label label-primary" style="font-size: 10px; margin-left: 5px;"><i class="fa fa-book"></i> '.$temp->modul_nama.'</span>' : '';
+            $record[] = '<b>'.$temp->topik_nama.'</b>'.$badge_modul;
             $record[] = $temp->topik_detail;
-            $record[] = $jml_soal;
+            $record[] = '<span class="badge bg-aqua">'.$jml_soal.' Soal</span>';
             if($temp->topik_aktif==1){
-            	$record[] = 'Aktif';
+            	$record[] = '<span class="label label-success">Aktif</span>';
             }else{
-            	$record[] = 'Tidak Aktif';
+            	$record[] = '<span class="label label-danger">Tidak Aktif</span>';
             }
             $record[] = '<a href="'.site_url('manager/modul_daftar/preview/'.$temp->topik_id).'" target="_blank" class="btn btn-success btn-xs" style="margin-right: 4px;" title="Preview Soal & Cek Kunci Jawaban"><i class="fa fa-eye"></i> Preview</a> <a onclick="edit(\''.$temp->topik_id.'\')" style="cursor: pointer;" class="btn btn-default btn-xs">Edit</a>';
             $record[] = '<input type="checkbox" name="edit-topik-id['.$temp->topik_id.']" >';

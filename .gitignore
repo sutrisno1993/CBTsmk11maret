@@ -15,3 +15,12 @@ desktop.ini
 .vscode/
 *.swp
 *.bak
+
+# Sensitive SSH and Credentials
+id_rsa_hosting
+id_rsa*
+*.pem
+*.key
+REMOTE_SERVER_INFO.md
+restrukturisasi_cbt.php
+generate_tests_from_schedule.php

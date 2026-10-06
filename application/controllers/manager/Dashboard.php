@@ -6,6 +6,49 @@ class Dashboard extends Member_Controller {
 	}
     
     public function index(){
+        // Pastikan menu modul-mapel terdaftar di user_menu & user_akses
+        $cek_m = $this->db->where('kode_menu', 'modul-mapel')->get('user_menu');
+        if($cek_m->num_rows() == 0){
+            $this->db->insert('user_menu', array(
+                'tipe' => 1,
+                'parent' => 'modul',
+                'kode_menu' => 'modul-mapel',
+                'nama_menu' => 'Mata Pelajaran (Modul)',
+                'url' => 'manager/modul_mapel',
+                'icon' => 'fa fa-book',
+                'urutan' => 0
+            ));
+        }
+        $cek_a = $this->db->where('level', 'admin')->where('kode_menu', 'modul-mapel')->get('user_akses');
+        if($cek_a->num_rows() == 0){
+            $this->db->insert('user_akses', array(
+                'level' => 'admin',
+                'kode_menu' => 'modul-mapel',
+                'add' => 1,
+                'edit' => 1
+            ));
+        }
+
+        // Pastikan guru memiliki akses ke import spreadsheet (Excel) & modul-mapel
+        $cek_g_imp = $this->db->where('level', 'guru')->where('kode_menu', 'modul-import')->get('user_akses');
+        if($cek_g_imp->num_rows() == 0){
+            $this->db->insert('user_akses', array('level' => 'guru', 'kode_menu' => 'modul-import', 'add' => 1, 'edit' => 1));
+        }
+        $cek_g_map = $this->db->where('level', 'guru')->where('kode_menu', 'modul-mapel')->get('user_akses');
+        if($cek_g_map->num_rows() == 0){
+            $this->db->insert('user_akses', array('level' => 'guru', 'kode_menu' => 'modul-mapel', 'add' => 1, 'edit' => 1));
+        }
+
+        // Pastikan operator-soal memiliki akses ke import word & modul-mapel
+        $cek_op_word = $this->db->where('level', 'operator-soal')->where('kode_menu', 'modul-import-word')->get('user_akses');
+        if($cek_op_word->num_rows() == 0){
+            $this->db->insert('user_akses', array('level' => 'operator-soal', 'kode_menu' => 'modul-import-word', 'add' => 1, 'edit' => 1));
+        }
+        $cek_op_map = $this->db->where('level', 'operator-soal')->where('kode_menu', 'modul-mapel')->get('user_akses');
+        if($cek_op_map->num_rows() == 0){
+            $this->db->insert('user_akses', array('level' => 'operator-soal', 'kode_menu' => 'modul-mapel', 'add' => 1, 'edit' => 1));
+        }
+
         $this->load->helper('form');
         $data['nama'] = $this->access->get_nama();
 
@@ -26,6 +69,24 @@ class Dashboard extends Member_Controller {
         if(is_writable($dir2)){
         	$data['dir_uploads'] = 'Writeable';
         }
+
+        // Statistik Real-time CBT
+        $data['total_siswa'] = $this->db->count_all('cbt_user');
+        $data['total_soal'] = $this->db->count_all('cbt_soal');
+        $data['total_tes'] = $this->db->count_all('cbt_tes');
+        $data['siswa_aktif_tes'] = $this->db->where('tesuser_status', 1)->count_all_results('cbt_tes_user');
+        $data['siswa_login'] = $this->db->where('user_login', 1)->count_all_results('cbt_user');
+
+        // Token Aktif Terkini
+        $query_token = $this->db->select('token_isi, token_ts')->order_by('token_id', 'DESC')->limit(1)->get('cbt_tes_token');
+        $data['token_aktif'] = ($query_token->num_rows() > 0) ? $query_token->row()->token_isi : '-';
+
+        // Jadwal Tes Aktif / Hari Ini
+        $this->db->select('tes_id, tes_nama, tes_begin_time, tes_end_time, tes_duration_time, tes_token');
+        $this->db->where('tes_end_time >=', date('Y-m-d 00:00:00'));
+        $this->db->order_by('tes_begin_time', 'DESC');
+        $this->db->limit(5);
+        $data['tes_berjalan'] = $this->db->get('cbt_tes')->result();
 
         if($this->access->get_level() == 'guru'){
             $this->template->display_admin('guru/guru_dashboard_view', 'Portal Guru CBT', $data);

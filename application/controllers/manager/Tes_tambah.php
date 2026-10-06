@@ -44,12 +44,17 @@ class Tes_tambah extends Member_Controller {
 
         $query_group = $this->cbt_user_grup_model->get_group();
 
+        $group_list = array();
+        $jurusan_set = array();
         if($query_group->num_rows()>0){
         	$select = '';
         	$query_group = $query_group->result();
         	foreach ($query_group as $temp) {
+                $info = $this->parse_grup_nama($temp->grup_nama);
+                $is_selected = 0;
         		if($is_edit!=0){
         			if($this->cbt_tesgrup_model->count_by_tes_and_group($tes_id, $temp->grup_id)->row()->hasil>0){
+                        $is_selected = 1;
         				$select = $select.'<option value="'.$temp->grup_id.'" selected>'.$temp->grup_nama.'</option>';
         			}else{
         				$select = $select.'<option value="'.$temp->grup_id.'">'.$temp->grup_nama.'</option>';
@@ -57,12 +62,35 @@ class Tes_tambah extends Member_Controller {
         		}else{
         			$select = $select.'<option value="'.$temp->grup_id.'">'.$temp->grup_nama.'</option>';
         		}
+
+                if(!empty($info['jurusan'])){
+                    $jurusan_set[$info['jurusan']] = true;
+                }
+
+                $group_list[] = array(
+                    'id' => $temp->grup_id,
+                    'nama' => $temp->grup_nama,
+                    'tingkat' => $info['tingkat'],
+                    'jurusan' => $info['jurusan'],
+                    'selected' => $is_selected
+                );
         	}
 
         }else{
         	$select = '<option value="0">Tidak Ada Group</option>';
         }
         $data['select_group'] = $select;
+        $data['group_list'] = $group_list;
+        
+        // 5 Jurusan Utama SMK 11 Maret: TKR, TSM, TKJ, OTKP, AK
+        $default_jurusan = array('TKR', 'TSM', 'TKJ', 'OTKP', 'AK');
+        $jurusan_keys = $default_jurusan;
+        foreach (array_keys($jurusan_set) as $j) {
+            if (!in_array($j, $jurusan_keys)) {
+                $jurusan_keys[] = $j;
+            }
+        }
+        $data['jurusan_list'] = $jurusan_keys;
 
         $query_modul = $this->cbt_modul_model->get_modul();
         $counter = 0;
@@ -226,13 +254,15 @@ class Tes_tambah extends Member_Controller {
                     $groups = $this->input->post('tambah-group', true);
                     // menghapus data group berdasarkan tes terlebih dahulu
                     $this->cbt_tesgrup_model->delete('tstgrp_tes_id', $tes_id);
-                    foreach ($groups as $group) {
-                        $data_group['tstgrp_tes_id'] = $tes_id;
-                        $data_group['tstgrp_grup_id'] = $group;
+                    if(is_array($groups)){
+                        foreach ($groups as $group) {
+                            $data_group['tstgrp_tes_id'] = $tes_id;
+                            $data_group['tstgrp_grup_id'] = $group;
 
-                        // Jika group tidak kosong
-                        if($group!=0){
-                            $this->cbt_tesgrup_model->save($data_group);
+                            // Jika group tidak kosong
+                            if(!empty($group) && $group != '0'){
+                                $this->cbt_tesgrup_model->save($data_group);
+                            }
                         }
                     }
 
@@ -391,6 +421,16 @@ class Tes_tambah extends Member_Controller {
 	            $data['hari'] = !empty($query->tes_hari) ? $query->tes_hari : '';
 	            $data['shift'] = !empty($query->tes_shift) ? $query->tes_shift : '';
 	            $data['jam_ke'] = !empty($query->tes_jam_ke) ? $query->tes_jam_ke : '';
+
+                // Ambil daftar grup yang terpilih untuk tes ini
+                $grup_query = $this->cbt_tesgrup_model->get_by_tes_id($id);
+                $group_ids = array();
+                if($grup_query->num_rows() > 0){
+                    foreach($grup_query->result() as $g){
+                        $group_ids[] = $g->tstgrp_grup_id;
+                    }
+                }
+                $data['group_ids'] = $group_ids;
 			}
 		}
 		echo json_encode($data);
@@ -469,6 +509,68 @@ class Tes_tambah extends Member_Controller {
 	* 
 */
 	
+    private function parse_grup_nama($grup_nama){
+        $tingkat = '';
+        $jurusan = '';
+        $nama = trim($grup_nama);
+
+        // Deteksi Tingkat
+        if (preg_match('/\b(XII|12)\b/i', $nama)) {
+            $tingkat = 'XII';
+        } elseif (preg_match('/\b(XI|11)\b/i', $nama)) {
+            $tingkat = 'XI';
+        } elseif (preg_match('/\b(X|10)\b/i', $nama)) {
+            $tingkat = 'X';
+        }
+
+        // 1. Pemetaan 5 Jurusan Utama SMK 11 Maret beserta alias
+        $primary_majors = array(
+            'TKR'  => array('TKR', 'TKRO'),
+            'TSM'  => array('TSM', 'TBSM'),
+            'TKJ'  => array('TKJ'),
+            'OTKP' => array('OTKP', 'MP', 'AP'),
+            'AK'   => array('AK', 'AKL'),
+        );
+        $nama_upper = strtoupper($nama);
+        foreach ($primary_majors as $utama => $aliases) {
+            foreach ($aliases as $alias) {
+                if (preg_match('/\b' . preg_quote($alias, '/') . '\b/', $nama_upper)) {
+                    $jurusan = $utama;
+                    break 2;
+                }
+            }
+        }
+
+        // 2. Deteksi Jurusan SMK umum lainnya jika bukan dari 5 jurusan utama
+        if (empty($jurusan)) {
+            $other_majors = array('RPL', 'DKV', 'BDP', 'PM', 'TB', 'TP', 'TITL', 'TEI');
+            foreach ($other_majors as $m) {
+                if (preg_match('/\b' . preg_quote($m, '/') . '\b/', $nama_upper)) {
+                    $jurusan = $m;
+                    break;
+                }
+            }
+        }
+
+        // Jika belum ketemu lewat daftar umum, ambil kata setelah tingkat
+        if (empty($jurusan)) {
+            $clean = preg_replace('/[-_]/', ' ', $nama);
+            $parts = preg_split('/\s+/', trim($clean));
+            foreach ($parts as $idx => $part) {
+                if (preg_match('/^(X|XI|XII|10|11|12|KELAS)$/i', $part)) {
+                    if (isset($parts[$idx + 1]) && !preg_match('/^(X|XI|XII|10|11|12)$/i', $parts[$idx + 1])) {
+                        if (!is_numeric($parts[$idx + 1])) {
+                            $jurusan = strtoupper($parts[$idx + 1]);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        return array('tingkat' => $tingkat, 'jurusan' => $jurusan);
+    }
+
 	function get_start() {
 		$start = 0;
 		if (isset($_GET['iDisplayStart'])) {

@@ -113,6 +113,32 @@ class Users_model extends CI_Model{
 	 * mendapatkan hak akses suatu menu
 	 */
 	function cek_akses($kode_menu, $level){
+        if($kode_menu == 'modul-mapel' || $kode_menu == 'modul'){
+            $cek_m = $this->db->where('kode_menu', 'modul-mapel')->get('user_menu');
+            if($cek_m->num_rows() == 0){
+                $this->db->insert('user_menu', array(
+                    'tipe' => 1,
+                    'parent' => 'modul',
+                    'kode_menu' => 'modul-mapel',
+                    'nama_menu' => 'Mata Pelajaran (Modul)',
+                    'url' => 'manager/modul_mapel',
+                    'icon' => 'fa fa-book',
+                    'urutan' => 0
+                ));
+            }
+            if($level == 'admin'){
+                $cek_a = $this->db->where('level', 'admin')->where('kode_menu', 'modul-mapel')->get('user_akses');
+                if($cek_a->num_rows() == 0){
+                    $this->db->insert('user_akses', array(
+                        'level' => 'admin',
+                        'kode_menu' => 'modul-mapel',
+                        'add' => 1,
+                        'edit' => 1
+                    ));
+                }
+            }
+        }
+
         if($level == 'guru'){
             // Pastikan jika menu baru ditambahkan, role guru otomatis tersinkron
             $cek = $this->db->where('level', 'guru')->where('kode_menu', 'guru-ulangan')->get('user_akses');
