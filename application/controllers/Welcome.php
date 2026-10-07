@@ -47,6 +47,17 @@ class Welcome extends CI_Controller {
 						if($query_konfigurasi->num_rows()>0){
 							$data['cbt_keterangan'] = $query_konfigurasi->row()->konfigurasi_isi;
 						}
+
+						// Pengaturan Radius GPS Sekolah
+						$data['radius_lock'] = $this->cbt_konfigurasi_model->get_value('cbt_radius_lock', 'tidak');
+						$data['sekolah_lat'] = $this->cbt_konfigurasi_model->get_value('cbt_sekolah_latitude', '-6.175392');
+						$data['sekolah_lng'] = $this->cbt_konfigurasi_model->get_value('cbt_sekolah_longitude', '106.827153');
+						$data['sekolah_radius'] = $this->cbt_konfigurasi_model->get_value('cbt_sekolah_radius', '200');
+						
+						$client_ip = $this->input->ip_address();
+						$ip_bypass_str = $this->cbt_konfigurasi_model->get_value('cbt_sekolah_ip_bypass', '192.168., 10., 172.16., 127.0.0.1');
+						$data['is_ip_bypass'] = $this->check_ip_bypass($client_ip, $ip_bypass_str) ? 1 : 0;
+						$data['client_ip'] = $client_ip;
 						
 						$this->template->display_user($this->kelompok.'/welcome_view', 'Selamat Datang', $data);
 					}else{
@@ -67,6 +78,40 @@ class Welcome extends CI_Controller {
         $this->form_validation->set_rules('username', 'Username','required|strip_tags');
         $this->form_validation->set_rules('password', 'Password','required|strip_tags');
         if($this->form_validation->run() == TRUE){
+
+			// Pengecekan Kunci Radius Lokasi GPS Sekolah
+			$radius_lock = $this->cbt_konfigurasi_model->get_value('cbt_radius_lock', 'tidak');
+			if($radius_lock == 'ya'){
+				$client_ip = $this->input->ip_address();
+				$ip_bypass_str = $this->cbt_konfigurasi_model->get_value('cbt_sekolah_ip_bypass', '192.168., 10., 172.16., 127.0.0.1');
+				
+				if(!$this->check_ip_bypass($client_ip, $ip_bypass_str)){
+					$lat_siswa = $this->input->post('latitude', TRUE);
+					$lng_siswa = $this->input->post('longitude', TRUE);
+					
+					if(empty($lat_siswa) || empty($lng_siswa) || $lat_siswa == '0' || $lng_siswa == '0' || !is_numeric($lat_siswa) || !is_numeric($lng_siswa)){
+						$status['status'] = 0;
+						$status['error'] = '<b>Akses Ditolak: Lokasi GPS Tidak Terdeteksi!</b><br>Ujian hanya dapat diikuti di lingkungan sekolah. Mohon pastikan GPS/Lokasi di HP Anda aktif dan berikan izin akses lokasi pada browser.';
+						echo json_encode($status);
+						return;
+					}
+					
+					$lat_sekolah = (float)$this->cbt_konfigurasi_model->get_value('cbt_sekolah_latitude', '0');
+					$lng_sekolah = (float)$this->cbt_konfigurasi_model->get_value('cbt_sekolah_longitude', '0');
+					$radius_max = (int)$this->cbt_konfigurasi_model->get_value('cbt_sekolah_radius', '200');
+					
+					if($lat_sekolah != 0 && $lng_sekolah != 0){
+						$jarak = $this->calculate_distance((float)$lat_siswa, (float)$lng_siswa, $lat_sekolah, $lng_sekolah);
+						if($jarak > $radius_max){
+							$status['status'] = 0;
+							$status['error'] = '<b>Akses Ditolak: Di Luar Lingkungan Sekolah!</b><br>Perangkat Anda terdeteksi berada di luar area sekolah.<br>Jarak Anda saat ini: <b>' . round($jarak) . ' meter</b> (Batas Maksimal: ' . $radius_max . ' meter).<br>Silakan masuk ke area sekolah untuk mengikuti ujian.';
+							echo json_encode($status);
+							return;
+						}
+					}
+				}
+			}
+
             $this->form_validation->set_rules('token','token','callback_check_login');
 			if($this->form_validation->run() == FALSE){
 				//Jika login gagal
@@ -88,7 +133,7 @@ class Welcome extends CI_Controller {
 						}else{
 							// User belum terdeteksi login, update user_login dan user_login_date
 							$data['user_login']=1;
-							$data['user_login_date']=date('Y-m-d');;
+							$data['user_login_date']=date('Y-m-d');
 							
 							if(!empty($username)){
 								$this->cbt_user_model->update('user_name', $username, $data);
@@ -107,6 +152,8 @@ class Welcome extends CI_Controller {
 					$this->session->set_userdata('cbt_tes_nama',stripslashes($result->user_firstname));
 					$this->session->set_userdata('cbt_tes_group',$result->grup_nama);
 					$this->session->set_userdata('cbt_tes_group_id',$result->grup_id);
+					$this->session->set_userdata('cbt_tes_lat', $this->input->post('latitude', TRUE));
+					$this->session->set_userdata('cbt_tes_lng', $this->input->post('longitude', TRUE));
 					
 					$status['status'] = 1;
 				}else{
@@ -147,6 +194,33 @@ class Welcome extends CI_Controller {
 			$this->form_validation->set_message('check_login','Username yang dimasukkan tidak dikenal');
 			return FALSE;
 		}
+	}
+
+	private function check_ip_bypass($client_ip, $ip_bypass_str){
+		if(empty($ip_bypass_str)){
+			return false;
+		}
+		$list = explode(',', $ip_bypass_str);
+		foreach($list as $ip_entry){
+			$ip_entry = trim($ip_entry);
+			if(!empty($ip_entry)){
+				if(strpos($client_ip, $ip_entry) === 0 || $client_ip === $ip_entry){
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private function calculate_distance($lat1, $lon1, $lat2, $lon2){
+		$earth_radius = 6371000; // Earth radius in meters
+		$dLat = deg2rad($lat2 - $lat1);
+		$dLon = deg2rad($lon2 - $lon1);
+		$a = sin($dLat / 2) * sin($dLat / 2) +
+		     cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+		     sin($dLon / 2) * sin($dLon / 2);
+		$c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+		return $earth_radius * $c;
 	}
 }
 

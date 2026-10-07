@@ -114,6 +114,84 @@
 								</p>
 							</div>
 						</div>
+
+						<!-- Bagian Kunci Lokasi GPS Sekolah -->
+						<div style="background: #f0f7ff; border: 1px solid #c8e1ff; border-radius: 6px; padding: 15px; margin: 15px 0;">
+							<h4 style="margin-top: 0; color: #0366d6; font-size: 15px; font-weight: 700;">
+								<i class="fa fa-map-marker"></i> Pengaturan Kunci Lokasi &amp; Radius GPS Sekolah
+							</h4>
+							<p style="font-size: 12px; color: #586069; margin-bottom: 15px;">
+								Membatasi siswa agar <b>wajib berada di lingkungan sekolah</b> saat login/ujian, meskipun siswa menggunakan <b>kuota data seluler pribadi</b> saat Wi-Fi kelas bermasalah/mental.
+							</p>
+
+							<div class="form-group">
+								<label class="col-sm-4 control-label" style="color: #0366d6;">Kunci Lokasi Siswa (GPS)</label>
+								<div class="col-sm-8">
+									<select class="form-control input-sm" id="zyacbt-radius-lock" name="zyacbt-radius-lock" style="font-weight: 600;">
+										<option value="tidak">Tidak (Nonaktif - Bebas Dari Mana Saja)</option>
+										<option value="ya">Ya (Aktif - Wajib Berada di Lingkungan Sekolah)</option>
+									</select>
+									<p class="help-block">
+										Jika diaktifkan, siswa yang mencoba login dari luar sekolah (di rumah/bolos) akan otomatis ditolak.
+									</p>
+								</div>
+							</div>
+
+							<div class="form-group">
+								<label class="col-sm-4 control-label">Titik Koordinat Sekolah</label>
+								<div class="col-sm-8">
+									<div class="row">
+										<div class="col-xs-6">
+											<div class="input-group input-group-sm">
+												<span class="input-group-addon">Lat</span>
+												<input type="text" class="form-control" id="zyacbt-sekolah-latitude" name="zyacbt-sekolah-latitude" placeholder="-6.175392">
+											</div>
+										</div>
+										<div class="col-xs-6">
+											<div class="input-group input-group-sm">
+												<span class="input-group-addon">Lng</span>
+												<input type="text" class="form-control" id="zyacbt-sekolah-longitude" name="zyacbt-sekolah-longitude" placeholder="106.827153">
+											</div>
+										</div>
+									</div>
+									<div style="margin-top: 8px;">
+										<button type="button" id="btn-detect-gps" class="btn btn-sm btn-info" onclick="ambilLokasiAdmin()">
+											<i class="fa fa-crosshairs"></i> Ambil Koordinat Saya Saat Ini
+										</button>
+										<a id="btn-view-map" href="#" target="_blank" class="btn btn-sm btn-default" style="margin-left: 5px;">
+											<i class="fa fa-external-link"></i> Cek di Google Maps
+										</a>
+									</div>
+									<p class="help-block">
+										Klik <i>Ambil Koordinat Saya Saat Ini</i> saat Anda berada di lingkungan sekolah, atau masukkan titik Latitude &amp; Longitude sekolah dari Google Maps.
+									</p>
+								</div>
+							</div>
+
+							<div class="form-group">
+								<label class="col-sm-4 control-label">Radius Toleransi (Meter)</label>
+								<div class="col-sm-8">
+									<div class="input-group input-group-sm" style="max-width: 200px;">
+										<input type="number" class="form-control" id="zyacbt-sekolah-radius" name="zyacbt-sekolah-radius" min="50" max="2000" step="10" placeholder="200">
+										<span class="input-group-addon">Meter</span>
+									</div>
+									<p class="help-block">
+										Batas jarak maksimal dari titik sekolah. Rekomendasi: <b>150 - 250 Meter</b> (mengakomodasi luas gedung sekolah &amp; toleransi GPS HP).
+									</p>
+								</div>
+							</div>
+
+							<div class="form-group">
+								<label class="col-sm-4 control-label">Bypass IP / Subnet Jaringan Sekolah</label>
+								<div class="col-sm-8">
+									<input type="text" class="form-control input-sm" id="zyacbt-sekolah-ip-bypass" name="zyacbt-sekolah-ip-bypass" placeholder="192.168., 10., 172.16., 127.0.0.1">
+									<p class="help-block">
+										Komputer Lab / Wi-Fi lokal dengan awalan IP di atas otomatis <b>lolos tanpa cek GPS</b> (sangat berguna untuk PC Lab sekolah yang tidak punya modul GPS satelit). Pisahkan dengan tanda koma.
+									</p>
+								</div>
+							</div>
+						</div>
+
 						<div class="form-group">
 							<label class="col-sm-4 control-label">Informasi ke Peserta Tes</label>
                             <div class="col-sm-8">
@@ -137,6 +215,39 @@
 
 
 <script lang="javascript">
+	function updateMapLink(){
+		var lat = $('#zyacbt-sekolah-latitude').val();
+		var lng = $('#zyacbt-sekolah-longitude').val();
+		if(lat && lng){
+			$('#btn-view-map').attr('href', 'https://www.google.com/maps?q=' + lat + ',' + lng).show();
+		}else{
+			$('#btn-view-map').attr('href', 'https://www.google.com/maps').show();
+		}
+	}
+
+	function ambilLokasiAdmin(){
+		if(!navigator.geolocation){
+			alert('Browser Anda tidak mendukung Geolocation GPS.');
+			return;
+		}
+		var btn = $('#btn-detect-gps');
+		btn.html('<i class="fa fa-spinner fa-spin"></i> Mendeteksi Lokasi...').prop('disabled', true);
+		navigator.geolocation.getCurrentPosition(
+			function(pos){
+				$('#zyacbt-sekolah-latitude').val(pos.coords.latitude.toFixed(6));
+				$('#zyacbt-sekolah-longitude').val(pos.coords.longitude.toFixed(6));
+				updateMapLink();
+				btn.html('<i class="fa fa-crosshairs"></i> Ambil Koordinat Saya Saat Ini').prop('disabled', false);
+				notify_success('Koordinat GPS berhasil dideteksi: ' + pos.coords.latitude.toFixed(6) + ', ' + pos.coords.longitude.toFixed(6));
+			},
+			function(err){
+				btn.html('<i class="fa fa-crosshairs"></i> Ambil Koordinat Saya Saat Ini').prop('disabled', false);
+				alert('Gagal mendeteksi lokasi GPS: ' + err.message + '. Pastikan GPS aktif dan izin lokasi diizinkan di browser.');
+			},
+			{ enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+		);
+	}
+
 	function load_data(){
         $("#modal-proses").modal('show');
         $.getJSON('<?php echo site_url().'/'.$url; ?>/get_pengaturan_zyacbt', function(data){
@@ -149,6 +260,14 @@
 				$('#zyacbt-anti-cheating').val(data.anti_cheating);
 				$('#zyacbt-tipe-soal-global').val(data.tipe_soal_global);
 				$('#zyacbt-use-token').val(data.use_token);
+
+				$('#zyacbt-radius-lock').val(data.radius_lock);
+				$('#zyacbt-sekolah-latitude').val(data.sekolah_latitude);
+				$('#zyacbt-sekolah-longitude').val(data.sekolah_longitude);
+				$('#zyacbt-sekolah-radius').val(data.sekolah_radius);
+				$('#zyacbt-sekolah-ip-bypass').val(data.sekolah_ip_bypass);
+				updateMapLink();
+
 				$('#zyacbt_informasi').val(data.cbt_informasi);
 				$('#zyacbt-informasi').val('');
             }
@@ -160,6 +279,11 @@
 		CKEDITOR.replace('zyacbt_informasi');
 		
 		load_data();
+
+		$('#zyacbt-sekolah-latitude, #zyacbt-sekolah-longitude').on('input change', function(){
+			updateMapLink();
+		});
+
         $('#form-pengaturan').submit(function(){
             $("#modal-proses").modal('show');
 			$('#zyacbt-informasi').val(CKEDITOR.instances.zyacbt_informasi.getData());

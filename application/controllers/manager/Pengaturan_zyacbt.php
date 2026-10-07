@@ -78,6 +78,22 @@ class Pengaturan_zyacbt extends Member_Controller {
 				$this->db->update('cbt_tes', array('tes_token' => 0));
 			}
 			
+			// Pengaturan Kunci Lokasi GPS Sekolah
+			$radius_lock = $this->input->post('zyacbt-radius-lock', true);
+			$this->cbt_konfigurasi_model->set_value('cbt_radius_lock', !empty($radius_lock) ? $radius_lock : 'tidak');
+
+			$sekolah_lat = $this->input->post('zyacbt-sekolah-latitude', true);
+			$this->cbt_konfigurasi_model->set_value('cbt_sekolah_latitude', !empty($sekolah_lat) ? $sekolah_lat : '-6.175392');
+
+			$sekolah_lng = $this->input->post('zyacbt-sekolah-longitude', true);
+			$this->cbt_konfigurasi_model->set_value('cbt_sekolah_longitude', !empty($sekolah_lng) ? $sekolah_lng : '106.827153');
+
+			$sekolah_radius = $this->input->post('zyacbt-sekolah-radius', true);
+			$this->cbt_konfigurasi_model->set_value('cbt_sekolah_radius', !empty($sekolah_radius) ? $sekolah_radius : '200');
+
+			$ip_bypass = $this->input->post('zyacbt-sekolah-ip-bypass', true);
+			$this->cbt_konfigurasi_model->set_value('cbt_sekolah_ip_bypass', !empty($ip_bypass) ? $ip_bypass : '192.168., 10., 172.16., 127.0.0.1');
+
 			$data['konfigurasi_isi'] = $this->input->post('zyacbt-informasi', true);
 			$this->cbt_konfigurasi_model->update('konfigurasi_kode', 'cbt_informasi', $data);
 
@@ -146,6 +162,12 @@ class Pengaturan_zyacbt extends Member_Controller {
 		if($query->num_rows()>0){
 			$data['use_token'] = $query->row()->konfigurasi_isi;
 		}
+
+		$data['radius_lock'] = $this->cbt_konfigurasi_model->get_value('cbt_radius_lock', 'tidak');
+		$data['sekolah_latitude'] = $this->cbt_konfigurasi_model->get_value('cbt_sekolah_latitude', '-6.175392');
+		$data['sekolah_longitude'] = $this->cbt_konfigurasi_model->get_value('cbt_sekolah_longitude', '106.827153');
+		$data['sekolah_radius'] = $this->cbt_konfigurasi_model->get_value('cbt_sekolah_radius', '200');
+		$data['sekolah_ip_bypass'] = $this->cbt_konfigurasi_model->get_value('cbt_sekolah_ip_bypass', '192.168., 10., 172.16., 127.0.0.1');
 		
 		echo json_encode($data);
     }

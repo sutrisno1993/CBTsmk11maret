@@ -41,4 +41,24 @@ class Cbt_konfigurasi_model extends CI_Model{
 				 ->limit($limit);
         return $this->db->get();
     }
+
+	function get_value($kode, $default = ''){
+		$query = $this->get_by_kolom_limit('konfigurasi_kode', $kode, 1);
+		if($query->num_rows() > 0){
+			$val = $query->row()->konfigurasi_isi;
+			return ($val !== null && $val !== '') ? $val : $default;
+		}
+		return $default;
+	}
+
+	function set_value($kode, $isi){
+		if($this->count_by_kolom('konfigurasi_kode', $kode)->row()->hasil == 0){
+			$this->save(array(
+				'konfigurasi_kode' => $kode,
+				'konfigurasi_isi' => $isi
+			));
+		}else{
+			$this->update('konfigurasi_kode', $kode, array('konfigurasi_isi' => $isi));
+		}
+	}
 }
