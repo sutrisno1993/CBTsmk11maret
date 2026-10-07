@@ -270,6 +270,97 @@ class Modul_jawaban extends Member_Controller {
         }
         echo json_encode($status);
     }
+
+    /**
+     * Endpoint untuk menangani upload gambar paste clipboard (Ctrl+V) langsung dari editor Jawaban
+     */
+    function upload_paste_image(){
+        $id_topik = $this->input->post('topik_id', TRUE);
+        if(empty($id_topik) || $id_topik == 'kosong' || $id_topik == '0'){
+            $id_soal = $this->input->post('soal_id', TRUE);
+            if(!empty($id_soal)){
+                $query_soal = $this->cbt_soal_model->get_by_kolom_limit('soal_id', $id_soal, 1);
+                if($query_soal->num_rows() > 0){
+                    $id_topik = $query_soal->row()->soal_topik_id;
+                }
+            }
+        }
+
+        if(empty($id_topik)){
+            $status['status'] = 0;
+            $status['pesan'] = 'Topik soal tidak ditemukan, silahkan muat ulang halaman.';
+            echo json_encode($status);
+            return;
+        }
+
+        $posisi = $this->config->item('upload_path').'/topik_'.$id_topik;
+        if(!is_dir($posisi)){
+            mkdir($posisi, 0755, true);
+        }
+
+        if(!empty($_FILES['upload_file']['name'])){
+            $field_name = 'upload_file';
+            $ext = strtolower(pathinfo($_FILES[$field_name]['name'], PATHINFO_EXTENSION));
+            if(empty($ext) || !in_array($ext, array('jpg','jpeg','png','gif'))){
+                $ext = 'png';
+            }
+
+            $clean_file_name = 'img_'.date('Ymd_His').'_'.substr(uniqid(), -5).'.'.$ext;
+
+            $config['upload_path'] = $posisi;
+            $config['allowed_types'] = 'jpg|png|jpeg|gif';
+            $config['max_size'] = '5120'; // 5MB
+            $config['overwrite'] = false;
+            $config['file_name'] = $clean_file_name;
+
+            $this->load->library('upload', $config);
+            if (!$this->upload->do_upload($field_name)){
+                $status['status'] = 0;
+                $status['pesan'] = $this->upload->display_errors('', '');
+            }else{
+                $upload_data = $this->upload->data();
+                $final_name = $upload_data['file_name'];
+                $image_url = base_url().$posisi.'/'.$final_name;
+
+                $status['status'] = 1;
+                $status['pesan'] = 'Gambar berhasil ditempel dan diunggah';
+                $status['url'] = $image_url;
+                $status['filename'] = $final_name;
+                $status['image_tag'] = '<img src="'.$image_url.'" class="img-responsive" style="max-width: 100%; height: auto;" />';
+            }
+        } else if(!empty($this->input->post('image_base64'))){
+            $base64_data = $this->input->post('image_base64');
+            if (preg_match('/^data:image\/(\w+);base64,/', $base64_data, $type)) {
+                $base64_data = substr($base64_data, strpos($base64_data, ',') + 1);
+                $ext = strtolower($type[1]);
+                if (!in_array($ext, array('jpg', 'jpeg', 'gif', 'png'))) {
+                    $ext = 'png';
+                }
+                $base64_data = base64_decode($base64_data);
+                if ($base64_data === false) {
+                    $status['status'] = 0;
+                    $status['pesan'] = 'Gagal decode data gambar';
+                } else {
+                    $clean_file_name = 'img_'.date('Ymd_His').'_'.substr(uniqid(), -5).'.'.$ext;
+                    file_put_contents($posisi.'/'.$clean_file_name, $base64_data);
+                    $image_url = base_url().$posisi.'/'.$clean_file_name;
+                    $status['status'] = 1;
+                    $status['pesan'] = 'Gambar berhasil ditempel dan diunggah';
+                    $status['url'] = $image_url;
+                    $status['filename'] = $clean_file_name;
+                    $status['image_tag'] = '<img src="'.$image_url.'" class="img-responsive" style="max-width: 100%; height: auto;" />';
+                }
+            } else {
+                $status['status'] = 0;
+                $status['pesan'] = 'Format gambar tidak valid';
+            }
+        } else {
+            $status['status'] = 0;
+            $status['pesan'] = 'Tidak ada file gambar yang diterima';
+        }
+
+        echo json_encode($status);
+    }
     
     function get_datatable(){
 		// variable initialization
