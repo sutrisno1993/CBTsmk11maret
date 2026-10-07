@@ -130,10 +130,11 @@ Struktur JSON yang diinginkan:
   }
 ]' style="font-family: Consolas, monospace; font-size: 13px; border-radius: 6px;"></textarea>
                                 </div>
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px; flex-wrap: wrap; gap: 5px;">
                                     <span class="text-muted" style="font-size: 12px;" id="json-char-count">0 karakter</span>
                                     <div>
-                                        <button type="button" class="btn btn-default btn-xs" onclick="format_json()"><i class="fa fa-indent"></i> Rapikan Format JSON</button>
+                                        <button type="button" class="btn btn-warning btn-xs" onclick="bersihkan_karakter_khusus()" title="Perbaiki kutip melengkung dari Word/WA dan koma berlebih"><i class="fa fa-magic"></i> Perbaiki Kutip & Simbol</button>
+                                        <button type="button" class="btn btn-default btn-xs" onclick="format_json()"><i class="fa fa-indent"></i> Rapikan JSON</button>
                                         <button type="button" class="btn btn-default btn-xs" onclick="$('#json-input').val(''); update_char_count();"><i class="fa fa-trash"></i> Bersihkan</button>
                                     </div>
                                 </div>
@@ -218,40 +219,53 @@ Struktur JSON yang diinginkan:
         });
     }
 
+    function bersihkan_karakter_khusus(){
+        var val = $('#json-input').val();
+        if(!val) return;
+        // Ganti smart quotes Word / HP
+        val = val.replace(/[\u201C\u201D]/g, '"');
+        val = val.replace(/[\u2018\u2019]/g, "'");
+        // Hapus trailing comma sebelum ] atau }
+        val = val.replace(/,\s*([\]}])/g, '$1');
+        $('#json-input').val(val);
+        update_char_count();
+        notify_success('Karakter kutip melengkung dan koma berlebih berhasil dinormalisasi!');
+    }
+
     function isi_contoh_json(){
         var contoh = [
             {
-                "soal": "Perangkat keras komputer yang berfungsi sebagai otak utama dalam memproses instruksi aritmatika dan logika adalah...",
-                "A": "Harddisk Drive (HDD)",
-                "B": "Central Processing Unit (CPU)",
-                "C": "Random Access Memory (RAM)",
-                "D": "Power Supply Unit (PSU)",
-                "E": "Video Graphic Array (VGA)",
+                "soal": "Perhatikan fungsi eksponen <b>f(x) = 2<sup>x+1</sup></b>. Berapakah nilai f(3)?",
+                "A": "8",
+                "B": "16",
+                "C": "32",
+                "D": "64",
+                "E": "128",
                 "kunci": "B"
             },
             {
-                "soal": "Protokol jaringan internet yang berfungsi secara aman (terenkripsi) untuk mengakses halaman web adalah...",
-                "A": "HTTP",
-                "B": "FTP",
-                "C": "HTTPS",
-                "D": "SMTP",
-                "E": "DHCP",
-                "kunci": "C"
+                "soal": "Lanjutan dari potongan ayat berikut adalah:\n<span style='font-size:18px;'>إِنَّ مَعَ الْعُسْرِ ...</span>",
+                "A": "يُسْرًا",
+                "B": "صَبْرًا",
+                "C": "فِرَارًا",
+                "D": "شُكْرًا",
+                "E": "رَحْمَةً",
+                "kunci": "A"
             },
             {
-                "soal": "Berapakah hasil perhitungan dari nilai biner 1010 dalam sistem bilangan desimal?",
-                "A": "8",
-                "B": "9",
-                "C": "10",
-                "D": "12",
-                "E": "14",
+                "soal": "Jika suhu suatu ruangan laboratorium adalah <b>25°C</b> dan massa jenis air adalah 1 g/cm³, berapakah volume dari 250 g air pada tekanan standar?",
+                "A": "100 cm³",
+                "B": "200 cm³",
+                "C": "250 cm³",
+                "D": "500 cm³",
+                "E": "1000 cm³",
                 "kunci": "C"
             }
         ];
 
         $('#json-input').val(JSON.stringify(contoh, null, 2));
         update_char_count();
-        notify_info('Contoh 3 butir soal JSON berhasil dimuat ke kotak input.');
+        notify_info('Contoh soal lengkap (Matematika Pangkat/Eksponen, Teks Arab, dan Simbol Sains) berhasil dimuat!');
     }
 
     function format_json(){

@@ -160,16 +160,16 @@ class Modul_import_json extends Member_Controller {
         foreach($questions as $idx => $q){
             $html .= '<tr>';
             $html .= '<td class="text-center" style="font-weight: bold; vertical-align: top;">'.($idx+1).'</td>';
-            $html .= '<td style="vertical-align: top;">'.nl2br(htmlspecialchars($q['soal'])).'</td>';
+            $html .= '<td style="vertical-align: top;">'.$this->_clean_html_text($q['soal']).'</td>';
             $html .= '<td style="vertical-align: top;">';
             $html .= '<ul class="list-unstyled" style="margin-bottom: 0;">';
             foreach($q['opsi'] as $o_idx => $opsi){
                 $label = isset($letters[$o_idx]) ? $letters[$o_idx] : ($o_idx+1);
                 $is_key = ($opsi['kunci'] == 1);
                 if($is_key){
-                    $html .= '<li style="padding: 2px 0;"><span class="badge bg-green" style="font-size: 11px; margin-right: 5px;">'.$label.' <i class="fa fa-check"></i> KUNCI</span> <strong class="text-success">'.htmlspecialchars($opsi['teks']).'</strong></li>';
+                    $html .= '<li style="padding: 2px 0;"><span class="badge bg-green" style="font-size: 11px; margin-right: 5px;">'.$label.' <i class="fa fa-check"></i> KUNCI</span> <strong class="text-success">'.$this->_clean_html_text($opsi['teks']).'</strong></li>';
                 } else {
-                    $html .= '<li style="padding: 2px 0; color: #555;"><span class="badge bg-gray" style="font-size: 11px; margin-right: 5px;">'.$label.'</span> '.htmlspecialchars($opsi['teks']).'</li>';
+                    $html .= '<li style="padding: 2px 0; color: #555;"><span class="badge bg-gray" style="font-size: 11px; margin-right: 5px;">'.$label.'</span> '.$this->_clean_html_text($opsi['teks']).'</li>';
                 }
             }
             $html .= '</ul>';
@@ -219,7 +219,7 @@ class Modul_import_json extends Member_Controller {
         foreach($questions as $q){
             $soal_data = array(
                 'soal_topik_id'   => $id_topik,
-                'soal_detail'     => nl2br(htmlspecialchars($q['soal'])),
+                'soal_detail'     => $this->_clean_html_text($q['soal']),
                 'soal_tipe'       => 1, // Pilihan Ganda
                 'soal_difficulty' => isset($q['kesulitan']) ? intval($q['kesulitan']) : 1,
                 'soal_aktif'      => 1
@@ -232,7 +232,7 @@ class Modul_import_json extends Member_Controller {
                 foreach($q['opsi'] as $opsi){
                     $jawaban_data = array(
                         'jawaban_soal_id' => $soal_id,
-                        'jawaban_detail'  => nl2br(htmlspecialchars($opsi['teks'])),
+                        'jawaban_detail'  => $this->_clean_html_text($opsi['teks']),
                         'jawaban_benar'   => ($opsi['kunci'] == 1) ? 1 : 0,
                         'jawaban_aktif'   => 1
                     );
@@ -249,18 +249,61 @@ class Modul_import_json extends Member_Controller {
     }
 
     /**
-     * Helper Universal Parser JSON Soal (Mendukung Format A-E, Opsi Array, Objek)
+     * Sanitasi Teks HTML Aman (Mendukung Simbol Matematika, Arab, Superscript/Subscript, Tag Aman)
+     */
+    private function _clean_html_text($text){
+        if(empty($text)) return '';
+        $text = trim($text);
+
+        // Izinkan tag pemformatan yang sering dipakai di soal pelajaran
+        $allowed_tags = '<b><strong><i><em><u><sub><sup><br><p><span><div><table><thead><tbody><tr><td><th><img><ul><ol><li>';
+        $cleaned = strip_tags($text, $allowed_tags);
+
+        // Hapus atribut script / event handler berbahaya (XSS prevention)
+        $cleaned = preg_replace('/(<[^>]+?)(on[a-z]+\s*=\s*[\'"][^\'"]*[\'"])([^>]*>)/i', '$1$3', $cleaned);
+        $cleaned = preg_replace('/(<[^>]+?)(href|src)\s*=\s*[\'"]javascript:[^\'"]*[\'"]([^>]*>)/i', '$1$3', $cleaned);
+
+        // Jika tidak memiliki tag pemisah paragraf / baris, ubah newline \n menjadi <br />
+        if(strpos($cleaned, '<br') === false && strpos($cleaned, '<p') === false){
+            $cleaned = nl2br($cleaned);
+        }
+
+        return $cleaned;
+    }
+
+    /**
+     * Helper Universal Parser JSON Soal (Dengan Self-Healing untuk Karakter Khusus)
      */
     private function _parse_json($json_str){
-        // Bersihkan Markdown Codeblocks ```json ... ``` dari respon ChatGPT / Claude
-        $json_str = trim($json_str);
+        // 1. Bersihkan BOM UTF-8 jika ada
+        $bom = pack('H*','EFBBBF');
+        $json_str = preg_replace("/^$bom/", '', trim($json_str));
+
+        // 2. Bersihkan Markdown Codeblocks ```json ... ``` dari respon ChatGPT / Claude
         if(preg_match('/^```(?:json)?\s*(.*?)\s*```$/is', $json_str, $m)){
             $json_str = trim($m[1]);
         }
 
+        // Percobaan 1: Decode Langsung
         $data = json_decode($json_str, true);
+
+        // Jika Gagal, jalankan Self-Healing Engine untuk Karakter Khusus
         if(json_last_error() !== JSON_ERROR_NONE){
-            return array('success' => false, 'error' => 'Format JSON tidak valid: ' . json_last_error_msg() . '. Pastikan kurung kurawal, tanda petik ganda, dan koma sudah benar.');
+            // Healing A: Normalisasi Smart/Curly Quotes dari Word atau HP
+            $healed = str_replace(array("“", "”"), '"', $json_str);
+            $healed = str_replace(array("‘", "’"), "'", $healed);
+
+            // Healing B: Hilangkan trailing commas sebelum ] atau }
+            $healed = preg_replace('/,\s*([\]}])/m', '$1', $healed);
+
+            // Healing C: Perbaiki LaTeX backslashes unescaped (misal \frac, \sqrt)
+            $healed = preg_replace('/\\\\([^"\\\\\/bfnrtu])/i', '\\\\\\\\$1', $healed);
+
+            $data = json_decode($healed, true);
+
+            if(json_last_error() !== JSON_ERROR_NONE){
+                return array('success' => false, 'error' => 'Format JSON tidak valid: ' . json_last_error_msg() . '. Pastikan kurung kurawal, tanda petik ganda, dan koma sudah benar.');
+            }
         }
 
         // Jika dibungkus objek semisal {"soal": [...]} atau {"data": [...]} atau {"questions": [...]}
