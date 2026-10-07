@@ -44,19 +44,11 @@
                             <div class="form-group">
                                 <label class="col-sm-2 control-label">Jawaban</label>
                                 <div class="col-sm-10">
-                                    <div style="margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
-                                        <button type="button" class="btn btn-info btn-sm btn-flat" onclick="imageUpload()" style="font-weight: 600;">
-                                            <i class="fa fa-picture-o"></i> Tambah / Kelola Gambar
-                                        </button>
-                                        <span class="label label-default" style="font-size: 11px; padding: 5px 10px; font-weight: normal; background-color: #f4f6f9; color: #333; border: 1px solid #d2d6de;">
-                                            <i class="fa fa-keyboard-o text-primary"></i> <b>Bisa Langsung Ctrl + V:</b> Paste screenshot/gambar clipboard langsung ke dalam editor!
-                                        </span>
-                                    </div>
                                     <input type="hidden" name="tambah-soal-id" id="tambah-soal-id" value="<?php if(!empty($id_soal)){ echo $id_soal; } ?>">
                                     <input type="hidden" name="tambah-jawaban-id" id="tambah-jawaban-id" >
                                     <input type="hidden" name="tambah-jawaban" id="tambah-jawaban" >
                                     <textarea class="textarea" id="tambah_jawaban" name="tambah_jawaban" style="width: 100%; height: 100px; font-size: 13px; line-height: 25px; border: 1px solid #dddddd; padding: 10px;"></textarea>
-                                    <p class="help-block">File gambar dapat di copy langsung (Ctrl+V) atau di upload melalui tombol Tambah / Kelola Gambar. Format yang didukung: JPG, PNG, GIF.</p>
+                                    <p class="help-block">File gambar dapat di copy langsung atau di upload terlebih dahulu. File gambar yang didukung adalah jpg dan png.</p>
                                 </div>
                             </div>
                             <div class="form-group">
@@ -281,8 +273,6 @@
      * Fungsi untuk upload image dari editor
      */
     function imageUpload(){
-        var topikVal = $('#topik').val();
-        $('#image-topik-id').val(topikVal);
         $('#box-preview').addClass('hide');
         $('#image-preview').html('');
         $('#form-pesan-upload-image').html('');
@@ -454,105 +444,9 @@
                   }
             });
 
-            var editorJawaban = CKEDITOR.replace('tambah_jawaban');
-            setupPasteImage(editorJawaban, function(){
-                return $('#topik').val();
-            }, function(){
-                return $('#tambah-soal-id').val();
-            }, "<?php echo site_url().'/'.$url; ?>/upload_paste_image");
+            CKEDITOR.replace('tambah_jawaban');
 
             <?php if(!empty($data_jawaban)){ echo $data_jawaban; } ?>
 		});
     });
-
-    /**
-     * Helper untuk menangani Paste (Ctrl+V) langsung pada CKEditor Jawaban
-     */
-    function setupPasteImage(editorInstance, getTopikId, getSoalId, uploadUrl) {
-        var isUploading = false;
-
-        function uploadBlob(file) {
-            if (isUploading) return;
-            var topikId = getTopikId ? getTopikId() : '';
-            var soalId = getSoalId ? getSoalId() : '';
-
-            isUploading = true;
-            var tempId = 'paste_img_' + new Date().getTime();
-            var placeholderHtml = '<span id="' + tempId + '" class="label label-info" style="display:inline-block; padding:3px 8px; margin:2px; font-size:12px;"><i class="fa fa-spinner fa-spin"></i> Menempelkan gambar...</span>';
-            editorInstance.insertHtml(placeholderHtml);
-
-            var formData = new FormData();
-            var filename = file.name || ('clipboard_' + new Date().getTime() + '.png');
-            formData.append('upload_file', file, filename);
-            formData.append('topik_id', topikId);
-            formData.append('soal_id', soalId);
-
-            $.ajax({
-                url: uploadUrl,
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                cache: false,
-                success: function(response) {
-                    isUploading = false;
-                    var res = (typeof response === 'object') ? response : $.parseJSON(response);
-                    var el = editorInstance.document ? editorInstance.document.getById(tempId) : null;
-                    if (res.status == 1) {
-                        if (el) {
-                            el.$.outerHTML = res.image_tag;
-                        } else {
-                            editorInstance.insertHtml(res.image_tag);
-                        }
-                        notify_success(res.pesan);
-                    } else {
-                        if (el) {
-                            el.remove();
-                        }
-                        notify_error(res.pesan);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    isUploading = false;
-                    var el = editorInstance.document ? editorInstance.document.getById(tempId) : null;
-                    if (el) {
-                        el.remove();
-                    }
-                    notify_error('Gagal mengunggah gambar paste: ' + error);
-                }
-            });
-        }
-
-        editorInstance.on('contentDom', function() {
-            var doc = editorInstance.document;
-            if (doc && doc.$) {
-                doc.$.addEventListener('paste', function(e) {
-                    var items = (e.clipboardData || window.clipboardData) ? (e.clipboardData || window.clipboardData).items : null;
-                    if (items) {
-                        for (var i = 0; i < items.length; i++) {
-                            if (items[i].type.indexOf('image') !== -1) {
-                                var blob = items[i].getAsFile();
-                                if (blob) {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    uploadBlob(blob);
-                                    return false;
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-        });
-
-        editorInstance.on('paste', function(evt) {
-            if (evt.data && evt.data.dataTransfer && typeof evt.data.dataTransfer.getFilesCount === 'function' && evt.data.dataTransfer.getFilesCount() > 0) {
-                var file = evt.data.dataTransfer.getFile(0);
-                if (file && file.type && file.type.indexOf('image') !== -1) {
-                    evt.cancel();
-                    uploadBlob(file);
-                }
-            }
-        });
-    }
 </script>
