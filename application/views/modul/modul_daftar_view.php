@@ -239,6 +239,9 @@
                                             <button type="button" class="btn btn-default" onclick="pilih_dan_lihat_soal('<?php echo $t->topik_id; ?>')" title="Lihat daftar butir soal topik ini di bawah">
                                                 <i class="fa fa-eye text-primary"></i> Soal
                                             </button>
+                                            <a href="<?php echo site_url('manager/modul_import_json?topik_id='.$t->topik_id); ?>" class="btn btn-warning" style="background-color: #6c5ce7; border-color: #6c5ce7; color: white;" title="Upload soal JSON / AI untuk topik ini">
+                                                <i class="fa fa-code"></i> JSON
+                                            </a>
                                             <a href="<?php echo site_url('manager/modul_import_word?topik_id='.$t->topik_id); ?>" class="btn btn-info" title="Upload soal Word untuk topik ini">
                                                 <i class="fa fa-file-word-o"></i> Word
                                             </a>
@@ -278,6 +281,9 @@
                     <div class="box-tools pull-right">
                         <a class="btn btn-sm btn-primary" href="<?php echo site_url('manager/modul_soal'); ?>" id="btn-tulis-soal-topik" style="margin-right: 5px; font-weight: 600;" title="Tulis atau tambah butir soal baru">
                             <i class="fa fa-pencil"></i> Tulis Soal
+                        </a>
+                        <a class="btn btn-sm btn-warning" href="<?php echo site_url('manager/modul_import_json'); ?>" id="btn-import-json-topik" style="margin-right: 5px; font-weight: 600; background-color: #6c5ce7; border-color: #6c5ce7; color: white;" title="Upload naskah soal dari JSON / AI">
+                            <i class="fa fa-code"></i> Import JSON / AI
                         </a>
                         <a class="btn btn-sm btn-info" href="<?php echo site_url('manager/modul_import_word'); ?>" id="btn-import-word-topik" style="margin-right: 5px; font-weight: 600;" title="Upload naskah soal dari Microsoft Word">
                             <i class="fa fa-file-word-o"></i> Import Word
@@ -360,6 +366,7 @@
 
         if(topik_id && topik_id != 'kosong'){
             $('#btn-tulis-soal-topik').attr('href', '<?php echo site_url("manager/modul_soal?topik_id="); ?>' + topik_id);
+            $('#btn-import-json-topik').attr('href', '<?php echo site_url("manager/modul_import_json?topik_id="); ?>' + topik_id);
             $('#btn-import-word-topik').attr('href', '<?php echo site_url("manager/modul_import_word?topik_id="); ?>' + topik_id);
         }
     }

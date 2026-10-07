@@ -49,6 +49,33 @@ class Dashboard extends Member_Controller {
             $this->db->insert('user_akses', array('level' => 'operator-soal', 'kode_menu' => 'modul-mapel', 'add' => 1, 'edit' => 1));
         }
 
+        // Pastikan menu modul-import-json terdaftar di user_menu
+        $cek_m_json = $this->db->where('kode_menu', 'modul-import-json')->get('user_menu');
+        if($cek_m_json->num_rows() == 0){
+            $this->db->insert('user_menu', array(
+                'tipe' => 1,
+                'parent' => 'modul',
+                'kode_menu' => 'modul-import-json',
+                'nama_menu' => 'Import Soal JSON / AI',
+                'url' => 'manager/modul_import_json',
+                'icon' => 'fa fa-code',
+                'urutan' => 5
+            ));
+        }
+
+        // Berikan hak akses modul-import-json ke admin, operator-soal, dan guru
+        foreach(array('admin', 'operator-soal', 'guru') as $lvl){
+            $cek_a_json = $this->db->where('level', $lvl)->where('kode_menu', 'modul-import-json')->get('user_akses');
+            if($cek_a_json->num_rows() == 0){
+                $this->db->insert('user_akses', array(
+                    'level' => $lvl,
+                    'kode_menu' => 'modul-import-json',
+                    'add' => 1,
+                    'edit' => 1
+                ));
+            }
+        }
+
         $this->load->helper('form');
         $data['nama'] = $this->access->get_nama();
 
