@@ -24,3 +24,4 @@ id_rsa*
 REMOTE_SERVER_INFO.md
 restrukturisasi_cbt.php
 generate_tests_from_schedule.php
+seed_menu.php
