@@ -163,7 +163,126 @@
         </div>
     </div>
 
-    <!-- 4. DUA KOLOM: JADWAL UJIAN HARI INI & STATUS SERVER -->
+    <!-- 4. PANEL MONITORING LIVE KONEKSI SISWA (IP PUBLIK VS WI-FI SEKOLAH) -->
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box box-solid" style="border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 25px;">
+                <div class="box-header with-border" style="padding: 16px 20px; background: #fafbfc; border-radius: 12px 12px 0 0;">
+                    <div class="row" style="display: flex; align-items: center; flex-wrap: wrap;">
+                        <div class="col-md-7 col-xs-12">
+                            <h3 class="box-title" style="font-size: 16px; font-weight: 700; color: #1e293b;">
+                                <i class="fa fa-globe text-primary" style="margin-right: 8px;"></i>
+                                Monitoring Live Siswa Ujian (IP Publik vs Wi-Fi Sekolah)
+                            </h3>
+                            <p style="margin: 3px 0 0 0; font-size: 12px; color: #64748b;">
+                                Memantau siswa yang sedang mengerjakan ujian, mendeteksi jalur koneksi (Wi-Fi Sekolah vs Kuota HP) serta verifikasi jarak lokasi GPS.
+                            </p>
+                        </div>
+                        <div class="col-md-5 col-xs-12 text-right" style="margin-top: 6px;">
+                            <!-- Filter Tabs -->
+                            <div class="btn-group btn-group-sm" id="btn-group-filter-ip">
+                                <button type="button" class="btn btn-primary active" onclick="filterMonitoringIp('semua', this)">
+                                    Semua (<span id="cnt-semua"><?php echo !empty($siswa_monitoring) ? count($siswa_monitoring) : 0; ?></span>)
+                                </button>
+                                <button type="button" class="btn btn-default" onclick="filterMonitoringIp('public', this)">
+                                    <span class="text-blue"><i class="fa fa-signal"></i> Kuota / IP Publik (<span id="cnt-public"><?php echo !empty($total_public_ip) ? $total_public_ip : 0; ?></span>)</span>
+                                </button>
+                                <button type="button" class="btn btn-default" onclick="filterMonitoringIp('local', this)">
+                                    <span class="text-green"><i class="fa fa-wifi"></i> Wi-Fi Sekolah (<span id="cnt-local"><?php echo !empty($total_local_ip) ? $total_local_ip : 0; ?></span>)</span>
+                                </button>
+                            </div>
+                            <a href="<?php echo site_url('manager/dashboard'); ?>" class="btn btn-sm btn-default" title="Segarkan Data" style="margin-left: 6px;">
+                                <i class="fa fa-refresh"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="box-body" style="padding: 0;">
+                    <?php if(!empty($siswa_monitoring) && count($siswa_monitoring) > 0){ ?>
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped" id="table-monitoring-ip" style="margin-bottom: 0;">
+                                <thead>
+                                    <tr style="background: #f8fafc; font-size: 12px; color: #475569;">
+                                        <th style="width: 50px;" class="text-center">No</th>
+                                        <th>Nama Peserta / Username</th>
+                                        <th>Kelas / Grup</th>
+                                        <th>Mata Pelajaran / Tes</th>
+                                        <th class="text-center">Jalur Koneksi</th>
+                                        <th>Alamat IP</th>
+                                        <th>Status Lokasi GPS</th>
+                                        <th>Waktu Mulai</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php 
+                                    $no = 1;
+                                    foreach($siswa_monitoring as $sm){ 
+                                        $row_type = $sm->is_local_ip ? 'local' : 'public';
+                                    ?>
+                                        <tr class="row-monitoring row-<?php echo $row_type; ?>">
+                                            <td class="text-center" style="font-size: 12px; color: #64748b;"><?php echo $no++; ?></td>
+                                            <td>
+                                                <div style="font-weight: 700; color: #1e293b; font-size: 13px;">
+                                                    <?php echo htmlspecialchars($sm->user_firstname); ?>
+                                                </div>
+                                                <small class="text-muted"><i class="fa fa-user"></i> <?php echo htmlspecialchars($sm->user_name); ?></small>
+                                            </td>
+                                            <td style="font-size: 12px; font-weight: 600; color: #475569;">
+                                                <span class="label label-default" style="font-size: 11px;"><?php echo !empty($sm->grup_nama) ? htmlspecialchars($sm->grup_nama) : '-'; ?></span>
+                                            </td>
+                                            <td style="font-size: 12px; color: #334155;">
+                                                <b><?php echo !empty($sm->tes_nama) ? htmlspecialchars($sm->tes_nama) : '-'; ?></b>
+                                            </td>
+                                            <td class="text-center">
+                                                <?php if($sm->is_local_ip){ ?>
+                                                    <span class="label label-success" style="font-size: 11px; padding: 4px 8px; border-radius: 4px;">
+                                                        <i class="fa fa-wifi"></i> Wi-Fi / LAN Sekolah
+                                                    </span>
+                                                <?php } else { ?>
+                                                    <span class="label label-primary" style="font-size: 11px; padding: 4px 8px; border-radius: 4px; background-color: #2563eb !important;">
+                                                        <i class="fa fa-signal"></i> Kuota / IP Publik
+                                                    </span>
+                                                <?php } ?>
+                                            </td>
+                                            <td style="font-family: monospace; font-size: 12px; font-weight: 600; color: #0f172a;">
+                                                <?php echo htmlspecialchars($sm->display_ip); ?>
+                                            </td>
+                                            <td style="font-size: 12px;">
+                                                <?php if($sm->is_local_ip){ ?>
+                                                    <span class="text-green" title="Bypass Lokasi GPS karena terhubung ke jaringan sekolah">
+                                                        <i class="fa fa-check-circle"></i> Jaringan Sekolah
+                                                    </span>
+                                                <?php } else if(!empty($sm->jarak_meter) || $sm->jarak_meter === 0){ ?>
+                                                    <span class="text-primary" style="font-weight: 600;">
+                                                        <i class="fa fa-map-marker text-red"></i> ~<?php echo $sm->jarak_meter; ?>m dari Sekolah
+                                                    </span>
+                                                    <br><small class="text-muted">(GPS Terverifikasi)</small>
+                                                <?php } else { ?>
+                                                    <span class="text-muted"><i class="fa fa-map-marker"></i> Terverifikasi</span>
+                                                <?php } ?>
+                                            </td>
+                                            <td style="font-size: 12px; color: #64748b;">
+                                                <i class="fa fa-clock-o"></i> <?php echo date('H:i:s', strtotime($sm->tesuser_creation_time)); ?>
+                                            </td>
+                                        </tr>
+                                    <?php } ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php } else { ?>
+                        <div class="text-center text-muted" style="padding: 40px 20px;">
+                            <i class="fa fa-users" style="font-size: 38px; color: #cbd5e1; margin-bottom: 10px;"></i>
+                            <p style="font-size: 13px; margin: 0; color: #64748b;">
+                                Saat ini belum ada siswa yang sedang aktif mengerjakan ujian hari ini.
+                            </p>
+                        </div>
+                    <?php } ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. DUA KOLOM: JADWAL UJIAN HARI INI & STATUS SERVER -->
     <div class="row">
         <!-- Kolom Kiri: Jadwal Ujian Aktif -->
         <div class="col-md-7 col-xs-12">
@@ -290,7 +409,7 @@
         </div>
     </div>
 
-    <!-- 5. BAGIAN INFORMASI LEGALITAS & TRIBUTE (DIBUAT RAPIH DI ACCORDION BAWAH) -->
+    <!-- 6. BAGIAN INFORMASI LEGALITAS & TRIBUTE (DIBUAT RAPIH DI ACCORDION BAWAH) -->
     <div class="row" style="margin-top: 10px;">
         <div class="col-xs-12">
             <div class="box box-default collapsed-box" style="border-radius: 8px; border: 1px solid #d2d6de; box-shadow: none;">
@@ -377,8 +496,23 @@
     }
 </style>
 
-<!-- SCRIPT LIVE SERVER CLOCK -->
+<!-- SCRIPT LIVE SERVER CLOCK & FILTER IP -->
 <script type="text/javascript">
+    function filterMonitoringIp(type, btn){
+        $('#btn-group-filter-ip .btn').removeClass('active btn-primary').addClass('btn-default');
+        $(btn).removeClass('btn-default').addClass('active btn-primary');
+        
+        if(type === 'semua'){
+            $('.row-monitoring').show();
+        }else if(type === 'public'){
+            $('.row-monitoring').hide();
+            $('.row-public').show();
+        }else if(type === 'local'){
+            $('.row-monitoring').hide();
+            $('.row-local').show();
+        }
+    }
+
     $(function(){
         // Server time sync ticker
         var serverTime = new Date("<?php echo date('Y/m/d H:i:s'); ?>");

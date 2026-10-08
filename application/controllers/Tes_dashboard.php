@@ -211,6 +211,9 @@ class Tes_dashboard extends Tes_Controller {
 							$data_tes['tesuser_user_id'] = $user_id;
 							$data_tes['tesuser_status'] = 1;
 							$data_tes['tesuser_creation_time'] = date('Y-m-d H:i:s');
+							$data_tes['tesuser_ip'] = $this->input->ip_address();
+							$data_tes['tesuser_lat'] = $this->session->userdata('cbt_tes_lat');
+							$data_tes['tesuser_lng'] = $this->session->userdata('cbt_tes_lng');
 
 							$tests_users_id = $this->cbt_tes_user_model->save($data_tes);
 

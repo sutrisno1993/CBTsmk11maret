@@ -48,6 +48,12 @@ class Tes_kerjakan extends Tes_Controller {
                     // jika waktu sudah melebihi waktu ketentuan, maka diarahkan ke dashboard
                     redirect('tes_dashboard');
                 }else{
+					// Update IP terbaru jika terjadi pergantian jaringan/WiFi ke kuota saat ujian
+					$curr_ip = $this->input->ip_address();
+					if(!empty($curr_ip) && (!isset($query_tes->tesuser_ip) || $query_tes->tesuser_ip != $curr_ip)){
+						$this->cbt_tes_user_model->update('tesuser_id', $query_tes->tesuser_id, array('tesuser_ip' => $curr_ip));
+					}
+
 					$is_ok = true;
 					// Apakah token aktif pada tes
 					if($query_tes->tes_token==1){

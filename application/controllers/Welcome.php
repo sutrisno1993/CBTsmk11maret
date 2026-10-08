@@ -145,6 +145,18 @@ class Welcome extends CI_Controller {
 				if($hasil==1){
 					$result = $this->cbt_user_model->get_by_username($username);
 					
+					// Simpan IP & Koordinat GPS ke database cbt_user
+					$data_login = array(
+						'user_login' => 1,
+						'user_login_date' => date('Y-m-d'),
+						'user_ip' => $client_ip,
+						'user_lat' => $lat_siswa,
+						'user_lng' => $lng_siswa
+					);
+					if(!empty($username)){
+						$this->cbt_user_model->update('user_name', $username, $data_login);
+					}
+
 					// Menyimpan session
 					$tanda = '@ZYACBT@';
 					$this->session->set_userdata('cbt_tes_tanda',$tanda.$result->user_name.$tanda);
@@ -152,8 +164,9 @@ class Welcome extends CI_Controller {
 					$this->session->set_userdata('cbt_tes_nama',stripslashes($result->user_firstname));
 					$this->session->set_userdata('cbt_tes_group',$result->grup_nama);
 					$this->session->set_userdata('cbt_tes_group_id',$result->grup_id);
-					$this->session->set_userdata('cbt_tes_lat', $this->input->post('latitude', TRUE));
-					$this->session->set_userdata('cbt_tes_lng', $this->input->post('longitude', TRUE));
+					$this->session->set_userdata('cbt_tes_lat', $lat_siswa);
+					$this->session->set_userdata('cbt_tes_lng', $lng_siswa);
+					$this->session->set_userdata('cbt_tes_ip', $client_ip);
 					
 					$status['status'] = 1;
 				}else{
