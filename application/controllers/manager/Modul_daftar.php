@@ -11,6 +11,7 @@ class Modul_daftar extends Member_Controller {
 		$this->load->model('cbt_topik_model');
 		$this->load->model('cbt_jawaban_model');
 		$this->load->model('cbt_soal_model');
+		$this->load->model('cbt_soal_koreksi_model');
 
 		parent::cek_akses($this->kode_menu);
 	}
@@ -94,11 +95,30 @@ class Modul_daftar extends Member_Controller {
         $sql .= " GROUP BY t.topik_id ORDER BY m.modul_nama ASC, t.topik_nama ASC";
         $query_monitor = $this->db->query($sql)->result();
 
+        // Ambil data verifikasi dan koreksi
+        $verif_map = array();
+        $q_verif = $this->cbt_soal_koreksi_model->get_all_verifikasi()->result();
+        foreach($q_verif as $v){
+            $verif_map[$v->verifikasi_topik_id] = $v;
+        }
+
+        $koreksi_map = array();
+        $q_kor = $this->db->select('koreksi_topik_id, 
+                                   COUNT(koreksi_id) as total_koreksi, 
+                                   SUM(CASE WHEN koreksi_status = "pending" THEN 1 ELSE 0 END) as pending_koreksi')
+                          ->group_by('koreksi_topik_id')
+                          ->get('cbt_soal_koreksi')->result();
+        foreach($q_kor as $k){
+            $koreksi_map[$k->koreksi_topik_id] = $k;
+        }
+
         $stat_total = count($query_monitor);
         $stat_kosong = 0;
         $stat_kurang = 0;
         $stat_lengkap = 0;
         $stat_total_soal = 0;
+        $stat_total_acc = 0;
+        $stat_total_revisi = 0;
 
         foreach($query_monitor as $m_row){
             $stat_total_soal += $m_row->jml_soal;
@@ -109,6 +129,16 @@ class Modul_daftar extends Member_Controller {
             }else{
                 $stat_lengkap++;
             }
+
+            $m_row->verifikasi = isset($verif_map[$m_row->topik_id]) ? $verif_map[$m_row->topik_id] : null;
+            $m_row->koreksi_info = isset($koreksi_map[$m_row->topik_id]) ? $koreksi_map[$m_row->topik_id] : null;
+
+            if(!empty($m_row->verifikasi) && $m_row->verifikasi->verifikasi_status == 'sesuai'){
+                $stat_total_acc++;
+            }
+            if(!empty($m_row->koreksi_info) && $m_row->koreksi_info->pending_koreksi > 0){
+                $stat_total_revisi += $m_row->koreksi_info->pending_koreksi;
+            }
         }
 
         $data['monitoring_topik'] = $query_monitor;
@@ -117,10 +147,31 @@ class Modul_daftar extends Member_Controller {
         $data['stat_kurang'] = $stat_kurang;
         $data['stat_lengkap'] = $stat_lengkap;
         $data['stat_total_soal'] = $stat_total_soal;
+        $data['stat_total_acc'] = $stat_total_acc;
+        $data['stat_total_revisi'] = $stat_total_revisi;
         $data['selected_topik'] = $selected_topik;
+        $data['public_monitoring_url'] = site_url('monitoring_soal');
         
         $this->template->display_admin($this->kelompok.'/modul_daftar_view', !empty($data['judul_halaman']) ? $data['judul_halaman'] : 'Manajemen & Daftar Soal', $data);
 	}
+
+    public function selesai_koreksi($koreksi_id = null){
+        if(!empty($koreksi_id)){
+            $this->cbt_soal_koreksi_model->update_status_koreksi(intval($koreksi_id), 'selesai');
+            echo json_encode(array('status' => 1, 'message' => 'Catatan koreksi ditandai telah diperbaiki.'));
+            return;
+        }
+        echo json_encode(array('status' => 0, 'message' => 'ID koreksi tidak valid.'));
+    }
+
+    public function hapus_koreksi($koreksi_id = null){
+        if(!empty($koreksi_id)){
+            $this->cbt_soal_koreksi_model->delete_koreksi(intval($koreksi_id));
+            echo json_encode(array('status' => 1, 'message' => 'Catatan koreksi berhasil dihapus.'));
+            return;
+        }
+        echo json_encode(array('status' => 0, 'message' => 'ID koreksi tidak valid.'));
+    }
 
 	function preview($topik_id=null){
 		$data['kode_menu'] = $this->kode_menu;

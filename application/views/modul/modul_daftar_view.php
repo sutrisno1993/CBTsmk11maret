@@ -86,6 +86,9 @@
                         <i class="fa fa-tasks text-primary"></i> Monitoring Kesiapan Bank Soal Topik Ujian
                     </h3>
                     <div class="box-tools pull-right">
+                        <button type="button" class="btn btn-sm btn-info" onclick="bukaModalShareLink()" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); border: none; font-weight: 700; margin-right: 8px; border-radius: 6px; box-shadow: 0 2px 6px rgba(30,60,114,0.25);">
+                            <i class="fa fa-link"></i> 🔗 Salin &amp; Bagikan Link Monitoring Guru
+                        </button>
                         <span class="badge bg-purple" style="font-size: 13px; padding: 6px 12px; border-radius: 12px;">
                             Total Butir Soal Terisi: <strong><?php echo !empty($stat_total_soal) ? $stat_total_soal : 0; ?></strong> Butir
                         </span>
@@ -150,13 +153,14 @@
                         <table id="table-monitoring" class="table table-bordered table-striped table-hover" style="font-size: 13px;">
                             <thead>
                                 <tr style="background: #f4f6f9; color: #333;">
-                                    <th width="4%" class="text-center">No.</th>
-                                    <th width="12%" class="text-center">Jadwal & Hari</th>
-                                    <th width="20%">Mata Pelajaran (Modul)</th>
-                                    <th width="22%">Nama Topik Ujian</th>
-                                    <th width="15%" class="text-center">Jumlah Butir Soal</th>
-                                    <th width="12%" class="text-center">Status Kesiapan</th>
-                                    <th width="15%" class="text-center">Aksi Cepat</th>
+                                    <th width="3%" class="text-center">No.</th>
+                                    <th width="10%" class="text-center">Jadwal & Hari</th>
+                                    <th width="18%">Mata Pelajaran (Modul)</th>
+                                    <th width="20%">Nama Topik Ujian</th>
+                                    <th width="13%" class="text-center">Jumlah Butir Soal</th>
+                                    <th width="11%" class="text-center">Kesiapan</th>
+                                    <th width="12%" class="text-center">Verifikasi Guru</th>
+                                    <th width="13%" class="text-center">Aksi Cepat</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -170,7 +174,7 @@
 
                                         // Status
                                         if($jml == 0){
-                                            $st_badge = '<span class="label label-danger" style="font-size: 11px; padding: 4px 8px; border-radius: 4px;"><i class="fa fa-times-circle"></i> Belum Ada Soal</span>';
+                                            $st_badge = '<span class="label label-danger" style="font-size: 11px; padding: 4px 8px; border-radius: 4px;"><i class="fa fa-times-circle"></i> Kosong (0)</span>';
                                             $st_cat = 'kosong';
                                             $bar_color = 'progress-bar-danger';
                                             $row_bg = 'style="background-color: #fff5f5;"';
@@ -180,7 +184,7 @@
                                             $bar_color = 'progress-bar-warning';
                                             $row_bg = '';
                                         } else {
-                                            $st_badge = '<span class="label label-success" style="font-size: 11px; padding: 4px 8px; border-radius: 4px;"><i class="fa fa-check-circle"></i> Siap Ujian ('.$jml.')</span>';
+                                            $st_badge = '<span class="label label-success" style="font-size: 11px; padding: 4px 8px; border-radius: 4px;"><i class="fa fa-check-circle"></i> Siap ('.$jml.')</span>';
                                             $st_cat = 'lengkap';
                                             $bar_color = 'progress-bar-success';
                                             $row_bg = '';
@@ -206,6 +210,14 @@
                                             $tingkat = 'XI';
                                         } else if(preg_match('/\b(X)\b/i', $t->topik_nama)){
                                             $tingkat = 'X';
+                                        }
+
+                                        // Status Verifikasi & Catatan Koreksi
+                                        $badge_verif = '<span class="text-muted" style="font-size: 11px;"><i class="fa fa-clock-o"></i> Belum ditelaah</span>';
+                                        if(!empty($t->verifikasi) && $t->verifikasi->verifikasi_status == 'sesuai'){
+                                            $badge_verif = '<span class="label label-success" style="font-size: 11px; padding: 3px 6px; border-radius: 3px;" title="Terverifikasi oleh '.$t->verifikasi->verifikasi_guru_nama.'"><i class="fa fa-check"></i> ACC (TTD)</span><br><small class="text-muted" style="font-size: 10px;">'.htmlspecialchars($t->verifikasi->verifikasi_guru_nama).'</small>';
+                                        } else if(!empty($t->koreksi_info) && $t->koreksi_info->pending_koreksi > 0){
+                                            $badge_verif = '<span class="label label-warning" style="font-size: 11px; padding: 3px 6px; border-radius: 3px; background-color: #f39c12 !important;"><i class="fa fa-commenting-o"></i> '.$t->koreksi_info->pending_koreksi.' Revisi</span>';
                                         }
                                 ?>
                                 <tr class="row-topik" data-status="<?php echo $st_cat; ?>" data-hari="<?php echo $hari; ?>" data-tingkat="<?php echo $tingkat; ?>" <?php echo $row_bg; ?>>
@@ -235,21 +247,24 @@
                                         <?php echo $st_badge; ?>
                                     </td>
                                     <td class="text-center" style="vertical-align: middle;">
+                                        <?php echo $badge_verif; ?>
+                                    </td>
+                                    <td class="text-center" style="vertical-align: middle;">
                                         <div class="btn-group btn-group-xs">
+                                            <a href="<?php echo site_url('monitoring_soal/detail/'.$t->topik_id); ?>" target="_blank" class="btn btn-default" style="background: #e0f2fe; color: #0369a1; border-color: #bae6fd;" title="Buka lembar telaah & QC soal guru">
+                                                <i class="fa fa-external-link"></i> Telaah
+                                            </a>
                                             <button type="button" class="btn btn-default" onclick="pilih_dan_lihat_soal('<?php echo $t->topik_id; ?>')" title="Lihat daftar butir soal topik ini di bawah">
                                                 <i class="fa fa-eye text-primary"></i> Soal
                                             </button>
-                                            <a href="<?php echo site_url('manager/modul_import_json?topik_id='.$t->topik_id); ?>" class="btn btn-warning" style="background-color: #6c5ce7; border-color: #6c5ce7; color: white;" title="Upload soal JSON / AI untuk topik ini">
-                                                <i class="fa fa-code"></i> JSON
-                                            </a>
                                             <a href="<?php echo site_url('manager/modul_import_word?topik_id='.$t->topik_id); ?>" class="btn btn-info" title="Upload soal Word untuk topik ini">
                                                 <i class="fa fa-file-word-o"></i> Word
                                             </a>
+                                            <a href="<?php echo site_url('manager/modul_import_json?topik_id='.$t->topik_id); ?>" class="btn btn-warning" style="background-color: #6c5ce7; border-color: #6c5ce7; color: white;" title="Upload soal JSON / AI untuk topik ini">
+                                                <i class="fa fa-code"></i> JSON
+                                            </a>
                                             <a href="<?php echo site_url('manager/modul_soal?topik_id='.$t->topik_id); ?>" class="btn btn-primary" title="Tulis butir soal baru secara manual">
                                                 <i class="fa fa-pencil"></i> Tulis
-                                            </a>
-                                            <a href="<?php echo site_url('manager/modul_import?topik_id='.$t->topik_id); ?>" class="btn btn-success" title="Import soal Excel Spreadsheet">
-                                                <i class="fa fa-file-excel-o"></i> Excel
                                             </a>
                                         </div>
                                     </td>
@@ -259,7 +274,7 @@
                                 } else {
                                 ?>
                                 <tr>
-                                    <td colspan="7" class="text-center text-muted" style="padding: 20px;">Belum ada data topik yang dapat ditampilkan.</td>
+                                    <td colspan="8" class="text-center text-muted" style="padding: 20px;">Belum ada data topik yang dapat ditampilkan.</td>
                                 </tr>
                                 <?php } ?>
                             </tbody>
@@ -334,9 +349,97 @@
         </div>
     </div>
 
+    <!-- MODAL SHARE LINK MONITORING & PREVIEW GURU -->
+    <div class="modal fade" id="modal-share-link" tabindex="-1" role="dialog" aria-labelledby="modalShareLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content" style="border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+                <div class="modal-header" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: #fff; padding: 18px 22px;">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: #fff; opacity: 0.8;"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="modalShareLabel" style="font-weight: 800; font-size: 17px;">
+                        <i class="fa fa-share-alt" style="margin-right: 6px;"></i> Bagikan Link Monitoring &amp; Preview Soal Guru
+                    </h4>
+                </div>
+                <div class="modal-body" style="padding: 22px 24px;">
+                    <p style="font-size: 13px; color: #475569; line-height: 1.6; margin-bottom: 16px;">
+                        Bapak/Ibu Guru dapat mengakses tautan di bawah ini secara langsung <strong>tanpa perlu login</strong> untuk menelaah naskah butir soal, memeriksa kunci jawaban, memberikan catatan koreksi per butir soal, serta menandatangani verifikasi (ACC) kelayakan naskah soal.
+                    </p>
+
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label style="font-size: 12px; font-weight: 700; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px;">
+                            <i class="fa fa-link text-primary"></i> Link Akses Portal Guru:
+                        </label>
+                        <div class="input-group">
+                            <input type="text" id="input-public-url" class="form-control input-lg" value="<?php echo !empty($public_monitoring_url) ? $public_monitoring_url : site_url('monitoring_soal'); ?>" readonly style="background: #f8fafc; font-weight: 700; color: #1e3c72; font-size: 13px; border-radius: 6px 0 0 6px;">
+                            <span class="input-group-btn">
+                                <button class="btn btn-primary btn-lg" type="button" onclick="salinLinkMonitoring()" id="btn-copy-link" style="background: #1e3c72; border-color: #1e3c72; font-weight: 700; font-size: 13px; border-radius: 0 6px 6px 0;">
+                                    <i class="fa fa-copy"></i> Salin Link
+                                </button>
+                            </span>
+                        </div>
+                        <small id="copy-feedback" class="text-green" style="display: none; font-weight: 700; margin-top: 5px;">
+                            <i class="fa fa-check-circle"></i> Tautan berhasil disalin ke clipboard! Siap dibagikan.
+                        </small>
+                    </div>
+
+                    <div style="background: #f1f5f9; border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; font-size: 12px; color: #334155;">
+                        <div style="font-weight: 700; color: #1e293b; margin-bottom: 4px;">
+                            <i class="fa fa-shield text-green"></i> Fitur Portal Guru:
+                        </div>
+                        <ul style="margin: 0; padding-left: 18px; line-height: 1.6;">
+                            <li>Nama topik otomatis dibersihkan (tanpa tag hari, hanya Mapel &amp; Kelas).</li>
+                            <li>Indikator status topik: sudah ada soal vs topik kosong (0 butir).</li>
+                            <li>Form catatan koreksi interaktif pada setiap nomor soal.</li>
+                            <li>Pengesahan TTD digital guru bila naskah soal sudah sesuai standar.</li>
+                        </ul>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-6 col-xs-12" style="margin-bottom: 8px;">
+                            <button type="button" class="btn btn-success btn-block" onclick="bagikanWhatsApp()" style="background: #25d366; border-color: #25d366; font-weight: 700; border-radius: 8px; padding: 9px 14px;">
+                                <i class="fa fa-whatsapp" style="font-size: 16px;"></i> Bagikan ke WhatsApp Guru
+                            </button>
+                        </div>
+                        <div class="col-sm-6 col-xs-12" style="margin-bottom: 8px;">
+                            <a href="<?php echo !empty($public_monitoring_url) ? $public_monitoring_url : site_url('monitoring_soal'); ?>" target="_blank" class="btn btn-default btn-block" style="border-radius: 8px; font-weight: 700; padding: 9px 14px; border: 1px solid #cbd5e1;">
+                                <i class="fa fa-external-link"></i> Buka Portal Sekarang
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </section><!-- /.content -->
 
 <script lang="javascript">
+    function bukaModalShareLink(){
+        $('#copy-feedback').hide();
+        $('#modal-share-link').modal('show');
+    }
+
+    function salinLinkMonitoring(){
+        var copyText = document.getElementById("input-public-url");
+        copyText.select();
+        copyText.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(copyText.value).then(function(){
+            $('#copy-feedback').fadeIn(200);
+            $('#btn-copy-link').html('<i class="fa fa-check"></i> Tersalin!');
+            setTimeout(function(){
+                $('#btn-copy-link').html('<i class="fa fa-copy"></i> Salin Link');
+            }, 2500);
+        }).catch(function(){
+            document.execCommand("copy");
+            $('#copy-feedback').fadeIn(200);
+        });
+    }
+
+    function bagikanWhatsApp(){
+        var url = $('#input-public-url').val();
+        var pesan = encodeURIComponent("Bapak/Ibu Guru Yang Terhormat,\n\nBerikut tautan portal monitoring dan telaah naskah butir soal ujian:\n" + url + "\n\nSilakan periksa butir soal mata pelajaran masing-masing. Berikan catatan koreksi bila ada kekeliruan, atau lakukan pengesahan (TTD verifikasi) bila naskah soal sudah sesuai standar. Terima kasih.");
+        window.open('https://api.whatsapp.com/send?text=' + pesan, '_blank');
+    }
+
     function refresh_table(){
         $('#table-soal').dataTable().fnReloadAjax();
     }

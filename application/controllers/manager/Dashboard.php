@@ -186,6 +186,14 @@ class Dashboard extends Member_Controller {
         $this->db->limit(5);
         $data['tes_berjalan'] = $this->db->get('cbt_tes')->result();
 
+        // Data Koreksi & Verifikasi Naskah Soal Guru
+        $this->load->model('cbt_soal_koreksi_model');
+        $data['total_pending_koreksi'] = $this->cbt_soal_koreksi_model->count_pending_koreksi();
+        $data['total_verified_topik'] = $this->cbt_soal_koreksi_model->count_verified_topik();
+        $data['daftar_koreksi_pending'] = $this->cbt_soal_koreksi_model->get_pending_koreksi(10)->result();
+        $data['daftar_verifikasi_terbaru'] = $this->cbt_soal_koreksi_model->get_all_verifikasi()->result();
+        $data['public_monitoring_url'] = site_url('monitoring_soal');
+
         if($this->access->get_level() == 'guru'){
             $this->template->display_admin('guru/guru_dashboard_view', 'Portal Guru CBT', $data);
             return;
