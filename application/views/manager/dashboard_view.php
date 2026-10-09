@@ -619,22 +619,21 @@
                 <div class="box-body" style="padding: 20px; font-size: 13px; color: #555; line-height: 1.6;">
                     <div class="row">
                         <div class="col-md-6">
-                            <h4 style="font-size: 14px; font-weight: 700; color: #333; margin-top: 0;">Perjanjian Penggunaan</h4>
-                            <p>Dengan menggunakan aplikasi ZYA CBT, pengguna menyetujui ketentuan:</p>
+                            <h4 style="font-size: 14px; font-weight: 700; color: #333; margin-top: 0;">Tentang Aplikasi</h4>
+                            <p>Aplikasi Ujian Online <b>SMART-CBT</b> dikembangkan untuk mendukung kelancaran pelaksanaan ujian berbasis komputer:</p>
                             <ol style="padding-left: 20px;">
-                                <li>Tidak mengubah Nama Aplikasi Ujian Online <b>ZYA CBT</b> menjadi nama aplikasi lain.</li>
-                                <li>Tidak mengubah footer yang menunjukkan alamat website resmi ZYA CBT.</li>
-                                <li>Tidak memperjualbelikan Aplikasi Ujian Online ZYA CBT.</li>
-                                <li>Tidak menghapus tribute dan perjanjian penggunaan ini.</li>
+                                <li>Sistem Ujian Online CBT Cepat, Aman, dan Terstruktur.</li>
+                                <li>Mendukung Ujian Data Mandiri (QR Code 12 Jam) & WiFi Lokal Sekolah.</li>
+                                <li>Dikelola oleh Tim ICT SMK 11 Maret.</li>
                             </ol>
                         </div>
                         <div class="col-md-6">
-                            <h4 style="font-size: 14px; font-weight: 700; color: #333; margin-top: 0;">Tribute Penulis</h4>
+                            <h4 style="font-size: 14px; font-weight: 700; color: #333; margin-top: 0;">Pengembang & Pengelola</h4>
                             <blockquote style="font-size: 13px; color: #666; border-left: 3px solid #00897b; margin: 0 0 10px 0;">
-                                Teruntuk Putri kami tercinta: Asyfiya Aniqa Putri (28 Februari 2018 – 1 Maret 2018).
+                                SMART-CBT &mdash; Solusi Computer-Based Test Terpadu SMK 11 Maret.
                             </blockquote>
                             <p style="margin: 0; font-size: 12px; color: #888;">
-                                Diciptakan oleh Achmad Lutfi (achmadlutfi.wordpress.com). Semoga bermanfaat untuk kemajuan pendidikan Indonesia.
+                                Dikelola oleh ICT-TIM-SMK11MARET. Semoga bermanfaat untuk kemajuan pendidikan Indonesia.
                             </p>
                         </div>
                     </div>
