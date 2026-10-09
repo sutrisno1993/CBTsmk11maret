@@ -71,25 +71,23 @@
                             <div class="col-sm-9">
                                 <input type="hidden" name="tambah-id" id="tambah-id" />
                                 <input type="hidden" name="tambah-nama-lama" id="tambah-nama-lama" />
-                                <input type="text" name="tambah-nama" id="tambah-nama" class="form-control input-sm" />
+                                <input type="text" name="tambah-nama" id="tambah-nama" class="form-control input-sm" placeholder="Contoh: PENILAIAN SUMATIF TENGAH SEMESTER (PSTS) GANJIL" />
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Deskripsi</label>
                             <div class="col-sm-9">
-                                <textarea name="tambah-deskripsi" id="tambah-deskripsi" class="form-control input-sm" ></textarea>
+                                <textarea name="tambah-deskripsi" id="tambah-deskripsi" class="form-control input-sm" placeholder="Keterangan pelaksanaan tes"></textarea>
                             </div>
                         </div>
-						<div class="form-group">
-                            <label class="col-sm-3 control-label">Rentang Waktu</label>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Tanggal Ujian</label>
                             <div class="col-sm-9">
                                 <div class="input-group">
-                                    <div class="input-group-addon">
-                                        <i class="fa fa-clock-o"></i>
-                                    </div>
-                                    <input type="text" name="tambah-rentang-waktu" id="tambah-rentang-waktu" class="form-control input-sm" value="<?php if(!empty($rentang_waktu)){ echo $rentang_waktu; } ?>" readonly />
+                                    <div class="input-group-addon"><i class="fa fa-calendar"></i></div>
+                                    <input type="date" id="preset-tanggal" class="form-control input-sm" value="<?php echo date('Y-m-d'); ?>" />
                                 </div>
-                                <p class="help-block">Rentang waktu tes dilaksanakan</p>
+                                <p class="help-block">Pilih tanggal untuk otomatis menentukan Hari dan Rentang Waktu</p>
                             </div>
                         </div>
                         <div class="form-group">
@@ -105,7 +103,7 @@
                                     <option value="Sabtu">Sabtu</option>
                                     <option value="Minggu">Minggu</option>
                                 </select>
-                                <p class="help-block">Hari pelaksanaan tes untuk jadwal dan filter</p>
+                                <p class="help-block">Hari pelaksanaan tes (otomatis dari tanggal atau pilih manual)</p>
                             </div>
                         </div>
                         <div class="form-group">
@@ -127,9 +125,20 @@
                                     <option value="Jam Ke-1">Jam Ke-1</option>
                                     <option value="Jam Ke-2">Jam Ke-2</option>
                                     <option value="Jam Ke-3">Jam Ke-3</option>
-                                    <option value="Jam Ke-4">Jam Ke-4</option>
                                 </select>
-                                <p class="help-block">Urutan jam dalam shift (Jam Ke-1, Jam Ke-2, atau Jam Ke-3)</p>
+                                <p class="help-block">Jam Ke dalam shift (otomatis mengatur rentang waktu & durasi)</p>
+                            </div>
+                        </div>
+						<div class="form-group">
+                            <label class="col-sm-3 control-label">Rentang Waktu</label>
+                            <div class="col-sm-9">
+                                <div class="input-group">
+                                    <div class="input-group-addon">
+                                        <i class="fa fa-clock-o"></i>
+                                    </div>
+                                    <input type="text" name="tambah-rentang-waktu" id="tambah-rentang-waktu" class="form-control input-sm" value="<?php if(!empty($rentang_waktu)){ echo $rentang_waktu; } ?>" readonly />
+                                </div>
+                                <p class="help-block">Otomatis terisi dari Hari/Shift/Jam Ke, atau klik untuk atur manual</p>
                             </div>
                         </div>
                         <div class="form-group">
@@ -250,14 +259,18 @@
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Waktu Tes</label>
                             <div class="col-sm-9">
-                                <input type="text" name="tambah-waktu" id="tambah-waktu" class="form-control input-sm" value="30" />
-                                <p class="help-block">Waktu tes dalam satuan menit</p>
+                                <div class="input-group">
+                                    <input type="text" name="tambah-waktu" id="tambah-waktu" class="form-control input-sm" value="90" />
+                                    <span class="input-group-addon">Menit</span>
+                                </div>
+                                <p class="help-block">Waktu durasi tes (otomatis dari jadwal sesi, bisa diubah manual)</p>
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Poin Dasar</label>
                             <div class="col-sm-9">
-                                <input type="text" name="tambah-poin" id="tambah-poin" class="form-control input-sm" value="1.00" />
+                                <input type="text" name="tambah-poin" id="tambah-poin" class="form-control input-sm" value="2.5" />
+                                <p class="help-block">Poin per butir soal (Default: 2.5 x 40 butir = 100)</p>
                             </div>
                         </div>
                         <div class="form-group">
@@ -278,7 +291,7 @@
                             <label class="col-sm-3 control-label">Tunjukkan Hasil</label>
                             <div class="col-sm-9">
                                 <input type="checkbox" name="tambah-tunjukkan-hasil" id="tambah-tunjukkan-hasil" value="1" checked>
-                                <p class="help-block">Menunjukkan hasil ke user saat tes sudah selesai</p>
+                                <p class="help-block">Menunjukkan hasil nilai ke user saat tes sudah selesai</p>
                             </div>
                         </div>
                         <div class="form-group">
@@ -292,7 +305,7 @@
                             <label class="col-sm-3 control-label">Token</label>
                             <div class="col-sm-9">
                                 <input type="checkbox" name="tambah-token" id="tambah-token" value="1" >
-                                <p class="help-block">Saat awal tes, user memasukkan Token dari operator</p>
+                                <p class="help-block">Saat awal tes, user memasukkan Token dari operator (Default: Tidak aktif)</p>
                             </div>
                         </div>
                     </div>
@@ -329,7 +342,7 @@
                             <div class="col-sm-9">
                                 <select style="width: 100%" class="form-control input-sm" id="soal-topik" name="soal-topik" >
                                     <div id="soal-topik-option">
-                                    <option value="kosong">Pilih Topik</option>
+                                     <option value="kosong">Pilih Topik</option>
                                     </div>
                                 </select>
                             </div>
@@ -372,15 +385,15 @@
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Acak Soal</label>
                             <div class="col-sm-9">
-                                <input type="checkbox" name="soal-acak-soal" id="soal-acak-soal" class="input-sm" value="1">
-                                <p class="help-block">Mengacak Soal Tes</p>
+                                <input type="checkbox" name="soal-acak-soal" id="soal-acak-soal" class="input-sm" value="1" checked="checked">
+                                <p class="help-block">Mengacak urutan Soal Tes (Default: Aktif)</p>
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Acak Jawaban</label>
                             <div class="col-sm-9">
                                 <input type="checkbox" name="soal-acak-jawaban" id="soal-acak-jawaban" class="input-sm" value="1">
-                                <p class="help-block">Mengacak Jawaban Tes</p>
+                                <p class="help-block">Mengacak opsi pilihan Jawaban (Default: Tidak aktif)</p>
                             </div>
                         </div>
                         <div class="form-group">
@@ -431,8 +444,92 @@
         $('#soal-kesulitan').val('1');
         $('#soal-jml').val('40');
         $('#soal-jml-jawaban').val('5');
-        $('#soal-acak-soal').prop('checked', false);
+        $('#soal-acak-soal').prop('checked', true);
         $('#soal-acak-jawaban').prop('checked', false);
+    }
+
+    function applyPresetJadwal() {
+        var tanggalStr = $('#preset-tanggal').val(); // YYYY-MM-DD
+        var hari = $('#tambah-hari').val();
+        var shift = $('#tambah-shift').val();
+        var jamKe = $('#tambah-jam-ke').val();
+
+        if (tanggalStr) {
+            var dParts = tanggalStr.split('-');
+            if (dParts.length === 3) {
+                var dt = new Date(parseInt(dParts[0], 10), parseInt(dParts[1], 10) - 1, parseInt(dParts[2], 10));
+                var namaHariArr = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+                var hariOtomatis = namaHariArr[dt.getDay()];
+                if (hariOtomatis && (!hari || hari === '')) {
+                    hari = hariOtomatis;
+                    $('#tambah-hari').val(hari);
+                }
+            }
+        }
+
+        if (!tanggalStr) {
+            var now = new Date();
+            var y = now.getFullYear();
+            var m = String(now.getMonth() + 1).padStart(2, '0');
+            var d = String(now.getDate()).padStart(2, '0');
+            tanggalStr = y + '-' + m + '-' + d;
+            $('#preset-tanggal').val(tanggalStr);
+        }
+
+        if (!shift || !jamKe) {
+            return;
+        }
+
+        var startTime = '';
+        var endTime = '';
+        var durasi = 90;
+
+        var hLower = (hari || '').toLowerCase();
+
+        if (hLower === 'rabu') {
+            if (shift === 'Pagi') {
+                if (jamKe === 'Jam Ke-1') { startTime = '07:30'; endTime = '09:00'; durasi = 90; }
+                else if (jamKe === 'Jam Ke-2') { startTime = '09:00'; endTime = '10:00'; durasi = 60; }
+                else if (jamKe === 'Jam Ke-3') { startTime = '10:30'; endTime = '11:30'; durasi = 60; }
+            } else if (shift === 'Siang') {
+                if (jamKe === 'Jam Ke-1') { startTime = '13:00'; endTime = '14:30'; durasi = 90; }
+                else if (jamKe === 'Jam Ke-2') { startTime = '14:30'; endTime = '15:30'; durasi = 60; }
+                else if (jamKe === 'Jam Ke-3') { startTime = '16:00'; endTime = '17:00'; durasi = 60; }
+            }
+        } else if (hLower === 'jumat') {
+            if (shift === 'Pagi') {
+                if (jamKe === 'Jam Ke-1') { startTime = '07:30'; endTime = '09:00'; durasi = 90; }
+                else if (jamKe === 'Jam Ke-2') { startTime = '09:30'; endTime = '10:30'; durasi = 60; }
+                else if (jamKe === 'Jam Ke-3') { startTime = '10:30'; endTime = '11:30'; durasi = 60; }
+            } else if (shift === 'Siang') {
+                if (jamKe === 'Jam Ke-1') { startTime = '13:30'; endTime = '15:00'; durasi = 90; }
+                else if (jamKe === 'Jam Ke-2') { startTime = '15:30'; endTime = '16:30'; durasi = 60; }
+                else if (jamKe === 'Jam Ke-3') { startTime = '16:30'; endTime = '17:30'; durasi = 60; }
+            }
+        } else {
+            // Hari Senin, Selasa, Kamis, Sabtu, Minggu
+            if (shift === 'Pagi') {
+                if (jamKe === 'Jam Ke-1') { startTime = '07:30'; endTime = '09:00'; durasi = 90; }
+                else if (jamKe === 'Jam Ke-2') { startTime = '09:30'; endTime = '11:00'; durasi = 90; }
+                else if (jamKe === 'Jam Ke-3') { startTime = '11:15'; endTime = '12:45'; durasi = 90; }
+            } else if (shift === 'Siang') {
+                if (jamKe === 'Jam Ke-1') { startTime = '13:00'; endTime = '14:30'; durasi = 90; }
+                else if (jamKe === 'Jam Ke-2') { startTime = '15:00'; endTime = '16:30'; durasi = 90; }
+                else if (jamKe === 'Jam Ke-3') { startTime = '16:45'; endTime = '18:15'; durasi = 90; }
+            }
+        }
+
+        if (startTime && endTime) {
+            var rentangStr = tanggalStr + ' ' + startTime + ' - ' + tanggalStr + ' ' + endTime;
+            $('#tambah-rentang-waktu').val(rentangStr);
+            $('#tambah-waktu').val(durasi);
+
+            var picker = $('#tambah-rentang-waktu').data('daterangepicker');
+            if (picker) {
+                picker.setStartDate(tanggalStr + ' ' + startTime);
+                picker.setEndDate(tanggalStr + ' ' + endTime);
+            }
+        }
     }
 
     function refresh_topik(){
@@ -466,6 +563,9 @@
                 $('#tambah-poin-kosong').val(data.poin_kosong);
                 $('#tambah-poin-salah').val(data.poin_salah);
                 $('#tambah-rentang-waktu').val(data.rentang_waktu);
+                if(data.rentang_waktu && data.rentang_waktu.length >= 10){
+                    $('#preset-tanggal').val(data.rentang_waktu.substring(0, 10));
+                }
                 $('#tambah-hari').val(data.hari ? data.hari : '');
                 $('#tambah-shift').val(data.shift ? data.shift : '');
                 $('#tambah-jam-ke').val(data.jam_ke ? data.jam_ke : '');
@@ -577,10 +677,14 @@
         $('#tambah-nama').val('');
         $('#tambah-nama-lama').val('');
         $('#tambah-deskripsi').val('');
-        $('#tambah-waktu').val('30');
-        $('#tambah-poin').val('1.00');
+        $('#tambah-waktu').val('90');
+        $('#tambah-poin').val('2.5');
         $('#tambah-poin-kosong').val('0.00');
         $('#tambah-poin-salah').val('0.00');
+        $('#tambah-token').prop("checked", false);
+        $('#tambah-tunjukkan-hasil').prop("checked", true);
+        $('#tambah-detail-hasil').prop("checked", false);
+        $('#preset-tanggal').val('<?php echo date('Y-m-d'); ?>');
         $('#tambah-rentang-waktu').val('<?php if(!empty($rentang_waktu)){ echo $rentang_waktu; } ?>');
         $('#tambah-hari').val('');
         $('#tambah-shift').val('');
@@ -598,8 +702,6 @@
         applyGroupFilters();
         updateGroupSummary();
 
-        $('#tambah-acak-jawaban').prop("checked", true);
-
         $('#soal-tes-id').val('');
         reset_soal();
 
@@ -610,13 +712,35 @@
     $(function(){
         $('#tambah-rentang-waktu').daterangepicker({timePicker: true, timePicker12Hour: false, timePicker24Hour: true, timePickerIncrement: 10, format: 'YYYY-MM-DD HH:mm'});
         
-        // Auto set hari berdasarkan tanggal mulai jika hari belum dipilih
+        // Auto set hari & tanggal saat daterangepicker diubah manual
         $('#tambah-rentang-waktu').on('apply.daterangepicker', function(ev, picker) {
             var namaHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
             var hariTerpilih = namaHari[picker.startDate.day()];
             if(!$('#tambah-hari').val()){
                 $('#tambah-hari').val(hariTerpilih);
             }
+            $('#preset-tanggal').val(picker.startDate.format('YYYY-MM-DD'));
+        });
+
+        // Event listener preset penjadwalan otomatis
+        $('#preset-tanggal').on('change input', function() {
+            var tanggalStr = $(this).val();
+            if (tanggalStr) {
+                var dParts = tanggalStr.split('-');
+                if (dParts.length === 3) {
+                    var dt = new Date(parseInt(dParts[0], 10), parseInt(dParts[1], 10) - 1, parseInt(dParts[2], 10));
+                    var namaHariArr = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+                    var hariOtomatis = namaHariArr[dt.getDay()];
+                    if (hariOtomatis) {
+                        $('#tambah-hari').val(hariOtomatis);
+                    }
+                }
+            }
+            applyPresetJadwal();
+        });
+
+        $('#tambah-hari, #tambah-shift, #tambah-jam-ke').on('change', function() {
+            applyPresetJadwal();
         });
 
         // Inisialisasi tampilan Group Selector

@@ -52,6 +52,8 @@ class Modul_mapel extends Member_Controller {
         
         if($this->form_validation->run() == TRUE){
             $data['modul_nama'] = trim($this->input->post('tambah-nama', true));
+            $durasi = $this->input->post('tambah-durasi', true);
+            $data['modul_durasi'] = !empty($durasi) ? intval($durasi) : 90;
             $data['modul_aktif'] = 1;
 
             if($this->cbt_modul_model->count_by_kolom('modul_nama', $data['modul_nama'])->row()->hasil > 0){
@@ -80,6 +82,7 @@ class Modul_mapel extends Member_Controller {
 				$data['data'] = 1;
 				$data['id'] = $query->modul_id;
 				$data['nama'] = $query->modul_nama;
+                $data['durasi'] = !empty($query->modul_durasi) ? $query->modul_durasi : 90;
                 $data['aktif'] = $query->modul_aktif;
 			}
 		}
@@ -110,6 +113,8 @@ class Modul_mapel extends Member_Controller {
             }else if($pilihan=='simpan'){
 				$nama_asli = $this->input->post('edit-nama-asli', true);
                 $data['modul_nama'] = trim($this->input->post('edit-nama', true));
+                $durasi = $this->input->post('edit-durasi', true);
+                $data['modul_durasi'] = !empty($durasi) ? intval($durasi) : 90;
                 $data['modul_aktif'] = $this->input->post('edit-aktif', true) == '1' ? 1 : 0;
 
                 if($nama_asli != $data['modul_nama'] && $this->cbt_modul_model->count_by_kolom('modul_nama', $data['modul_nama'])->row()->hasil > 0){
@@ -160,6 +165,10 @@ class Modul_mapel extends Member_Controller {
             
 			$record[] = ++$i;
             $record[] = '<b>'.$temp->modul_nama.'</b>';
+
+            // Durasi pengerjaan default
+            $durasi = !empty($temp->modul_durasi) ? $temp->modul_durasi : 90;
+            $record[] = '<span class="badge bg-purple"><i class="fa fa-clock-o"></i> '.$durasi.' Menit</span>';
 
             // Hitung jumlah topik di bawah modul ini
             $jml_topik = $this->cbt_topik_model->count_by_kolom('topik_modul_id', $temp->modul_id)->row()->hasil;

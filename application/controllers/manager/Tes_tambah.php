@@ -37,8 +37,8 @@ class Tes_tambah extends Member_Controller {
         	}
         }
 
-        $tanggal_awal = date('Y-m-d H:i');
-        $tanggal_akhir = date('Y-m-d H:i', strtotime('+ 1 days'));
+        $tanggal_awal = date('Y-m-d 07:30');
+        $tanggal_akhir = date('Y-m-d 09:00');
         
         $data['rentang_waktu'] = $tanggal_awal.' - '.$tanggal_akhir;
 

@@ -38,6 +38,7 @@
                             <tr>
                                 <th style="width: 30px;">No.</th>
                                 <th>Nama Mata Pelajaran / Modul</th>
+                                <th style="width: 130px;">Durasi Ujian</th>
                                 <th style="width: 120px;">Jumlah Topik</th>
                                 <th style="width: 100px;">Status</th>
                                 <th style="width: 80px;">Aksi</th>
@@ -45,6 +46,7 @@
                         </thead>
                         <tbody>
                             <tr>
+                                <td></td>
                                 <td></td>
                                 <td></td>
                                 <td></td>
@@ -74,6 +76,11 @@
                         <input type="text" class="form-control" id="tambah-nama" name="tambah-nama" placeholder="Contoh: Bahasa Indonesia, Matematika, Keahlian TKJ" required autocomplete="off">
                         <p class="help-block" style="font-size: 11px;">Masukkan nama mapel secara jelas. Setelah dibuat, Anda dapat menambahkan topik soal ke dalamnya.</p>
                     </div>
+                    <div class="form-group">
+                        <label>Durasi Pengerjaan Ujian (Menit) <span class="text-red">*</span></label>
+                        <input type="number" class="form-control" id="tambah-durasi" name="tambah-durasi" value="90" min="10" max="300" required>
+                        <p class="help-block" style="font-size: 11px;">Durasi standar ujian untuk mapel ini (misal: 90 menit atau 60 menit).</p>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button>
@@ -102,6 +109,10 @@
                     <div class="form-group">
                         <label>Nama Mata Pelajaran / Modul <span class="text-red">*</span></label>
                         <input type="text" class="form-control" id="edit-nama" name="edit-nama" required autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label>Durasi Pengerjaan Ujian (Menit) <span class="text-red">*</span></label>
+                        <input type="number" class="form-control" id="edit-durasi" name="edit-durasi" value="90" min="10" max="300" required>
                     </div>
                     <div class="form-group">
                         <label>Status</label>
@@ -145,6 +156,7 @@
     function tambah(){
         $('#form-pesan-tambah').html('');
         $('#tambah-nama').val('');
+        $('#tambah-durasi').val('90');
         $("#modal-tambah").modal('show');
         setTimeout(function(){ $('#tambah-nama').focus(); }, 400);
     }
@@ -156,6 +168,7 @@
                 $('#edit-id').val(data.id);
                 $('#edit-nama').val(data.nama);
                 $('#edit-nama-asli').val(data.nama);
+                $('#edit-durasi').val(data.durasi ? data.durasi : 90);
                 $('#edit-aktif').val(data.aktif);
                 $('#form-pesan-edit').html('');
                 $("#modal-edit").modal('show');
@@ -231,6 +244,7 @@
             "aoColumns": [
                 {"bSearchable": false, "bSortable": false, "sWidth":"30px"},
                 {"bSearchable": true, "bSortable": true},
+                {"bSearchable": false, "bSortable": false, "sWidth":"130px"},
                 {"bSearchable": false, "bSortable": false, "sWidth":"120px"},
                 {"bSearchable": false, "bSortable": false, "sWidth":"100px"},
                 {"bSearchable": false, "bSortable": false, "sWidth":"80px"}

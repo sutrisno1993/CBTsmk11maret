@@ -2,6 +2,21 @@
 class Cbt_modul_model extends CI_Model{
 	public $table = 'cbt_modul';
 	
+	function __construct(){
+		parent::__construct();
+		if(!$this->db->field_exists('modul_durasi', $this->table)){
+			$this->load->dbforge();
+			$fields = array(
+				'modul_durasi' => array(
+					'type' => 'INT',
+					'constraint' => 11,
+					'default' => 90,
+					'null' => FALSE
+				)
+			);
+			$this->dbforge->add_column($this->table, $fields);
+		}
+	}
 	
     function save($data){
         $this->db->insert($this->table, $data);
