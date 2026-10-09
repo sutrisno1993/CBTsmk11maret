@@ -41,17 +41,46 @@ class Tes_qr_akses extends Member_Controller {
 		parent::cek_akses($this->kode_menu);
 	}
 	
+    /**
+     * Normalisasi URL Publik: bersihkan query string, /index.php, /welcome, /akses, dan trailing slash
+     */
+    private function normalize_url($url){
+        $url = trim($url);
+        if(empty($url)){
+            return 'http://115.187.31.99';
+        }
+        if(strpos($url, '?') !== false){
+            $url = substr($url, 0, strpos($url, '?'));
+        }
+        $url = preg_replace('/\/index\.php(\/.*)?$/i', '', $url);
+        $url = preg_replace('/\/welcome(\/.*)?$/i', '', $url);
+        $url = preg_replace('/\/akses(\/.*)?$/i', '', $url);
+        $url = rtrim($url, '/');
+        return $url;
+    }
+
+    /**
+     * Ambil URL Akses Publik yang valid dan bersihkan nilai usang di database
+     */
+    private function get_clean_public_url(){
+        $public_url = $this->cbt_konfigurasi_model->get_value('cbt_public_url', 'http://115.187.31.99');
+        
+        // Bersihkan jika masih tersimpan link lama (trycloudflare atau /zyacbtpublic yang memicu 404)
+        if(empty($public_url) || strpos($public_url, 'trycloudflare') !== false || $public_url === 'http://115.187.31.99/zyacbtpublic' || strpos($public_url, 'zyacbtpublic') !== false){
+            $public_url = 'http://115.187.31.99';
+            $this->cbt_konfigurasi_model->set_value('cbt_public_url', $public_url);
+        }
+
+        return $this->normalize_url($public_url);
+    }
+	
     public function index(){
         $data['kode_menu'] = $this->kode_menu;
         $data['url'] = $this->url;
 
-        // Ambil URL Akses Publik (Default: IP Publik Sekolah)
-        $public_url = $this->cbt_konfigurasi_model->get_value('cbt_public_url', 'http://115.187.31.99/zyacbtpublic');
-        if(empty($public_url) || strpos($public_url, 'trycloudflare') !== false){
-            $public_url = 'http://115.187.31.99/zyacbtpublic';
-            $this->cbt_konfigurasi_model->set_value('cbt_public_url', $public_url);
-        }
-        $data['public_url'] = rtrim($public_url, '/');
+        // Ambil URL Akses Publik Bersih
+        $public_url = $this->get_clean_public_url();
+        $data['public_url'] = $public_url;
 
         $token = $this->cbt_konfigurasi_model->get_qr_token(0);
         $data['current_token'] = $token;
@@ -59,7 +88,7 @@ class Tes_qr_akses extends Member_Controller {
         $data['valid_until'] = $this->cbt_konfigurasi_model->get_qr_valid_until();
         
         // Link lengkap yang akan discan siswa (kompatibel dengan semua jenis web server)
-        $data['access_url'] = $data['public_url'] . '/index.php/welcome?qr=' . $token;
+        $data['access_url'] = $public_url . '/index.php/welcome?qr=' . $token;
 
         $this->template->display_admin($this->kelompok.'/tes_qr_akses_view', 'QR Code Akses Siswa', $data);
     }
@@ -68,11 +97,7 @@ class Tes_qr_akses extends Member_Controller {
      * API AJAX untuk sinkronisasi token dan sisa waktu secara live
      */
     function get_qr_status(){
-        $public_url = $this->cbt_konfigurasi_model->get_value('cbt_public_url', 'http://115.187.31.99/zyacbtpublic');
-        if(empty($public_url) || strpos($public_url, 'trycloudflare') !== false){
-            $public_url = 'http://115.187.31.99/zyacbtpublic';
-        }
-        $public_url = rtrim($public_url, '/');
+        $public_url = $this->get_clean_public_url();
 
         $token = $this->cbt_konfigurasi_model->get_qr_token(0);
         $expires_in = $this->cbt_konfigurasi_model->get_qr_expires_in();
@@ -93,23 +118,23 @@ class Tes_qr_akses extends Member_Controller {
     }
 
     /**
-     * Simpan / Perbarui URL Publik (Cloudflare Tunnel atau IP Publik)
+     * Simpan / Perbarui URL Publik (IP Publik atau Domain Sekolah)
      */
     function simpan_public_url(){
         $this->load->library('form_validation');
         $this->form_validation->set_rules('public_url', 'URL Publik', 'required|strip_tags');
 
         if($this->form_validation->run() == TRUE){
-            $public_url = trim($this->input->post('public_url', TRUE));
-            $public_url = rtrim($public_url, '/');
+            $raw_url = trim($this->input->post('public_url', TRUE));
+            $public_url = $this->normalize_url($raw_url);
             
             $this->cbt_konfigurasi_model->set_value('cbt_public_url', $public_url);
 
             $token = $this->cbt_konfigurasi_model->get_qr_token(0);
-            $access_url = $public_url . '/index.php/welcome/akses/' . $token;
+            $access_url = $public_url . '/index.php/welcome?qr=' . $token;
 
             $status['status'] = 1;
-            $status['pesan'] = 'URL Publik berhasil disimpan. QR Code otomatis diperbarui!';
+            $status['pesan'] = 'URL Publik berhasil disimpan: ' . $public_url;
             $status['public_url'] = $public_url;
             $status['access_url'] = $access_url;
         }else{

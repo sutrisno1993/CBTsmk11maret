@@ -173,19 +173,27 @@
                     </p>
                     <form id="form-public-url" onsubmit="savePublicUrl(event)">
                         <div class="form-group">
-                            <label style="font-size: 12px;">URL Publik (Contoh: <code>http://115.187.31.99/zyacbtpublic</code>)</label>
+                            <label style="font-size: 12px;">URL Publik (Contoh: <code>http://115.187.31.99</code>)</label>
                             <div class="input-group">
-                                <span class="input-group-addon"><i class="fa fa-link"></i></span>
-                                <input type="text" id="public_url" name="public_url" class="form-control" value="<?php echo htmlspecialchars($public_url); ?>" placeholder="http://115.187.31.99/zyacbtpublic" required autocomplete="off">
+                                <span class="input-group-addon"><i class="fa fa-globe"></i></span>
+                                <input type="text" id="public_url" name="public_url" class="form-control" value="<?php echo htmlspecialchars($public_url); ?>" placeholder="http://115.187.31.99" required autocomplete="off">
                             </div>
-                            <p class="help-block" style="font-size: 11px;">Pastikan menggunakan awalan <code>http://</code> atau <code>https://</code> tanpa tanda garis miring (slash) di akhir.</p>
+                            <p class="help-block" style="font-size: 11px; margin-bottom: 8px;">Gunakan format <code>http://115.187.31.99</code> (tanpa akhiran slash atau /index.php).</p>
+                            
+                            <div style="margin-top: 6px; display: flex; gap: 5px; flex-wrap: wrap;">
+                                <button type="button" class="btn btn-xs btn-primary" onclick="setPresetUrl('http://115.187.31.99')">
+                                    <i class="fa fa-server"></i> Set ke http://115.187.31.99
+                                </button>
+                                <button type="button" class="btn btn-xs btn-default" onclick="detectBrowserOrigin()">
+                                    <i class="fa fa-crosshairs"></i> Gunakan Alamat Browser Ini
+                                </button>
+                            </div>
                         </div>
-                        <button type="submit" id="btn-save-url" class="btn btn-success btn-sm">
-                            <i class="fa fa-save"></i> Simpan URL Publik
-                        </button>
-                        <button type="button" class="btn btn-default btn-sm pull-right" onclick="resetToLocalUrl()">
-                            <i class="fa fa-undo"></i> Gunakan Localhost / Server Ini
-                        </button>
+                        <div style="margin-top: 15px;">
+                            <button type="submit" id="btn-save-url" class="btn btn-success btn-sm">
+                                <i class="fa fa-save"></i> Simpan URL Publik
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -446,8 +454,23 @@
         });
     }
 
+    function setPresetUrl(targetUrl){
+        $('#public_url').val(targetUrl);
+        $('#form-public-url').submit();
+    }
+
+    function detectBrowserOrigin(){
+        var origin = window.location.origin;
+        // Jika ada pathname subfolder tanpa index.php
+        var path = window.location.pathname.replace(/\/index\.php.*$/i, "").replace(/\/$/, "");
+        var full = origin + path;
+        $('#public_url').val(full);
+        $('#form-public-url').submit();
+    }
+
     function resetToLocalUrl(){
-        $('#public_url').val("<?php echo site_url(); ?>".replace(/\/$/, ""));
+        var base = "<?php echo base_url(); ?>".replace(/\/index\.php.*$/i, "").replace(/\/$/, "");
+        $('#public_url').val(base);
         $('#form-public-url').submit();
     }
 
