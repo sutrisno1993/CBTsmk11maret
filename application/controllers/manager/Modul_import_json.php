@@ -27,10 +27,17 @@ class Modul_import_json extends Member_Controller {
 				'urutan' => 5
 			));
 		}
+		$db_levels = $this->db->get('user_level')->result();
+		$active_levels = array();
+		foreach($db_levels as $lvl_row){
+			$active_levels[] = $lvl_row->level;
+		}
 		foreach(array('admin', 'operator-soal', 'guru') as $lvl){
-			$cek_a = $this->db->where('level', $lvl)->where('kode_menu', $this->kode_menu)->get('user_akses');
-			if($cek_a->num_rows() == 0){
-				$this->db->insert('user_akses', array('level' => $lvl, 'kode_menu' => $this->kode_menu, 'add' => 1, 'edit' => 1));
+			if(in_array($lvl, $active_levels)){
+				$cek_a = $this->db->where('level', $lvl)->where('kode_menu', $this->kode_menu)->get('user_akses');
+				if($cek_a->num_rows() == 0){
+					$this->db->insert('user_akses', array('level' => $lvl, 'kode_menu' => $this->kode_menu, 'add' => 1, 'edit' => 1));
+				}
 			}
 		}
 

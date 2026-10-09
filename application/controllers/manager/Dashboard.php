@@ -29,24 +29,30 @@ class Dashboard extends Member_Controller {
             ));
         }
 
-        // Pastikan guru memiliki akses ke import spreadsheet (Excel) & modul-mapel
-        $cek_g_imp = $this->db->where('level', 'guru')->where('kode_menu', 'modul-import')->get('user_akses');
-        if($cek_g_imp->num_rows() == 0){
-            $this->db->insert('user_akses', array('level' => 'guru', 'kode_menu' => 'modul-import', 'add' => 1, 'edit' => 1));
-        }
-        $cek_g_map = $this->db->where('level', 'guru')->where('kode_menu', 'modul-mapel')->get('user_akses');
-        if($cek_g_map->num_rows() == 0){
-            $this->db->insert('user_akses', array('level' => 'guru', 'kode_menu' => 'modul-mapel', 'add' => 1, 'edit' => 1));
+        // Pastikan guru memiliki akses ke import spreadsheet (Excel) & modul-mapel jika level guru ada
+        $cek_level_guru = $this->db->where('level', 'guru')->get('user_level');
+        if($cek_level_guru->num_rows() > 0){
+            $cek_g_imp = $this->db->where('level', 'guru')->where('kode_menu', 'modul-import')->get('user_akses');
+            if($cek_g_imp->num_rows() == 0){
+                $this->db->insert('user_akses', array('level' => 'guru', 'kode_menu' => 'modul-import', 'add' => 1, 'edit' => 1));
+            }
+            $cek_g_map = $this->db->where('level', 'guru')->where('kode_menu', 'modul-mapel')->get('user_akses');
+            if($cek_g_map->num_rows() == 0){
+                $this->db->insert('user_akses', array('level' => 'guru', 'kode_menu' => 'modul-mapel', 'add' => 1, 'edit' => 1));
+            }
         }
 
-        // Pastikan operator-soal memiliki akses ke import word & modul-mapel
-        $cek_op_word = $this->db->where('level', 'operator-soal')->where('kode_menu', 'modul-import-word')->get('user_akses');
-        if($cek_op_word->num_rows() == 0){
-            $this->db->insert('user_akses', array('level' => 'operator-soal', 'kode_menu' => 'modul-import-word', 'add' => 1, 'edit' => 1));
-        }
-        $cek_op_map = $this->db->where('level', 'operator-soal')->where('kode_menu', 'modul-mapel')->get('user_akses');
-        if($cek_op_map->num_rows() == 0){
-            $this->db->insert('user_akses', array('level' => 'operator-soal', 'kode_menu' => 'modul-mapel', 'add' => 1, 'edit' => 1));
+        // Pastikan operator-soal memiliki akses ke import word & modul-mapel jika level ada
+        $cek_level_op = $this->db->where('level', 'operator-soal')->get('user_level');
+        if($cek_level_op->num_rows() > 0){
+            $cek_op_word = $this->db->where('level', 'operator-soal')->where('kode_menu', 'modul-import-word')->get('user_akses');
+            if($cek_op_word->num_rows() == 0){
+                $this->db->insert('user_akses', array('level' => 'operator-soal', 'kode_menu' => 'modul-import-word', 'add' => 1, 'edit' => 1));
+            }
+            $cek_op_map = $this->db->where('level', 'operator-soal')->where('kode_menu', 'modul-mapel')->get('user_akses');
+            if($cek_op_map->num_rows() == 0){
+                $this->db->insert('user_akses', array('level' => 'operator-soal', 'kode_menu' => 'modul-mapel', 'add' => 1, 'edit' => 1));
+            }
         }
 
         // Pastikan menu modul-import-json terdaftar di user_menu
@@ -63,16 +69,25 @@ class Dashboard extends Member_Controller {
             ));
         }
 
-        // Berikan hak akses modul-import-json ke admin, operator-soal, dan guru
+        // Ambil semua level yang benar-benar ada di tabel user_level
+        $db_levels = $this->db->get('user_level')->result();
+        $active_levels = array();
+        foreach($db_levels as $lvl_row){
+            $active_levels[] = $lvl_row->level;
+        }
+
+        // Berikan hak akses modul-import-json jika level terdaftar
         foreach(array('admin', 'operator-soal', 'guru') as $lvl){
-            $cek_a_json = $this->db->where('level', $lvl)->where('kode_menu', 'modul-import-json')->get('user_akses');
-            if($cek_a_json->num_rows() == 0){
-                $this->db->insert('user_akses', array(
-                    'level' => $lvl,
-                    'kode_menu' => 'modul-import-json',
-                    'add' => 1,
-                    'edit' => 1
-                ));
+            if(in_array($lvl, $active_levels)){
+                $cek_a_json = $this->db->where('level', $lvl)->where('kode_menu', 'modul-import-json')->get('user_akses');
+                if($cek_a_json->num_rows() == 0){
+                    $this->db->insert('user_akses', array(
+                        'level' => $lvl,
+                        'kode_menu' => 'modul-import-json',
+                        'add' => 1,
+                        'edit' => 1
+                    ));
+                }
             }
         }
 
@@ -90,15 +105,8 @@ class Dashboard extends Member_Controller {
             ));
         }
 
-        // Berikan hak akses tes-qr-akses ke semua level yang ada (admin, guru, pengawas, operator, dll)
-        $levels_list = array('admin', 'pengawas', 'guru', 'operator-tes', 'operator-soal');
-        $db_levels = $this->db->get('user_level')->result();
-        foreach($db_levels as $lvl_row){
-            if(!in_array($lvl_row->level, $levels_list)){
-                $levels_list[] = $lvl_row->level;
-            }
-        }
-        foreach($levels_list as $lvl){
+        // Berikan hak akses tes-qr-akses ke SEMUA level yang benar-benar ada di tabel user_level
+        foreach($active_levels as $lvl){
             $cek_a_qr = $this->db->where('level', $lvl)->where('kode_menu', 'tes-qr-akses')->get('user_akses');
             if($cek_a_qr->num_rows() == 0){
                 $this->db->insert('user_akses', array(

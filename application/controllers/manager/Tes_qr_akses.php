@@ -23,9 +23,10 @@ class Tes_qr_akses extends Member_Controller {
             ));
         }
 
-        // Pastikan level admin, pengawas, dan guru memiliki hak akses ke tes-qr-akses
-        $levels = array('admin', 'pengawas', 'guru');
-        foreach($levels as $lvl){
+        // Pastikan semua level yang ada di user_level memiliki hak akses ke tes-qr-akses
+        $db_levels = $this->db->get('user_level')->result();
+        foreach($db_levels as $lvl_row){
+            $lvl = $lvl_row->level;
             $cek_akses = $this->db->where('kode_menu', $this->kode_menu)->where('level', $lvl)->get('user_akses');
             if($cek_akses->num_rows() == 0){
                 $this->db->insert('user_akses', array(
