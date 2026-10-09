@@ -61,4 +61,39 @@ class Cbt_konfigurasi_model extends CI_Model{
 			$this->update('konfigurasi_kode', $kode, array('konfigurasi_isi' => $isi));
 		}
 	}
+
+	/**
+	 * Menghasilkan token dinamis per 1 jam
+	 * @param int $hour_offset (0 = jam ini, -1 = jam sebelumnya, 1 = jam berikutnya)
+	 * @return string token 10 karakter
+	 */
+	function get_qr_token($hour_offset = 0){
+		$salt = $this->get_value('cbt_qr_secret_salt', 'ZYACBT_SMK11MARET_SECURE_QR_SALT_2026');
+		$time_slot = date('Y-m-d-H', strtotime($hour_offset.' hour'));
+		return substr(md5($salt . '_' . $time_slot), 0, 10);
+	}
+
+	/**
+	 * Validasi token QR siswa (mendukung grace period toleransi jam sebelumnya/berikutnya)
+	 * @param string $token
+	 * @return bool
+	 */
+	function is_valid_qr_token($token){
+		if(empty($token)) return false;
+		$token = trim($token);
+		$current = $this->get_qr_token(0);
+		$prev = $this->get_qr_token(-1);
+		$next = $this->get_qr_token(1);
+		return ($token === $current || $token === $prev || $token === $next);
+	}
+
+	/**
+	 * Mendapatkan sisa detik masa berlaku token QR jam berjalan
+	 * @return int detik
+	 */
+	function get_qr_expires_in(){
+		$now = time();
+		$end_of_hour = strtotime(date('Y-m-d H:00:00', strtotime('+1 hour')));
+		return max(0, $end_of_hour - $now);
+	}
 }

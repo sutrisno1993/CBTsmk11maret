@@ -76,6 +76,33 @@ class Dashboard extends Member_Controller {
             }
         }
 
+        // Pastikan menu tes-qr-akses terdaftar di user_menu
+        $cek_m_qr = $this->db->where('kode_menu', 'tes-qr-akses')->get('user_menu');
+        if($cek_m_qr->num_rows() == 0){
+            $this->db->insert('user_menu', array(
+                'tipe' => 1,
+                'parent' => 'tes',
+                'kode_menu' => 'tes-qr-akses',
+                'nama_menu' => 'QR Akses Siswa (Data Mandiri)',
+                'url' => 'manager/tes_qr_akses',
+                'icon' => 'fa fa-qrcode',
+                'urutan' => 6
+            ));
+        }
+
+        // Berikan hak akses tes-qr-akses ke admin, pengawas, dan guru
+        foreach(array('admin', 'pengawas', 'guru') as $lvl){
+            $cek_a_qr = $this->db->where('level', $lvl)->where('kode_menu', 'tes-qr-akses')->get('user_akses');
+            if($cek_a_qr->num_rows() == 0){
+                $this->db->insert('user_akses', array(
+                    'level' => $lvl,
+                    'kode_menu' => 'tes-qr-akses',
+                    'add' => 1,
+                    'edit' => 1
+                ));
+            }
+        }
+
         $this->load->helper('form');
         $this->load->model('cbt_konfigurasi_model');
         $data['nama'] = $this->access->get_nama();

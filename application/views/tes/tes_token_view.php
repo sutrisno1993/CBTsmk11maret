@@ -23,7 +23,8 @@
                     <div class="box-header with-border">
     					<div class="box-title">Generate Token</div>
 						<div class="box-tools pull-right">
-    							<div class="dropdown pull-right">
+                                <a href="<?php echo site_url('manager/tes_qr_akses'); ?>" class="btn btn-primary btn-xs" style="margin-right: 8px;"><i class="fa fa-qrcode"></i> QR Akses Siswa (Data Mandiri)</a>
+    							<div class="dropdown pull-right" style="display: inline-block;">
     								<a style="cursor: pointer;" onclick="manual()">Token Tes Manual</a>
     							</div>
     						</div>

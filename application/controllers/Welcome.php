@@ -48,6 +48,20 @@ class Welcome extends CI_Controller {
 							$data['cbt_keterangan'] = $query_konfigurasi->row()->konfigurasi_isi;
 						}
 
+						// Pengecekan Akses QR Code Dinamis (Data Pribadi)
+						$is_qr_valid = 0;
+						if($this->session->userdata('cbt_qr_access_granted') == 1){
+							$is_qr_valid = 1;
+						}else{
+							$cookie_qr = $this->input->cookie('cbt_qr_pass', TRUE);
+							if(!empty($cookie_qr) && $this->cbt_konfigurasi_model->is_valid_qr_token($cookie_qr)){
+								$is_qr_valid = 1;
+								$this->session->set_userdata('cbt_qr_access_granted', 1);
+							}
+						}
+						$data['is_qr_valid'] = $is_qr_valid;
+						$data['pesan_qr'] = $this->session->flashdata('pesan_qr');
+
 						// Pengaturan Radius GPS Sekolah
 						$data['radius_lock'] = $this->cbt_konfigurasi_model->get_value('cbt_radius_lock', 'tidak');
 						$data['sekolah_lat'] = $this->cbt_konfigurasi_model->get_value('cbt_sekolah_latitude', '-6.175392');
@@ -70,6 +84,38 @@ class Welcome extends CI_Controller {
         }else{
             $this->template->display_user('blokbrowser_view', 'Browser yang didukung');
         }
+	}
+
+	/**
+	 * Endpoint untuk verifikasi scan QR Code dari perangkat siswa
+	 */
+	public function akses($token = null){
+		if(empty($token)){
+			$token = $this->input->get('qr', TRUE);
+		}
+		
+		if(!empty($token) && $this->cbt_konfigurasi_model->is_valid_qr_token($token)){
+			// Token valid: berikan hak akses kuota pribadi ke sesi siswa
+			$this->session->set_userdata('cbt_qr_access_granted', 1);
+			$this->session->set_userdata('cbt_qr_access_token', $token);
+			$this->session->set_userdata('cbt_qr_access_time', time());
+			$this->session->set_userdata('cbt_qr_access_ip', $this->input->ip_address());
+
+			// Simpan cookie sebagai backup selama 3 jam (durasi pengerjaan ujian)
+			$cookie = array(
+				'name'   => 'cbt_qr_pass',
+				'value'  => $token,
+				'expire' => 10800,
+				'path'   => '/'
+			);
+			$this->input->set_cookie($cookie);
+
+			$this->session->set_flashdata('pesan_qr', 'success');
+			redirect('welcome');
+		}else{
+			$this->session->set_flashdata('pesan_qr', 'error');
+			redirect('welcome');
+		}
 	}
 
 	function login(){

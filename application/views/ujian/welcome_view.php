@@ -27,6 +27,23 @@
       			<div class="login-box-body">
         			<p class="login-box-msg">Masukkan Username dan Password</p>
 					
+					<?php if(!empty($pesan_qr) && $pesan_qr == 'success'): ?>
+					<div class="alert alert-success" style="margin-bottom: 15px; padding: 10px 12px; border-radius: 6px; font-size: 12px; line-height: 1.4;">
+						<i class="fa fa-check-circle" style="font-size: 15px;"></i> <b>Akses Kuota Mandiri Terverifikasi!</b><br>
+						<span>Perangkat Anda berhasil diverifikasi via QR Code resmi pengawas. Silakan login untuk memulai ujian.</span>
+					</div>
+					<?php elseif(!empty($pesan_qr) && $pesan_qr == 'error'): ?>
+					<div class="alert alert-danger" style="margin-bottom: 15px; padding: 10px 12px; border-radius: 6px; font-size: 12px; line-height: 1.4;">
+						<i class="fa fa-warning" style="font-size: 15px;"></i> <b>QR Code Kadaluarsa / Tidak Valid!</b><br>
+						<span>Masa berlaku QR Code (1 jam) telah habis. Silakan scan ulang QR Code terbaru dari Pengawas di ruang ujian.</span>
+					</div>
+					<?php elseif(!empty($is_qr_valid)): ?>
+					<div style="margin-bottom: 15px; padding: 8px 12px; border-radius: 6px; font-size: 12px; background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; display: flex; align-items: center; gap: 8px;">
+						<i class="fa fa-qrcode text-green" style="font-size: 16px;"></i>
+						<span><b>Akses Kuota Mandiri Aktif</b> (QR Code Terverifikasi)</span>
+					</div>
+					<?php endif; ?>
+
 					<?php if(isset($radius_lock) && $radius_lock == 'ya' && empty($is_ip_bypass)): ?>
 					<div id="gps-status-box" style="margin-bottom: 15px; padding: 10px 12px; border-radius: 6px; font-size: 12px; background: #eef2ff; color: #3730a3; border: 1px solid #c7d2fe; display: flex; align-items: center; justify-content: space-between;">
 						<div style="display: flex; align-items: center; gap: 8px;">
