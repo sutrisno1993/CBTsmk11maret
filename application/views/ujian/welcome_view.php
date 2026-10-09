@@ -30,17 +30,34 @@
 					<?php if(!empty($pesan_qr) && $pesan_qr == 'success'): ?>
 					<div class="alert alert-success" style="margin-bottom: 15px; padding: 10px 12px; border-radius: 6px; font-size: 12px; line-height: 1.4;">
 						<i class="fa fa-check-circle" style="font-size: 15px;"></i> <b>Akses Kuota Mandiri Terverifikasi!</b><br>
-						<span>Perangkat Anda berhasil diverifikasi via QR Code resmi pengawas. Silakan login untuk memulai ujian.</span>
+						<span>Izin akses perangkat aktif (Maksimal 2 Jam). Silakan login untuk memulai ujian.</span>
+					</div>
+					<?php elseif(!empty($pesan_qr) && $pesan_qr == 'error_2hours'): ?>
+					<div class="alert alert-danger" style="margin-bottom: 15px; padding: 10px 12px; border-radius: 6px; font-size: 12px; line-height: 1.4;">
+						<i class="fa fa-clock-o" style="font-size: 15px;"></i> <b>Batas Waktu Akses 2 Jam Telah Habis!</b><br>
+						<span>Masa berlaku akses perangkat Anda telah selesai. Silakan minta dan pindai QR Code link terbaru dari Proktor / Teknisi di ruang ujian.</span>
 					</div>
 					<?php elseif(!empty($pesan_qr) && $pesan_qr == 'error'): ?>
 					<div class="alert alert-danger" style="margin-bottom: 15px; padding: 10px 12px; border-radius: 6px; font-size: 12px; line-height: 1.4;">
 						<i class="fa fa-warning" style="font-size: 15px;"></i> <b>QR Code Kadaluarsa / Tidak Valid!</b><br>
-						<span>Masa berlaku QR Code (1 jam) telah habis. Silakan scan ulang QR Code terbaru dari Pengawas di ruang ujian.</span>
+						<span>Masa berlaku QR Code telah habis. Silakan scan ulang QR Code terbaru dari Pengawas di ruang ujian.</span>
 					</div>
-					<?php elseif(!empty($is_qr_valid)): ?>
-					<div style="margin-bottom: 15px; padding: 8px 12px; border-radius: 6px; font-size: 12px; background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; display: flex; align-items: center; gap: 8px;">
-						<i class="fa fa-qrcode text-green" style="font-size: 16px;"></i>
-						<span><b>Akses Kuota Mandiri Aktif</b> (QR Code Terverifikasi)</span>
+					<?php elseif(!empty($is_qr_valid) && empty($is_ip_bypass)): ?>
+					<div style="margin-bottom: 15px; padding: 8px 12px; border-radius: 6px; font-size: 12px; background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; display: flex; align-items: center; justify-content: space-between;">
+						<div style="display: flex; align-items: center; gap: 8px;">
+							<i class="fa fa-qrcode text-green" style="font-size: 16px;"></i>
+							<span><b>Akses Kuota Mandiri Aktif</b> (Maks 2 Jam)</span>
+						</div>
+						<?php if(!empty($qr_remaining_seconds)): ?>
+						<span class="badge bg-green" style="font-size: 11px;">
+							Sisa: <?php echo ceil($qr_remaining_seconds / 60); ?> mnt
+						</span>
+						<?php endif; ?>
+					</div>
+					<?php elseif(empty($is_ip_bypass) && empty($is_qr_valid)): ?>
+					<div style="margin-bottom: 15px; padding: 10px 12px; border-radius: 6px; font-size: 12px; background: #fffbeb; color: #92400e; border: 1px solid #fde68a; line-height: 1.4;">
+						<i class="fa fa-info-circle text-yellow" style="font-size: 15px;"></i> <b>Perangkat Belum Scan QR Code:</b><br>
+						<span>Jika menggunakan kuota pribadi, Anda wajib memindai QR Code izin dari Pengawas/Proktor di ruang ujian (berlaku 2 jam).</span>
 					</div>
 					<?php endif; ?>
 

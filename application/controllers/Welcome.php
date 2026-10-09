@@ -48,18 +48,16 @@ class Welcome extends CI_Controller {
 							$data['cbt_keterangan'] = $query_konfigurasi->row()->konfigurasi_isi;
 						}
 
-						// Pengecekan Akses QR Code Dinamis (Data Pribadi)
-						$is_qr_valid = 0;
-						if($this->session->userdata('cbt_qr_access_granted') == 1){
-							$is_qr_valid = 1;
-						}else{
-							$cookie_qr = $this->input->cookie('cbt_qr_pass', TRUE);
-							if(!empty($cookie_qr) && $this->cbt_konfigurasi_model->is_valid_qr_token($cookie_qr)){
-								$is_qr_valid = 1;
-								$this->session->set_userdata('cbt_qr_access_granted', 1);
-							}
-						}
-						$data['is_qr_valid'] = $is_qr_valid;
+						$client_ip = $this->input->ip_address();
+						$ip_bypass_str = $this->cbt_konfigurasi_model->get_value('cbt_sekolah_ip_bypass', '192.168., 10., 172.16., 127.0.0.1');
+						$data['is_ip_bypass'] = $this->check_ip_bypass($client_ip, $ip_bypass_str) ? 1 : 0;
+						$data['client_ip'] = $client_ip;
+
+						// Pengecekan Akses QR Code Dinamis (Maksimal 2 Jam untuk Data Pribadi)
+						$qr_status = $this->get_qr_access_status($client_ip, $data['is_ip_bypass']);
+						$data['qr_status'] = $qr_status;
+						$data['is_qr_valid'] = $qr_status['valid'];
+						$data['qr_remaining_seconds'] = $qr_status['remaining_seconds'];
 						$data['pesan_qr'] = $this->session->flashdata('pesan_qr');
 
 						// Pengaturan Radius GPS Sekolah
@@ -67,11 +65,6 @@ class Welcome extends CI_Controller {
 						$data['sekolah_lat'] = $this->cbt_konfigurasi_model->get_value('cbt_sekolah_latitude', '-6.175392');
 						$data['sekolah_lng'] = $this->cbt_konfigurasi_model->get_value('cbt_sekolah_longitude', '106.827153');
 						$data['sekolah_radius'] = $this->cbt_konfigurasi_model->get_value('cbt_sekolah_radius', '200');
-						
-						$client_ip = $this->input->ip_address();
-						$ip_bypass_str = $this->cbt_konfigurasi_model->get_value('cbt_sekolah_ip_bypass', '192.168., 10., 172.16., 127.0.0.1');
-						$data['is_ip_bypass'] = $this->check_ip_bypass($client_ip, $ip_bypass_str) ? 1 : 0;
-						$data['client_ip'] = $client_ip;
 						
 						$this->template->display_user($this->kelompok.'/welcome_view', 'Selamat Datang', $data);
 					}else{
@@ -87,7 +80,45 @@ class Welcome extends CI_Controller {
 	}
 
 	/**
-	 * Endpoint untuk verifikasi scan QR Code dari perangkat siswa
+	 * Helper untuk memvalidasi batas waktu izin akses data pribadi (Maksimal 2 Jam = 7200 Detik)
+	 */
+	private function get_qr_access_status($client_ip, $is_ip_bypass){
+		if($is_ip_bypass){
+			return array('valid' => 1, 'is_wifi' => 1, 'remaining_seconds' => 7200);
+		}
+
+		$qr_granted = $this->session->userdata('cbt_qr_access_granted');
+		$qr_time = $this->session->userdata('cbt_qr_access_time');
+
+		if(empty($qr_granted) || empty($qr_time)){
+			$cookie_token = $this->input->cookie('cbt_qr_pass', TRUE);
+			$cookie_time = $this->input->cookie('cbt_qr_time', TRUE);
+			if(!empty($cookie_token) && !empty($cookie_time) && $this->cbt_konfigurasi_model->is_valid_qr_token($cookie_token)){
+				$qr_granted = 1;
+				$qr_time = intval($cookie_time);
+				$this->session->set_userdata('cbt_qr_access_granted', 1);
+				$this->session->set_userdata('cbt_qr_access_time', $qr_time);
+			}
+		}
+
+		if(!empty($qr_granted) && !empty($qr_time)){
+			$elapsed = time() - intval($qr_time);
+			if($elapsed <= 7200){ // Maksimal 2 Jam
+				$remaining = 7200 - $elapsed;
+				return array('valid' => 1, 'is_wifi' => 0, 'expired' => 0, 'remaining_seconds' => $remaining);
+			}else{
+				// Melebihi 2 jam! Reset sesi & cookie
+				$this->session->unset_userdata('cbt_qr_access_granted');
+				$this->session->unset_userdata('cbt_qr_access_time');
+				return array('valid' => 0, 'is_wifi' => 0, 'expired' => 1, 'remaining_seconds' => 0);
+			}
+		}
+
+		return array('valid' => 0, 'is_wifi' => 0, 'expired' => 0, 'remaining_seconds' => 0);
+	}
+
+	/**
+	 * Endpoint untuk verifikasi scan QR Code dari perangkat siswa (Izin berlaku 2 Jam)
 	 */
 	public function akses($token = null){
 		if(empty($token)){
@@ -95,20 +126,29 @@ class Welcome extends CI_Controller {
 		}
 		
 		if(!empty($token) && $this->cbt_konfigurasi_model->is_valid_qr_token($token)){
-			// Token valid: berikan hak akses kuota pribadi ke sesi siswa
+			$now = time();
+			// Token valid: berikan hak akses kuota pribadi ke sesi siswa maksimal 2 jam
 			$this->session->set_userdata('cbt_qr_access_granted', 1);
 			$this->session->set_userdata('cbt_qr_access_token', $token);
-			$this->session->set_userdata('cbt_qr_access_time', time());
+			$this->session->set_userdata('cbt_qr_access_time', $now);
 			$this->session->set_userdata('cbt_qr_access_ip', $this->input->ip_address());
 
-			// Simpan cookie sebagai backup selama 3 jam (durasi pengerjaan ujian)
-			$cookie = array(
+			// Simpan cookie selama 2 jam (7200 detik)
+			$cookie_pass = array(
 				'name'   => 'cbt_qr_pass',
 				'value'  => $token,
-				'expire' => 10800,
+				'expire' => 7200,
 				'path'   => '/'
 			);
-			$this->input->set_cookie($cookie);
+			$this->input->set_cookie($cookie_pass);
+
+			$cookie_time = array(
+				'name'   => 'cbt_qr_time',
+				'value'  => strval($now),
+				'expire' => 7200,
+				'path'   => '/'
+			);
+			$this->input->set_cookie($cookie_time);
 
 			$this->session->set_flashdata('pesan_qr', 'success');
 			redirect('welcome');
@@ -125,35 +165,47 @@ class Welcome extends CI_Controller {
         $this->form_validation->set_rules('password', 'Password','required|strip_tags');
         if($this->form_validation->run() == TRUE){
 
+			$client_ip = $this->input->ip_address();
+			$ip_bypass_str = $this->cbt_konfigurasi_model->get_value('cbt_sekolah_ip_bypass', '192.168., 10., 172.16., 127.0.0.1');
+			$is_ip_bypass = $this->check_ip_bypass($client_ip, $ip_bypass_str);
+
+			// Pengecekan Izin Akses Data Pribadi (Wajib Scan QR & Maksimal 2 Jam)
+			$qr_status = $this->get_qr_access_status($client_ip, $is_ip_bypass);
+			if($qr_status['valid'] != 1){
+				$status['status'] = 0;
+				if(!empty($qr_status['expired'])){
+					$status['error'] = '<b>Akses Ditolak: Batas Waktu 2 Jam Telah Habis!</b><br>Masa berlaku akses perangkat Anda (maksimal 2 jam) telah selesai.<br><br>Silakan minta dan pindai QR Code link terbaru dari Proktor / Teknisi di ruang ujian.';
+				}else{
+					$status['error'] = '<b>Akses Ditolak: Izin Akses Belum Terverifikasi!</b><br>Perangkat Anda menggunakan jaringan data pribadi di luar WiFi sekolah. Anda wajib memindai QR Code izin akses yang ditampilkan Pengawas/Proktor di ruang ujian (berlaku maksimal 2 jam).';
+				}
+				echo json_encode($status);
+				return;
+			}
+
 			// Pengecekan Kunci Radius Lokasi GPS Sekolah
 			$radius_lock = $this->cbt_konfigurasi_model->get_value('cbt_radius_lock', 'tidak');
-			if($radius_lock == 'ya'){
-				$client_ip = $this->input->ip_address();
-				$ip_bypass_str = $this->cbt_konfigurasi_model->get_value('cbt_sekolah_ip_bypass', '192.168., 10., 172.16., 127.0.0.1');
+			if($radius_lock == 'ya' && !$is_ip_bypass){
+				$lat_siswa = $this->input->post('latitude', TRUE);
+				$lng_siswa = $this->input->post('longitude', TRUE);
 				
-				if(!$this->check_ip_bypass($client_ip, $ip_bypass_str)){
-					$lat_siswa = $this->input->post('latitude', TRUE);
-					$lng_siswa = $this->input->post('longitude', TRUE);
-					
-					if(empty($lat_siswa) || empty($lng_siswa) || $lat_siswa == '0' || $lng_siswa == '0' || !is_numeric($lat_siswa) || !is_numeric($lng_siswa)){
+				if(empty($lat_siswa) || empty($lng_siswa) || $lat_siswa == '0' || $lng_siswa == '0' || !is_numeric($lat_siswa) || !is_numeric($lng_siswa)){
+					$status['status'] = 0;
+					$status['error'] = '<b>Akses Ditolak: Lokasi GPS Tidak Terdeteksi!</b><br>Ujian hanya dapat diikuti di lingkungan sekolah. Mohon pastikan GPS/Lokasi di HP Anda aktif dan berikan izin akses lokasi pada browser.';
+					echo json_encode($status);
+					return;
+				}
+				
+				$lat_sekolah = (float)$this->cbt_konfigurasi_model->get_value('cbt_sekolah_latitude', '0');
+				$lng_sekolah = (float)$this->cbt_konfigurasi_model->get_value('cbt_sekolah_longitude', '0');
+				$radius_max = (int)$this->cbt_konfigurasi_model->get_value('cbt_sekolah_radius', '200');
+				
+				if($lat_sekolah != 0 && $lng_sekolah != 0){
+					$jarak = $this->calculate_distance((float)$lat_siswa, (float)$lng_siswa, $lat_sekolah, $lng_sekolah);
+					if($jarak > $radius_max){
 						$status['status'] = 0;
-						$status['error'] = '<b>Akses Ditolak: Lokasi GPS Tidak Terdeteksi!</b><br>Ujian hanya dapat diikuti di lingkungan sekolah. Mohon pastikan GPS/Lokasi di HP Anda aktif dan berikan izin akses lokasi pada browser.';
+						$status['error'] = '<b>Akses Ditolak: Di Luar Lingkungan Sekolah!</b><br>Perangkat Anda terdeteksi berada di luar area sekolah.<br>Jarak Anda saat ini: <b>' . round($jarak) . ' meter</b> (Batas Maksimal: ' . $radius_max . ' meter).<br>Silakan masuk ke area sekolah untuk mengikuti ujian.';
 						echo json_encode($status);
 						return;
-					}
-					
-					$lat_sekolah = (float)$this->cbt_konfigurasi_model->get_value('cbt_sekolah_latitude', '0');
-					$lng_sekolah = (float)$this->cbt_konfigurasi_model->get_value('cbt_sekolah_longitude', '0');
-					$radius_max = (int)$this->cbt_konfigurasi_model->get_value('cbt_sekolah_radius', '200');
-					
-					if($lat_sekolah != 0 && $lng_sekolah != 0){
-						$jarak = $this->calculate_distance((float)$lat_siswa, (float)$lng_siswa, $lat_sekolah, $lng_sekolah);
-						if($jarak > $radius_max){
-							$status['status'] = 0;
-							$status['error'] = '<b>Akses Ditolak: Di Luar Lingkungan Sekolah!</b><br>Perangkat Anda terdeteksi berada di luar area sekolah.<br>Jarak Anda saat ini: <b>' . round($jarak) . ' meter</b> (Batas Maksimal: ' . $radius_max . ' meter).<br>Silakan masuk ke area sekolah untuk mengikuti ujian.';
-							echo json_encode($status);
-							return;
-						}
 					}
 				}
 			}

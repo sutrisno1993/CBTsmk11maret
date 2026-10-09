@@ -44,10 +44,10 @@ class Tes_qr_akses extends Member_Controller {
         $data['kode_menu'] = $this->kode_menu;
         $data['url'] = $this->url;
 
-        // Ambil URL Akses Publik (misal: Cloudflare Tunnel atau IP Publik)
-        $public_url = $this->cbt_konfigurasi_model->get_value('cbt_public_url', '');
+        // Ambil URL Akses Publik (Default: Cloudflare Tunnel Sekolah)
+        $public_url = $this->cbt_konfigurasi_model->get_value('cbt_public_url', 'https://made-bible-intent-engines.trycloudflare.com');
         if(empty($public_url)){
-            $public_url = site_url();
+            $public_url = 'https://made-bible-intent-engines.trycloudflare.com';
         }
         $data['public_url'] = rtrim($public_url, '/');
 
@@ -66,9 +66,9 @@ class Tes_qr_akses extends Member_Controller {
      * API AJAX untuk sinkronisasi token dan sisa waktu secara live
      */
     function get_qr_status(){
-        $public_url = $this->cbt_konfigurasi_model->get_value('cbt_public_url', '');
+        $public_url = $this->cbt_konfigurasi_model->get_value('cbt_public_url', 'https://made-bible-intent-engines.trycloudflare.com');
         if(empty($public_url)){
-            $public_url = site_url();
+            $public_url = 'https://made-bible-intent-engines.trycloudflare.com';
         }
         $public_url = rtrim($public_url, '/');
 

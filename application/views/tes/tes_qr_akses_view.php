@@ -90,11 +90,11 @@
 	<div class="row">
         <div class="col-xs-12">
             <div class="callout callout-info" style="margin-bottom: 18px; border-left-width: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
-                <h4><i class="fa fa-signal"></i> Solusi Koneksi Ujian Mandiri (Data Seluler Siswa):</h4>
+                <h4><i class="fa fa-signal"></i> Solusi Koneksi Ujian Mandiri (Data Seluler Siswa - Maks 2 Jam):</h4>
                 <p style="font-size: 13px; line-height: 1.6;">
                     Fitur ini mengatasi kendala <b>WiFi sekolah yang tidak mampu menampung seluruh perangkat siswa sekaligus</b>.
-                    Pengawas cukup menampilkan QR Code di layar proyektor. Siswa memindai QR Code ini menggunakan HP mereka untuk mendapatkan izin akses ujian secara resmi.
-                    <b>QR Code ini dinamis dan otomatis berganti setiap 1 jam demi keamanan.</b>
+                    Pengawas cukup menampilkan QR Code di layar proyektor. Siswa memindai QR Code ini menggunakan HP mereka untuk mendapatkan izin akses ujian secara resmi selama <b>maksimal 2 jam</b>.
+                    <b>QR Code ini dinamis dan otomatis berganti token setiap 1 jam demi keamanan. Setelah 2 jam, siswa wajib meminta/memindai link QR Code terbaru ke proktor atau teknisi.</b>
                 </p>
             </div>
         </div>

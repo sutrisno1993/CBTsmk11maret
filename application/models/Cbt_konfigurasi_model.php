@@ -96,4 +96,26 @@ class Cbt_konfigurasi_model extends CI_Model{
 		$end_of_hour = strtotime(date('Y-m-d H:00:00', strtotime('+1 hour')));
 		return max(0, $end_of_hour - $now);
 	}
+
+	/**
+	 * Cek apakah IP client termasuk jaringan lokal/WiFi sekolah (Bypass)
+	 */
+	function check_ip_bypass($client_ip, $ip_bypass_str = null){
+		if($ip_bypass_str === null){
+			$ip_bypass_str = $this->get_value('cbt_sekolah_ip_bypass', '192.168., 10., 172.16., 127.0.0.1');
+		}
+		if(empty($ip_bypass_str) || empty($client_ip)){
+			return false;
+		}
+		$list = explode(',', $ip_bypass_str);
+		foreach($list as $ip_entry){
+			$ip_entry = trim($ip_entry);
+			if(!empty($ip_entry)){
+				if(strpos($client_ip, $ip_entry) === 0 || $client_ip === $ip_entry){
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 }
