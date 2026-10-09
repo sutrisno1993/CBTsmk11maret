@@ -88,6 +88,7 @@ class Users_model extends CI_Model{
         // Hak akses guru
         $guru_menus = array(
             'guru-ulangan',
+            'tes-qr-akses',
             'modul-topik',
             'modul-daftar',
             'modul-soal',
@@ -113,6 +114,31 @@ class Users_model extends CI_Model{
 	 * mendapatkan hak akses suatu menu
 	 */
 	function cek_akses($kode_menu, $level){
+        if($kode_menu == 'tes-qr-akses'){
+            $cek_m = $this->db->where('kode_menu', 'tes-qr-akses')->get('user_menu');
+            if($cek_m->num_rows() == 0){
+                $this->db->insert('user_menu', array(
+                    'tipe' => 1,
+                    'parent' => 'tes',
+                    'kode_menu' => 'tes-qr-akses',
+                    'nama_menu' => 'QR Akses Siswa (Data Mandiri)',
+                    'url' => 'manager/tes_qr_akses',
+                    'icon' => 'fa fa-qrcode',
+                    'urutan' => 6
+                ));
+            }
+            $cek_a = $this->db->where('level', $level)->where('kode_menu', 'tes-qr-akses')->get('user_akses');
+            if($cek_a->num_rows() == 0){
+                $this->db->insert('user_akses', array(
+                    'level' => $level,
+                    'kode_menu' => 'tes-qr-akses',
+                    'add' => 1,
+                    'edit' => 1
+                ));
+            }
+            return 1;
+        }
+
         if($kode_menu == 'modul-mapel' || $kode_menu == 'modul'){
             $cek_m = $this->db->where('kode_menu', 'modul-mapel')->get('user_menu');
             if($cek_m->num_rows() == 0){
@@ -141,7 +167,7 @@ class Users_model extends CI_Model{
 
         if($level == 'guru'){
             // Pastikan jika menu baru ditambahkan, role guru otomatis tersinkron
-            $cek = $this->db->where('level', 'guru')->where('kode_menu', 'guru-ulangan')->get('user_akses');
+            $cek = $this->db->where('level', 'guru')->where('kode_menu', 'tes-qr-akses')->get('user_akses');
             if($cek->num_rows() == 0){
                 $this->init_guru_role();
             }
@@ -211,13 +237,19 @@ class Users_model extends CI_Model{
             $bank_soal_active = ($kode_menu == 'modul-daftar' && $this->uri->segment(3) != 'panitia') || $kode_menu == 'modul-soal' || $kode_menu == 'modul-import-word' || $kode_menu == 'modul-topik' ? 'active' : '';
             $uh_active = ($kode_menu == 'guru-ulangan' || $kode_menu == 'tes-tambah' || $kode_menu == 'tes-daftar' || $kode_menu == 'tes-token') ? 'active' : '';
             $panitia_active = ($kode_menu == 'modul-daftar' && $this->uri->segment(3) == 'panitia') ? 'active' : '';
+            $qr_active = ($kode_menu == 'tes-qr-akses') ? 'active' : '';
             $hasil_active = ($kode_menu == 'tes-hasil' || $kode_menu == 'tes-evaluasi') ? 'active' : '';
 
             $menu = '
-                <li class="header" style="color: #b8c7ce; font-size: 11px; text-transform: uppercase; padding: 12px 15px 6px 15px; letter-spacing: 0.5px;">PORTAL GURU</li>
+                <li class="header" style="color: #b8c7ce; font-size: 11px; text-transform: uppercase; padding: 12px 15px 6px 15px; letter-spacing: 0.5px;">PORTAL GURU & PENGAWAS</li>
                 <li class="'.$dash_active.'">
                     <a href="'.site_url('manager/dashboard').'">
                         <i class="fa fa-dashboard text-aqua"></i> <span>Dashboard Utama</span>
+                    </a>
+                </li>
+                <li class="'.$qr_active.'">
+                    <a href="'.site_url('manager/tes_qr_akses').'">
+                        <i class="fa fa-qrcode text-purple"></i> <span>QR Akses Kuota Siswa</span>
                     </a>
                 </li>
                 <li class="'.$bank_soal_active.'">

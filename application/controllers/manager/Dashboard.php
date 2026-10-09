@@ -90,8 +90,15 @@ class Dashboard extends Member_Controller {
             ));
         }
 
-        // Berikan hak akses tes-qr-akses ke admin, pengawas, dan guru
-        foreach(array('admin', 'pengawas', 'guru') as $lvl){
+        // Berikan hak akses tes-qr-akses ke semua level yang ada (admin, guru, pengawas, operator, dll)
+        $levels_list = array('admin', 'pengawas', 'guru', 'operator-tes', 'operator-soal');
+        $db_levels = $this->db->get('user_level')->result();
+        foreach($db_levels as $lvl_row){
+            if(!in_array($lvl_row->level, $levels_list)){
+                $levels_list[] = $lvl_row->level;
+            }
+        }
+        foreach($levels_list as $lvl){
             $cek_a_qr = $this->db->where('level', $lvl)->where('kode_menu', 'tes-qr-akses')->get('user_akses');
             if($cek_a_qr->num_rows() == 0){
                 $this->db->insert('user_akses', array(

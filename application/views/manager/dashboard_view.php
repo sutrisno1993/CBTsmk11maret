@@ -151,10 +151,16 @@
                 </div>
                 <div class="box-body" style="padding: 18px 20px;">
                     <div class="row">
-                        <div class="col-md-2 col-sm-4 col-xs-6 quick-btn-box">
+                        <div class="col-md-3 col-sm-6 col-xs-6 quick-btn-box">
+                            <a href="<?php echo site_url('manager/tes_qr_akses'); ?>" class="btn btn-default btn-block quick-action-btn" style="border-color: #fbcfe8; background: #fdf2f8;">
+                                <i class="fa fa-qrcode text-purple" style="font-size: 26px; display: block; margin-bottom: 8px; color: #9333ea;"></i>
+                                <span style="color: #6b21a8; font-weight: 800;">QR Akses Kuota (Proyektor)</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-sm-6 col-xs-6 quick-btn-box">
                             <a href="<?php echo site_url('monitoring_soal'); ?>" target="_blank" class="btn btn-default btn-block quick-action-btn" style="border-color: #93c5fd; background: #f0f9ff;">
-                                <i class="fa fa-share-alt text-primary" style="font-size: 24px; display: block; margin-bottom: 8px;"></i>
-                                <span style="color: #1e3c72; font-weight: 800;">Link Telaah Guru</span>
+                                <i class="fa fa-share-alt text-primary" style="font-size: 26px; display: block; margin-bottom: 8px;"></i>
+                                <span style="color: #1e3c72; font-weight: 800;">Link Telaah Guru (SAS)</span>
                             </a>
                         </div>
                         <div class="col-md-2 col-sm-4 col-xs-6 quick-btn-box">
@@ -173,18 +179,6 @@
                             <a href="<?php echo site_url('manager/peserta_reset'); ?>" class="btn btn-default btn-block quick-action-btn">
                                 <i class="fa fa-refresh text-red" style="font-size: 24px; display: block; margin-bottom: 8px;"></i>
                                 <span>Reset Login</span>
-                            </a>
-                        </div>
-                        <div class="col-md-2 col-sm-4 col-xs-6 quick-btn-box">
-                            <a href="<?php echo site_url('manager/tes_hasil'); ?>" class="btn btn-default btn-block quick-action-btn">
-                                <i class="fa fa-bar-chart text-blue" style="font-size: 24px; display: block; margin-bottom: 8px;"></i>
-                                <span>Rekap Nilai</span>
-                            </a>
-                        </div>
-                        <div class="col-md-2 col-sm-4 col-xs-6 quick-btn-box">
-                            <a href="<?php echo site_url('manager/modul_import_word'); ?>" class="btn btn-default btn-block quick-action-btn">
-                                <i class="fa fa-file-word-o text-purple" style="font-size: 24px; display: block; margin-bottom: 8px;"></i>
-                                <span>Import Word</span>
                             </a>
                         </div>
                     </div>
@@ -377,6 +371,9 @@
                             </p>
                         </div>
                         <div class="col-md-5 col-xs-12 text-right" style="margin-top: 6px;">
+                            <a href="<?php echo site_url('manager/tes_qr_akses'); ?>" class="btn btn-sm btn-purple" style="background: #9333ea; border-color: #7e22ce; color: #fff; font-weight: 700; margin-right: 6px; box-shadow: 0 2px 6px rgba(147,51,234,0.3);">
+                                <i class="fa fa-qrcode"></i> Layar QR Proyektor
+                            </a>
                             <!-- Filter Tabs -->
                             <div class="btn-group btn-group-sm" id="btn-group-filter-ip">
                                 <button type="button" class="btn btn-primary active" onclick="filterMonitoringIp('semua', this)">
