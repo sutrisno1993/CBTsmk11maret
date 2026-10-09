@@ -48,7 +48,7 @@ class Tes_Controller extends CI_Controller{
 			return;
 		}
 
-		// Batasi akses data pribadi / IP Publik maksimal 2 Jam (7200 detik)
+		// Batasi akses data pribadi / IP Publik maksimal 12 Jam (43200 detik)
 		$client_ip = $this->input->ip_address();
 		$is_ip_bypass = $this->cbt_konfigurasi_model->check_ip_bypass($client_ip);
 
@@ -63,8 +63,8 @@ class Tes_Controller extends CI_Controller{
 					$qr_time = intval($cookie_time);
 				}
 			}
-			if(!empty($qr_time) && (time() - intval($qr_time) > 7200)){
-				// Melebihi 2 jam! Logout dan wajib minta link / scan QR baru
+			if(!empty($qr_time) && (time() - intval($qr_time) > 43200)){
+				// Melebihi 12 jam! Logout dan wajib minta link / scan QR baru
 				$this->session->unset_userdata('cbt_qr_access_granted');
 				$this->session->unset_userdata('cbt_qr_access_time');
 				$this->access_tes->logout();

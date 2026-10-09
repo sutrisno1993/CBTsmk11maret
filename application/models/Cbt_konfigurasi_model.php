@@ -63,18 +63,20 @@ class Cbt_konfigurasi_model extends CI_Model{
 	}
 
 	/**
-	 * Menghasilkan token dinamis per 1 jam
-	 * @param int $hour_offset (0 = jam ini, -1 = jam sebelumnya, 1 = jam berikutnya)
+	 * Menghasilkan token dinamis per 12 jam (Shift 00:00 - 12:00 dan 12:00 - 24:00)
+	 * @param int $slot_offset (0 = slot 12-jam ini, -1 = slot sebelumnya, 1 = slot berikutnya)
 	 * @return string token 10 karakter
 	 */
-	function get_qr_token($hour_offset = 0){
+	function get_qr_token($slot_offset = 0){
 		$salt = $this->get_value('cbt_qr_secret_salt', 'ZYACBT_SMK11MARET_SECURE_QR_SALT_2026');
-		$time_slot = date('Y-m-d-H', strtotime($hour_offset.' hour'));
+		$current_time = time() + ($slot_offset * 43200);
+		$slot_hour = (intval(date('H', $current_time)) < 12) ? '00' : '12';
+		$time_slot = date('Y-m-d-', $current_time) . $slot_hour;
 		return substr(md5($salt . '_' . $time_slot), 0, 10);
 	}
 
 	/**
-	 * Validasi token QR siswa (mendukung grace period toleransi jam sebelumnya/berikutnya)
+	 * Validasi token QR siswa (mendukung toleransi slot sebelumnya & berikutnya)
 	 * @param string $token
 	 * @return bool
 	 */
@@ -88,13 +90,31 @@ class Cbt_konfigurasi_model extends CI_Model{
 	}
 
 	/**
-	 * Mendapatkan sisa detik masa berlaku token QR jam berjalan
+	 * Mendapatkan sisa detik masa berlaku token QR slot 12-jam berjalan
 	 * @return int detik
 	 */
 	function get_qr_expires_in(){
 		$now = time();
-		$end_of_hour = strtotime(date('Y-m-d H:00:00', strtotime('+1 hour')));
-		return max(0, $end_of_hour - $now);
+		$hour = intval(date('H'));
+		if($hour < 12){
+			$end_of_slot = strtotime(date('Y-m-d 12:00:00'));
+		}else{
+			$end_of_slot = strtotime(date('Y-m-d 00:00:00', strtotime('+1 day')));
+		}
+		return max(0, $end_of_slot - $now);
+	}
+
+	/**
+	 * Mendapatkan waktu berakhir slot 12-jam berjalan dalam string jam WIB
+	 * @return string
+	 */
+	function get_qr_valid_until(){
+		$hour = intval(date('H'));
+		if($hour < 12){
+			return '12:00:00 WIB (Siang)';
+		}else{
+			return '24:00:00 WIB (Malam)';
+		}
 	}
 
 	/**

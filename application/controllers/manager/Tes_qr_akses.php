@@ -45,17 +45,18 @@ class Tes_qr_akses extends Member_Controller {
         $data['kode_menu'] = $this->kode_menu;
         $data['url'] = $this->url;
 
-        // Ambil URL Akses Publik (Default: Cloudflare Tunnel Sekolah)
-        $public_url = $this->cbt_konfigurasi_model->get_value('cbt_public_url', 'https://made-bible-intent-engines.trycloudflare.com');
-        if(empty($public_url)){
-            $public_url = 'https://made-bible-intent-engines.trycloudflare.com';
+        // Ambil URL Akses Publik (Default: IP Publik Sekolah)
+        $public_url = $this->cbt_konfigurasi_model->get_value('cbt_public_url', 'http://115.187.31.99/zyacbtpublic');
+        if(empty($public_url) || strpos($public_url, 'trycloudflare') !== false){
+            $public_url = 'http://115.187.31.99/zyacbtpublic';
+            $this->cbt_konfigurasi_model->set_value('cbt_public_url', $public_url);
         }
         $data['public_url'] = rtrim($public_url, '/');
 
         $token = $this->cbt_konfigurasi_model->get_qr_token(0);
         $data['current_token'] = $token;
         $data['expires_in'] = $this->cbt_konfigurasi_model->get_qr_expires_in();
-        $data['valid_until'] = date('H:00:00', strtotime('+1 hour')) . ' WIB';
+        $data['valid_until'] = $this->cbt_konfigurasi_model->get_qr_valid_until();
         
         // Link lengkap yang akan discan siswa
         $data['access_url'] = $data['public_url'] . '/index.php/welcome/akses/' . $token;
@@ -67,15 +68,15 @@ class Tes_qr_akses extends Member_Controller {
      * API AJAX untuk sinkronisasi token dan sisa waktu secara live
      */
     function get_qr_status(){
-        $public_url = $this->cbt_konfigurasi_model->get_value('cbt_public_url', 'https://made-bible-intent-engines.trycloudflare.com');
-        if(empty($public_url)){
-            $public_url = 'https://made-bible-intent-engines.trycloudflare.com';
+        $public_url = $this->cbt_konfigurasi_model->get_value('cbt_public_url', 'http://115.187.31.99/zyacbtpublic');
+        if(empty($public_url) || strpos($public_url, 'trycloudflare') !== false){
+            $public_url = 'http://115.187.31.99/zyacbtpublic';
         }
         $public_url = rtrim($public_url, '/');
 
         $token = $this->cbt_konfigurasi_model->get_qr_token(0);
         $expires_in = $this->cbt_konfigurasi_model->get_qr_expires_in();
-        $valid_until = date('H:00:00', strtotime('+1 hour')) . ' WIB';
+        $valid_until = $this->cbt_konfigurasi_model->get_qr_valid_until();
         $access_url = $public_url . '/index.php/welcome/akses/' . $token;
 
         $response = array(

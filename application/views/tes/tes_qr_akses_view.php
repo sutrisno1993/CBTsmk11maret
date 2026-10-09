@@ -90,11 +90,11 @@
 	<div class="row">
         <div class="col-xs-12">
             <div class="callout callout-info" style="margin-bottom: 18px; border-left-width: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
-                <h4><i class="fa fa-signal"></i> Solusi Koneksi Ujian Mandiri (Data Seluler Siswa - Maks 2 Jam):</h4>
+                <h4><i class="fa fa-signal"></i> Solusi Koneksi Ujian Mandiri (Data Seluler Siswa - Maks 12 Jam):</h4>
                 <p style="font-size: 13px; line-height: 1.6;">
                     Fitur ini mengatasi kendala <b>WiFi sekolah yang tidak mampu menampung seluruh perangkat siswa sekaligus</b>.
-                    Pengawas cukup menampilkan QR Code di layar proyektor. Siswa memindai QR Code ini menggunakan HP mereka untuk mendapatkan izin akses ujian secara resmi selama <b>maksimal 2 jam</b>.
-                    <b>QR Code ini dinamis dan otomatis berganti token setiap 1 jam demi keamanan. Setelah 2 jam, siswa wajib meminta/memindai link QR Code terbaru ke proktor atau teknisi.</b>
+                    Pengawas cukup menampilkan QR Code di layar proyektor. Siswa memindai QR Code ini menggunakan HP mereka untuk mendapatkan izin akses ujian secara resmi selama <b>maksimal 12 jam</b>.
+                    <b>QR Code ini dinamis dan berlaku selama 12 jam (Shift Pagi / Siang). Setelah 12 jam, siswa wajib meminta/memindai link QR Code terbaru ke proktor atau pengawas.</b>
                 </p>
             </div>
         </div>
@@ -105,7 +105,7 @@
         <div class="col-md-6 col-sm-12">
             <div class="box box-primary text-center" style="padding-bottom: 15px;">
                 <div class="box-header with-border">
-                    <h3 class="box-title"><i class="fa fa-qrcode text-primary"></i> QR Code Akses Aktif (1 Jam)</h3>
+                    <h3 class="box-title"><i class="fa fa-qrcode text-primary"></i> QR Code Akses Aktif (12 Jam)</h3>
                     <div class="box-tools pull-right">
                         <button type="button" class="btn btn-default btn-xs" onclick="fetchQrStatus(true)" title="Perbarui Status">
                             <i class="fa fa-refresh"></i> Refresh
@@ -169,14 +169,14 @@
                 <div class="box-body">
                     <div id="pesan-public-url"></div>
                     <p style="font-size: 12px; color: #555;">
-                        Masukkan alamat <b>Cloudflare Tunnel</b> atau <b>IP Publik</b> server sekolah Anda di bawah ini agar QR Code yang discan siswa mengarah ke jaringan internet publik:
+                        Masukkan alamat <b>IP Publik</b> atau <b>Domain</b> server sekolah Anda di bawah ini agar QR Code yang discan siswa mengarah ke jaringan internet publik:
                     </p>
                     <form id="form-public-url" onsubmit="savePublicUrl(event)">
                         <div class="form-group">
-                            <label style="font-size: 12px;">URL Publik (Contoh: <code>https://made-bible-intent-engines.trycloudflare.com</code>)</label>
+                            <label style="font-size: 12px;">URL Publik (Contoh: <code>http://115.187.31.99/zyacbtpublic</code>)</label>
                             <div class="input-group">
                                 <span class="input-group-addon"><i class="fa fa-link"></i></span>
-                                <input type="text" id="public_url" name="public_url" class="form-control" value="<?php echo htmlspecialchars($public_url); ?>" placeholder="https://domain-atau-tunnel.com" required autocomplete="off">
+                                <input type="text" id="public_url" name="public_url" class="form-control" value="<?php echo htmlspecialchars($public_url); ?>" placeholder="http://115.187.31.99/zyacbtpublic" required autocomplete="off">
                             </div>
                             <p class="help-block" style="font-size: 11px;">Pastikan menggunakan awalan <code>http://</code> atau <code>https://</code> tanpa tanda garis miring (slash) di akhir.</p>
                         </div>
@@ -225,7 +225,7 @@
                     <button type="button" class="btn btn-warning btn-xs pull-right" onclick="regenerateSalt()">
                         <i class="fa fa-refresh"></i> Rotasi Ulang Token Sekarang
                     </button>
-                    <small class="text-muted"><i class="fa fa-shield"></i> Keamanan waktu 1 jam otomatis aktif.</small>
+                    <small class="text-muted"><i class="fa fa-shield"></i> Keamanan waktu 12 jam otomatis aktif.</small>
                 </div>
             </div>
         </div>
@@ -262,7 +262,7 @@
                 </div>
                 <div style="margin-top: 10px;">
                     <span id="projector-countdown-badge" class="countdown-badge" style="font-size: 16px; padding: 10px 22px;">
-                        <i class="fa fa-clock-o"></i> <span id="projector-countdown-text">Masa berlaku 1 jam</span>
+                        <i class="fa fa-clock-o"></i> <span id="projector-countdown-text">Masa berlaku 12 jam</span>
                     </span>
                 </div>
                 <div style="margin-top: 8px; font-size: 13px; color: #cbd5e1;">
@@ -362,8 +362,12 @@
     }
 
     function formatTime(seconds){
-        var m = Math.floor(seconds / 60);
+        var h = Math.floor(seconds / 3600);
+        var m = Math.floor((seconds % 3600) / 60);
         var s = seconds % 60;
+        if(h > 0){
+            return h + " jam " + (m < 10 ? "0" + m : m) + " mnt " + (s < 10 ? "0" + s : s) + " dtk";
+        }
         return (m < 10 ? "0" + m : m) + " menit " + (s < 10 ? "0" + s : s) + " detik";
     }
 
@@ -375,7 +379,7 @@
             return;
         }
 
-        var text = "Berlaku 1 Jam (Sisa: " + formatTime(expiresInSeconds) + ")";
+        var text = "Berlaku 12 Jam (Sisa: " + formatTime(expiresInSeconds) + ")";
         $('#countdown-text').text(text);
         $('#projector-countdown-text').text(text);
 

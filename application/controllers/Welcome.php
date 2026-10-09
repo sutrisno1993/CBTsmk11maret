@@ -80,11 +80,11 @@ class Welcome extends CI_Controller {
 	}
 
 	/**
-	 * Helper untuk memvalidasi batas waktu izin akses data pribadi (Maksimal 2 Jam = 7200 Detik)
+	 * Helper untuk memvalidasi batas waktu izin akses data pribadi (Maksimal 12 Jam = 43200 Detik)
 	 */
 	private function get_qr_access_status($client_ip, $is_ip_bypass){
 		if($is_ip_bypass){
-			return array('valid' => 1, 'is_wifi' => 1, 'remaining_seconds' => 7200);
+			return array('valid' => 1, 'is_wifi' => 1, 'remaining_seconds' => 43200);
 		}
 
 		$qr_granted = $this->session->userdata('cbt_qr_access_granted');
@@ -103,11 +103,11 @@ class Welcome extends CI_Controller {
 
 		if(!empty($qr_granted) && !empty($qr_time)){
 			$elapsed = time() - intval($qr_time);
-			if($elapsed <= 7200){ // Maksimal 2 Jam
-				$remaining = 7200 - $elapsed;
+			if($elapsed <= 43200){ // Maksimal 12 Jam
+				$remaining = 43200 - $elapsed;
 				return array('valid' => 1, 'is_wifi' => 0, 'expired' => 0, 'remaining_seconds' => $remaining);
 			}else{
-				// Melebihi 2 jam! Reset sesi & cookie
+				// Melebihi 12 jam! Reset sesi & cookie
 				$this->session->unset_userdata('cbt_qr_access_granted');
 				$this->session->unset_userdata('cbt_qr_access_time');
 				return array('valid' => 0, 'is_wifi' => 0, 'expired' => 1, 'remaining_seconds' => 0);
@@ -118,7 +118,7 @@ class Welcome extends CI_Controller {
 	}
 
 	/**
-	 * Endpoint untuk verifikasi scan QR Code dari perangkat siswa (Izin berlaku 2 Jam)
+	 * Endpoint untuk verifikasi scan QR Code dari perangkat siswa (Izin berlaku 12 Jam)
 	 */
 	public function akses($token = null){
 		if(empty($token)){
@@ -127,17 +127,17 @@ class Welcome extends CI_Controller {
 		
 		if(!empty($token) && $this->cbt_konfigurasi_model->is_valid_qr_token($token)){
 			$now = time();
-			// Token valid: berikan hak akses kuota pribadi ke sesi siswa maksimal 2 jam
+			// Token valid: berikan hak akses kuota pribadi ke sesi siswa maksimal 12 jam
 			$this->session->set_userdata('cbt_qr_access_granted', 1);
 			$this->session->set_userdata('cbt_qr_access_token', $token);
 			$this->session->set_userdata('cbt_qr_access_time', $now);
 			$this->session->set_userdata('cbt_qr_access_ip', $this->input->ip_address());
 
-			// Simpan cookie selama 2 jam (7200 detik)
+			// Simpan cookie selama 12 jam (43200 detik)
 			$cookie_pass = array(
 				'name'   => 'cbt_qr_pass',
 				'value'  => $token,
-				'expire' => 7200,
+				'expire' => 43200,
 				'path'   => '/'
 			);
 			$this->input->set_cookie($cookie_pass);
@@ -145,7 +145,7 @@ class Welcome extends CI_Controller {
 			$cookie_time = array(
 				'name'   => 'cbt_qr_time',
 				'value'  => strval($now),
-				'expire' => 7200,
+				'expire' => 43200,
 				'path'   => '/'
 			);
 			$this->input->set_cookie($cookie_time);
@@ -169,14 +169,14 @@ class Welcome extends CI_Controller {
 			$ip_bypass_str = $this->cbt_konfigurasi_model->get_value('cbt_sekolah_ip_bypass', '192.168., 10., 172.16., 127.0.0.1');
 			$is_ip_bypass = $this->check_ip_bypass($client_ip, $ip_bypass_str);
 
-			// Pengecekan Izin Akses Data Pribadi (Wajib Scan QR & Maksimal 2 Jam)
+			// Pengecekan Izin Akses Data Pribadi (Wajib Scan QR & Maksimal 12 Jam)
 			$qr_status = $this->get_qr_access_status($client_ip, $is_ip_bypass);
 			if($qr_status['valid'] != 1){
 				$status['status'] = 0;
 				if(!empty($qr_status['expired'])){
-					$status['error'] = '<b>Akses Ditolak: Batas Waktu 2 Jam Telah Habis!</b><br>Masa berlaku akses perangkat Anda (maksimal 2 jam) telah selesai.<br><br>Silakan minta dan pindai QR Code link terbaru dari Proktor / Teknisi di ruang ujian.';
+					$status['error'] = '<b>Akses Ditolak: Batas Waktu 12 Jam Telah Habis!</b><br>Masa berlaku akses perangkat Anda (maksimal 12 jam) telah selesai.<br><br>Silakan minta dan pindai QR Code link terbaru dari Proktor / Teknisi di ruang ujian.';
 				}else{
-					$status['error'] = '<b>Akses Ditolak: Izin Akses Belum Terverifikasi!</b><br>Perangkat Anda menggunakan jaringan data pribadi di luar WiFi sekolah. Anda wajib memindai QR Code izin akses yang ditampilkan Pengawas/Proktor di ruang ujian (berlaku maksimal 2 jam).';
+					$status['error'] = '<b>Akses Ditolak: Izin Akses Belum Terverifikasi!</b><br>Perangkat Anda menggunakan jaringan data pribadi di luar WiFi sekolah. Anda wajib memindai QR Code izin akses yang ditampilkan Pengawas/Proktor di ruang ujian (berlaku maksimal 12 jam).';
 				}
 				echo json_encode($status);
 				return;
