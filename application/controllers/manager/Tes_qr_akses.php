@@ -58,8 +58,8 @@ class Tes_qr_akses extends Member_Controller {
         $data['expires_in'] = $this->cbt_konfigurasi_model->get_qr_expires_in();
         $data['valid_until'] = $this->cbt_konfigurasi_model->get_qr_valid_until();
         
-        // Link lengkap yang akan discan siswa
-        $data['access_url'] = $data['public_url'] . '/index.php/welcome/akses/' . $token;
+        // Link lengkap yang akan discan siswa (kompatibel dengan semua jenis web server)
+        $data['access_url'] = $data['public_url'] . '/index.php/welcome?qr=' . $token;
 
         $this->template->display_admin($this->kelompok.'/tes_qr_akses_view', 'QR Code Akses Siswa', $data);
     }
@@ -77,7 +77,7 @@ class Tes_qr_akses extends Member_Controller {
         $token = $this->cbt_konfigurasi_model->get_qr_token(0);
         $expires_in = $this->cbt_konfigurasi_model->get_qr_expires_in();
         $valid_until = $this->cbt_konfigurasi_model->get_qr_valid_until();
-        $access_url = $public_url . '/index.php/welcome/akses/' . $token;
+        $access_url = $public_url . '/index.php/welcome?qr=' . $token;
 
         $response = array(
             'status' => 1,

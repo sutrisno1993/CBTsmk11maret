@@ -36,6 +36,27 @@ class Welcome extends CI_Controller {
 				}
 				if($akses_cbt==1){
 					if(!$this->access_tes->is_login()){
+						// Verifikasi instan jika siswa mengakses URL dengan parameter QR (?qr=TOKEN atau /welcome/akses/TOKEN)
+						$token_input = $this->input->get('qr', TRUE);
+						if(empty($token_input) && $this->uri->segment(2) == 'akses'){
+							$token_input = $this->uri->segment(3);
+						}
+						if(!empty($token_input)){
+							if($this->cbt_konfigurasi_model->is_valid_qr_token($token_input)){
+								$now = time();
+								$this->session->set_userdata('cbt_qr_access_granted', 1);
+								$this->session->set_userdata('cbt_qr_access_token', $token_input);
+								$this->session->set_userdata('cbt_qr_access_time', $now);
+								$this->session->set_userdata('cbt_qr_access_ip', $this->input->ip_address());
+
+								$this->input->set_cookie(array('name' => 'cbt_qr_pass', 'value' => $token_input, 'expire' => 43200, 'path' => '/'));
+								$this->input->set_cookie(array('name' => 'cbt_qr_time', 'value' => strval($now), 'expire' => 43200, 'path' => '/'));
+								$this->session->set_flashdata('pesan_qr', 'success');
+							}else{
+								$this->session->set_flashdata('pesan_qr', 'error');
+							}
+						}
+
 						$data['link_login_operator'] = "tidak";
 						$query_konfigurasi = $this->cbt_konfigurasi_model->get_by_kolom_limit('konfigurasi_kode', 'link_login_operator', 1);
 						if($query_konfigurasi->num_rows()>0){
@@ -53,7 +74,7 @@ class Welcome extends CI_Controller {
 						$data['is_ip_bypass'] = $this->check_ip_bypass($client_ip, $ip_bypass_str) ? 1 : 0;
 						$data['client_ip'] = $client_ip;
 
-						// Pengecekan Akses QR Code Dinamis (Maksimal 2 Jam untuk Data Pribadi)
+						// Pengecekan Akses QR Code Dinamis (Maksimal 12 Jam untuk Data Pribadi)
 						$qr_status = $this->get_qr_access_status($client_ip, $data['is_ip_bypass']);
 						$data['qr_status'] = $qr_status;
 						$data['is_qr_valid'] = $qr_status['valid'];
