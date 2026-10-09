@@ -178,7 +178,8 @@
           showpassword();
         });
         
-        $('#form-login').submit(function(){
+        $('#form-login').submit(function(e){
+            e.preventDefault();
             if(isRadiusLock && !isIpBypass){
                 var lat = $('#latitude').val();
                 var lng = $('#longitude').val();
@@ -191,27 +192,32 @@
 
             $("#modal-proses").modal('show');
             $.ajax({
-              url:"<?php echo site_url(); ?>/welcome/login",
-      			    type:"POST",
-      			    data:$('#form-login').serialize(),
-      			    cache: false,
-       		        success:function(respon){
-          		    	var obj = $.parseJSON(respon);
-       		            if(obj.status==1){
-       		                window.open("<?php echo site_url(); ?>/tes_dashboard","_self");
-           		        }else{
+                url:"<?php echo site_url('welcome/login'); ?>",
+                type:"POST",
+                data:$('#form-login').serialize(),
+                cache: false,
+                success:function(respon){
+                    try {
+                        var obj = typeof respon === 'object' ? respon : $.parseJSON(respon);
+                        if(obj.status==1){
+                            window.open("<?php echo site_url('tes_dashboard'); ?>","_self");
+                        }else{
                             $('#form-pesan').html(pesan_err(obj.error));
                             $("#modal-proses").modal('hide');
                             $('#username').focus();   
-           		        }
-          			},
-					error: function(request, status, errorThrown) {
-						$("#modal-proses").modal('hide');
-						$('#form-pesan').html(pesan_err("Terjadi Kesalahan Sistem. Silahkan hubungi Administrator.<br/> "+errorThrown));
-					}
-       		});
+                        }
+                    } catch(e) {
+                        $("#modal-proses").modal('hide');
+                        $('#form-pesan').html(pesan_err("Gagal memproses respon server: " + respon));
+                    }
+                },
+                error: function(request, status, errorThrown) {
+                    $("#modal-proses").modal('hide');
+                    $('#form-pesan').html(pesan_err("Terjadi Kesalahan Sistem. Silahkan hubungi Administrator.<br/> "+errorThrown));
+                }
+            });
             
-       		return false;
+            return false;
         });    
     });
 </script>

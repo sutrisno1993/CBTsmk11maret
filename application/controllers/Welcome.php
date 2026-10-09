@@ -11,10 +11,10 @@ class Welcome extends CI_Controller {
 
 	function __construct(){
 		parent:: __construct();
+		$this->load->model('cbt_user_model');
 		$this->load->model('cbt_konfigurasi_model');
 		$this->load->library('access_tes');
 		$this->load->library('user_agent');
-		$this->load->model('cbt_konfigurasi_model');
 	}
     
 	public function index(){
@@ -182,12 +182,12 @@ class Welcome extends CI_Controller {
 				return;
 			}
 
+			$lat_siswa = $this->input->post('latitude', TRUE);
+			$lng_siswa = $this->input->post('longitude', TRUE);
+
 			// Pengecekan Kunci Radius Lokasi GPS Sekolah
 			$radius_lock = $this->cbt_konfigurasi_model->get_value('cbt_radius_lock', 'tidak');
 			if($radius_lock == 'ya' && !$is_ip_bypass){
-				$lat_siswa = $this->input->post('latitude', TRUE);
-				$lng_siswa = $this->input->post('longitude', TRUE);
-				
 				if(empty($lat_siswa) || empty($lng_siswa) || $lat_siswa == '0' || $lng_siswa == '0' || !is_numeric($lat_siswa) || !is_numeric($lng_siswa)){
 					$status['status'] = 0;
 					$status['error'] = '<b>Akses Ditolak: Lokasi GPS Tidak Terdeteksi!</b><br>Ujian hanya dapat diikuti di lingkungan sekolah. Mohon pastikan GPS/Lokasi di HP Anda aktif dan berikan izin akses lokasi pada browser.';
@@ -243,14 +243,21 @@ class Welcome extends CI_Controller {
 				if($hasil==1){
 					$result = $this->cbt_user_model->get_by_username($username);
 					
-					// Simpan IP & Koordinat GPS ke database cbt_user
+					// Simpan data login ke database cbt_user secara aman
 					$data_login = array(
 						'user_login' => 1,
-						'user_login_date' => date('Y-m-d'),
-						'user_ip' => $client_ip,
-						'user_lat' => $lat_siswa,
-						'user_lng' => $lng_siswa
+						'user_login_date' => date('Y-m-d')
 					);
+					if($this->db->field_exists('user_ip', 'cbt_user')){
+						$data_login['user_ip'] = $client_ip;
+					}
+					if(!empty($lat_siswa) && $this->db->field_exists('user_lat', 'cbt_user')){
+						$data_login['user_lat'] = $lat_siswa;
+					}
+					if(!empty($lng_siswa) && $this->db->field_exists('user_lng', 'cbt_user')){
+						$data_login['user_lng'] = $lng_siswa;
+					}
+
 					if(!empty($username)){
 						$this->cbt_user_model->update('user_name', $username, $data_login);
 					}
@@ -262,8 +269,8 @@ class Welcome extends CI_Controller {
 					$this->session->set_userdata('cbt_tes_nama',stripslashes($result->user_firstname));
 					$this->session->set_userdata('cbt_tes_group',$result->grup_nama);
 					$this->session->set_userdata('cbt_tes_group_id',$result->grup_id);
-					$this->session->set_userdata('cbt_tes_lat', $lat_siswa);
-					$this->session->set_userdata('cbt_tes_lng', $lng_siswa);
+					$this->session->set_userdata('cbt_tes_lat', !empty($lat_siswa) ? $lat_siswa : '');
+					$this->session->set_userdata('cbt_tes_lng', !empty($lng_siswa) ? $lng_siswa : '');
 					$this->session->set_userdata('cbt_tes_ip', $client_ip);
 					
 					$status['status'] = 1;
