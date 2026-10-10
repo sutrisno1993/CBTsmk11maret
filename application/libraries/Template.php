@@ -13,12 +13,11 @@
             if(empty($data['kode_menu'])){
                 $data['kode_menu'] = 'KOSONG'; 
             }
-            //$data['site_name']=$this->_ci->config->item('site_name');
 			$query = $this->_ci->cbt_konfigurasi_model->get_by_kolom_limit('konfigurasi_kode', 'cbt_nama', 1);
-			if($query->num_rows()>0){
+			if($query->num_rows()>0 && !empty($query->row()->konfigurasi_isi) && stripos($query->row()->konfigurasi_isi, 'zya') === false && $query->row()->konfigurasi_isi !== 'Computer Based-Test'){
 				$data['site_name']=$query->row()->konfigurasi_isi;
 			}else{
-				$data['site_name']=$this->_ci->config->item('site_name');
+				$data['site_name']='SMART-CBT';
 			}
 			$data['site_version']=$this->_ci->config->item('site_version');
             $data['nama']=$this->_ci->access->get_nama();
@@ -29,12 +28,11 @@
 		}
 		
 		function display_user($template, $title, $data=null){
-			//$data['site_name']=$this->_ci->config->item('site_name');
 			$query = $this->_ci->cbt_konfigurasi_model->get_by_kolom_limit('konfigurasi_kode', 'cbt_nama', 1);
-			if($query->num_rows()>0){
+			if($query->num_rows()>0 && !empty($query->row()->konfigurasi_isi) && stripos($query->row()->konfigurasi_isi, 'zya') === false && $query->row()->konfigurasi_isi !== 'Computer Based-Test'){
 				$data['site_name']=$query->row()->konfigurasi_isi;
 			}else{
-				$data['site_name']=$this->_ci->config->item('site_name');
+				$data['site_name']='SMART-CBT';
 			}
 			$data['site_version']=$this->_ci->config->item('site_version');
 			$data['content']=$this->_ci->load->view($template,$data,true);
@@ -43,12 +41,11 @@
 		}
 
 		function display_tes($template, $title, $data=null){
-			//$data['site_name']=$this->_ci->config->item('site_name');
 			$query = $this->_ci->cbt_konfigurasi_model->get_by_kolom_limit('konfigurasi_kode', 'cbt_nama', 1);
-			if($query->num_rows()>0){
+			if($query->num_rows()>0 && !empty($query->row()->konfigurasi_isi) && stripos($query->row()->konfigurasi_isi, 'zya') === false && $query->row()->konfigurasi_isi !== 'Computer Based-Test'){
 				$data['site_name']=$query->row()->konfigurasi_isi;
 			}else{
-				$data['site_name']=$this->_ci->config->item('site_name');
+				$data['site_name']='SMART-CBT';
 			}
 			$data['site_version']=$this->_ci->config->item('site_version');
 			$data['content']=$this->_ci->load->view($template,$data,true);

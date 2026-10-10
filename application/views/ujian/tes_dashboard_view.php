@@ -1,51 +1,61 @@
-<div class="container">
-	<!-- Content Header (Page header) -->
-    <section class="content-header">
-    	<h1>
-    		SELAMAT DATANG <?php if(!empty($nama)){ echo $nama; } if(!empty($group)){ echo ' | '.$group; } ?>
-            <small>di Ujian Online Berbasis Komputer</small>
-        </h1>
-        <ol class="breadcrumb">
-        	<li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
-            <li class="active">dashboard</li>
-        </ol>
-	</section>
+<div class="container" style="padding-top: 15px;">
+    <!-- Banner Sambutan Peserta Ujian -->
+    <div style="background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); border-radius: 14px; padding: 22px 26px; color: #fff; margin-bottom: 22px; box-shadow: 0 4px 16px rgba(30, 58, 138, 0.22);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+            <div>
+                <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #93c5fd; font-weight: 700; background: rgba(255,255,255,0.12); padding: 3px 10px; border-radius: 20px;">
+                    Peserta Ujian SMART-CBT
+                </span>
+                <h2 style="margin: 8px 0 0 0; font-size: 22px; font-weight: 800; color: #ffffff; letter-spacing: -0.3px;">
+                    <?php if(!empty($nama)){ echo htmlspecialchars($nama); }else{ echo 'Peserta Ujian'; } ?>
+                </h2>
+                <div style="font-size: 13px; color: #cbd5e1; margin-top: 4px; font-weight: 500;">
+                    <i class="fa fa-users" style="margin-right: 5px; color: #93c5fd;"></i> <?php if(!empty($group)){ echo htmlspecialchars($group); }else{ echo 'Peserta'; } ?>
+                </div>
+            </div>
+            <div>
+                <span class="badge" style="background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.3); font-size: 13px; padding: 8px 16px; border-radius: 20px; font-weight: 600;">
+                    <i class="fa fa-check-circle" style="color: #4ade80; margin-right: 5px;"></i> Status: Siap Mengikuti Ujian
+                </span>
+            </div>
+        </div>
+    </div>
 
 	<!-- Main content -->
-    <section class="content">
+    <section class="content" style="padding: 0;">
 		<?php
 			if(!empty($informasi)){
 				?>
-				<div class="callout callout-info">
-                    <h4>Informasi</h4>
-                    <?php 
-					echo $informasi
-					?>
+				<div class="callout callout-info" style="border-radius: 10px; margin-bottom: 20px;">
+                    <h4 style="margin-top: 0; font-weight: 700;"><i class="fa fa-info-circle"></i> Pengumuman Ujian</h4>
+                    <?php echo $informasi; ?>
                 </div>
 				<?php
 			}else{
 				?>
-				<div class="callout callout-info">
-					<h4>Informasi</h4>
-					<p>Silahkan pilih Tes yang diikuti dari daftar tes yang tersedia dibawah ini. Apabila tes tidak muncul, silahkan menghubungi Operator yang bertugas.</p>
+				<div class="callout callout-info" style="border-radius: 10px; margin-bottom: 20px;">
+					<h4 style="margin-top: 0; font-weight: 700;"><i class="fa fa-info-circle"></i> Petunjuk Ujian</h4>
+					<p style="margin: 0; font-size: 13.5px;">Silahkan pilih Tes yang akan diikuti pada tabel di bawah ini. Jika tes belum muncul, silakan tunggu pengawas mengaktifkan jadwal atau klik tombol Refresh pada browser.</p>
 				</div>
 				<?php
 			}
 		?>
-        <div class="box box-success box-solid">
-            <div class="box-header with-border">
-                <h3 class="box-title">Daftar Tes</h3>
+        <div class="box box-success box-solid" style="border-radius: 12px; overflow: hidden;">
+            <div class="box-header with-border" style="padding: 14px 20px;">
+                <h3 class="box-title" style="font-size: 16px; font-weight: 700;">
+                    <i class="fa fa-list-alt" style="margin-right: 6px;"></i> Daftar Tes yang Tersedia
+                </h3>
             </div><!-- /.box-header -->
-            <div class="box-body">
-                <table id="table-tes" class="table table-bordered table-hover">
+            <div class="box-body" style="padding: 18px 20px;">
+                <table id="table-tes" class="table table-bordered table-hover" style="font-size: 13.5px;">
                     <thead>
-                        <tr>
-                            <th>No.</th>
-                            <th class="all">Tes</th>
-                            <th>Waktu Mulai Tes</th>
-                            <th>Waktu Selesai Tes</th>
-                            <th>Status</th>
-                            <th class="all">Action</th>
+                        <tr style="background: #f8fafc; color: #1e293b;">
+                            <th style="width: 35px; text-align: center;">No.</th>
+                            <th class="all">Nama Tes</th>
+                            <th>Mulai Tes</th>
+                            <th>Selesai Tes</th>
+                            <th style="text-align: center;">Status</th>
+                            <th class="all" style="text-align: center; width: 90px;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>

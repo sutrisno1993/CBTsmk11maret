@@ -1,17 +1,20 @@
 <div class="container">
 	<!-- Content Header (Page header) -->
-    <section class="content-header">
-        <h1>
-            Tes : <?php if(!empty($tes_name)){ echo $tes_name; } ?>
-        </h1>
-        <div class="breadcrumb">
-            <img src="<?php echo base_url(); ?>public/images/zoom.png" style="cursor: pointer;" height="20" onclick="zoomnormal()" title="Klik ukuran font normal" />&nbsp;&nbsp;
-            <img src="<?php echo base_url(); ?>public/images/zoom.png" style="cursor: pointer;" height="26" onclick="zoombesar()" title="Klik ukuran font lebih besar" />
+    <section class="content-header" style="padding: 15px 0 12px 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <h1 style="font-size: 18px; font-weight: 800; color: #0f172a; margin: 0;">
+                <i class="fa fa-pencil-square-o" style="color: #2563eb; margin-right: 6px;"></i> Mata Uji: <?php if(!empty($tes_name)){ echo htmlspecialchars($tes_name); } ?>
+            </h1>
+            <div class="breadcrumb" style="position: static; float: none; background: transparent; padding: 0; margin: 0; display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 12px; color: #64748b; font-weight: 600;">Font:</span>
+                <button type="button" class="btn btn-xs btn-default" onclick="zoomnormal()" title="Ukuran Font Normal" style="border-radius: 6px; font-weight: bold; padding: 3px 10px;">A</button>
+                <button type="button" class="btn btn-xs btn-primary" onclick="zoombesar()" title="Ukuran Font Lebih Besar" style="border-radius: 6px; font-weight: bold; padding: 3px 10px; font-size: 13px;">A+</button>
+            </div>
         </div>
     </section>
 
 	<!-- Main content -->
-    <section class="content">
+    <section class="content" style="padding: 0;">
     	<div class="row">
         <?php echo form_open('tes_kerjakan/simpan_jawaban','id="form-kerjakan"')?>
             <input type="hidden" name="tes-id" id="tes-id" value="<?php if(!empty($tes_id)){ echo $tes_id; } ?>">
@@ -20,41 +23,66 @@
             <input type="hidden" name="tes-soal-nomor" id="tes-soal-nomor"  value="<?php if(!empty($tes_soal_nomor)){ echo $tes_soal_nomor; } ?>">
             <input type="hidden" name="tes-soal-jml" id="tes-soal-jml" value="<?php if(!empty($tes_soal_jml)){ echo $tes_soal_jml; } ?>">
             <input type="hidden" name="tes-soal-ragu" id="tes-soal-ragu" value="<?php if(!empty($tes_ragu)){ echo $tes_ragu; } ?>">
-    		<div class="box box-success box-solid">
-                <div class="box-header with-border">
-                    <h3 class="box-title">Soal <span id="judul-soal"><?php if(!empty($tes_soal_nomor)){ echo 'ke '.$tes_soal_nomor; } ?></span></h3>
-                    <div class="box-tools pull-right">
-                        <div class="pull-right">
-                            <div id="sisa-waktu"></div>
-                        </div>
+    		<div class="box box-success box-solid" style="border-radius: 12px; overflow: hidden; margin-bottom: 20px;">
+                <div class="box-header with-border" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 18px;">
+                    <h3 class="box-title" style="font-size: 16px; font-weight: 700; margin: 0;">
+                        <i class="fa fa-question-circle" style="margin-right: 6px;"></i> Soal <span id="judul-soal"><?php if(!empty($tes_soal_nomor)){ echo 'Nomor '.$tes_soal_nomor; } ?></span>
+                    </h3>
+                    <div class="box-tools pull-right" style="position: static; margin: 0;">
+                        <div id="sisa-waktu"></div>
                     </div>
                 </div><!-- /.box-header -->
-                <div class="box-body">
-                    <div id="isi-tes-soal" style="font-size: 15px;">
+                <div class="box-body" style="padding: 24px 20px;">
+                    <div id="isi-tes-soal" style="font-size: 15.5px; line-height: 1.7; color: #1e293b;">
                         <?php if(!empty($tes_soal)){ echo $tes_soal; } ?>
                     </div>
                 </div><!-- /.box-body -->
-                <div class="box-footer">
-                    <button type="button" class="btn btn-default hide" id="btn-sebelumnya">Soal Sebelumnya</button>&nbsp;&nbsp;&nbsp;
-                    <div class="btn btn-warning" id="btn-ragu" onclick="ragu()">
-                        <input type="checkbox" style="width:10px;height:10px;" name="btn-ragu-checkbox" id="btn-ragu-checkbox" <?php if(!empty($tes_ragu)){ echo "checked"; } ?> /> Ragu-ragu
-                    </div>&nbsp;&nbsp;&nbsp;
-                    <button type="button" class="btn btn-default" id="btn-selanjutnya">Soal Selanjutnya</button>
+                <div class="box-footer" style="padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <button type="button" class="btn btn-default hide" id="btn-sebelumnya" style="border-radius: 8px; padding: 8px 18px; font-weight: 600;">
+                            <i class="fa fa-chevron-left" style="margin-right: 5px;"></i> Soal Sebelumnya
+                        </button>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <div class="btn btn-warning" id="btn-ragu" onclick="ragu()" style="border-radius: 8px; padding: 8px 18px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+                            <input type="checkbox" style="width: 15px; height: 15px; margin: 0;" name="btn-ragu-checkbox" id="btn-ragu-checkbox" <?php if(!empty($tes_ragu)){ echo "checked"; } ?> /> 
+                            <span>Ragu-ragu</span>
+                        </div>
+                        <button type="button" class="btn btn-primary" id="btn-selanjutnya" style="border-radius: 8px; padding: 8px 22px; font-weight: 700;">
+                            Soal Selanjutnya <i class="fa fa-chevron-right" style="margin-left: 5px;"></i>
+                        </button>
+                    </div>
                 </div>
             </div><!-- /.box -->
         </form>
     	</div>
         <div class="row">
-            <div class="box box-success box-solid">
-                <div class="box-header with-border">
-                    <h3 class="box-title">Daftar Soal</h3>
+            <div class="box box-success box-solid" style="border-radius: 12px; overflow: hidden; margin-bottom: 30px;">
+                <div class="box-header with-border" style="padding: 12px 18px;">
+                    <h3 class="box-title" style="font-size: 15px; font-weight: 700;">
+                        <i class="fa fa-th" style="margin-right: 6px;"></i> Lembar Jawaban &amp; Navigasi Nomor Soal
+                    </h3>
                 </div><!-- /.box-header -->
-                <div class="box-body">
-                    <?php if(!empty($tes_daftar_soal)){ echo $tes_daftar_soal; } ?>
-                    <p class="help-block">Soal yang sudah dijawab akan berwarna Biru.</p>
+                <div class="box-body" style="padding: 18px;">
+                    <div style="line-height: 2.2;">
+                        <?php if(!empty($tes_daftar_soal)){ echo $tes_daftar_soal; } ?>
+                    </div>
+                    <div style="margin-top: 14px; font-size: 12px; color: #64748b; display: flex; gap: 16px; flex-wrap: wrap; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 12px;">
+                        <span style="display: flex; align-items: center; gap: 6px;">
+                            <span style="display:inline-block; width:13px; height:13px; background:#2563eb; border-radius:3px;"></span> Sudah Dijawab
+                        </span>
+                        <span style="display: flex; align-items: center; gap: 6px;">
+                            <span style="display:inline-block; width:13px; height:13px; background:#f59e0b; border-radius:3px;"></span> Ragu-ragu
+                        </span>
+                        <span style="display: flex; align-items: center; gap: 6px;">
+                            <span style="display:inline-block; width:13px; height:13px; background:#ffffff; border:1px solid #cbd5e1; border-radius:3px;"></span> Belum Dijawab
+                        </span>
+                    </div>
                 </div><!-- /.box-body -->
-                <div class="box-footer">
-                    <button class="btn btn-default pull-right" id="btn-hentikan">Hentikan Tes</button>
+                <div class="box-footer" style="padding: 14px 18px; text-align: right;">
+                    <button class="btn btn-default" id="btn-hentikan" style="border-radius: 8px; font-weight: 600; padding: 8px 20px; border-color: #cbd5e1;">
+                        <i class="fa fa-flag-checkered" style="color: #ef4444; margin-right: 5px;"></i> Selesaikan Ujian
+                    </button>
                 </div>
             </div><!-- /.box -->
         </div>

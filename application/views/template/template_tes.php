@@ -51,111 +51,183 @@
     <script src="<?php echo base_url(); ?>public/plugins/pnotify/pnotify.custom.min.js" type="text/javascript"></script>
     <script src="<?php echo base_url(); ?>public/app.js" type="text/javascript"></script>
     
-    <!-- Tema Biru Tua Elegan (Sesuai Gaya Notifikasi Peringatan) & Responsive Soal -->
+    <!-- Tema Modern Ringan & Zero Overhead (Khusus Ujian Berkecepatan Tinggi) -->
     <style type="text/css">
       #isi-tes-soal img {
         display: block;
         max-width: 100%;
         height: auto;
+        border-radius: 6px;
+        margin: 8px 0;
       }
       body.skin-blue, .content-wrapper, .wrapper {
-        background-color: #f4f6fa !important;
+        background-color: #f1f5f9 !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+        -webkit-font-smoothing: antialiased;
       }
       .skin-blue .main-header .navbar {
-        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important;
-        border-bottom: 2px solid #162d55;
-        box-shadow: 0 2px 10px rgba(15, 34, 64, 0.25);
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+        border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.15) !important;
       }
       .skin-blue .main-header .navbar .navbar-brand {
         color: #ffffff !important;
-        font-weight: 700;
-        letter-spacing: 0.5px;
+        font-weight: 800 !important;
+        letter-spacing: 0.5px !important;
+        font-size: 19px !important;
       }
       .skin-blue .main-header .navbar .nav > li > a {
-        color: #e0e9f8 !important;
+        color: #cbd5e1 !important;
+        font-weight: 500;
       }
       .skin-blue .main-header .navbar .nav > li > a:hover {
-        background: rgba(255, 255, 255, 0.12) !important;
+        background: rgba(255, 255, 255, 0.08) !important;
         color: #ffffff !important;
       }
       .skin-blue .main-header li.user-header {
-        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important;
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+      }
+      #timestamp {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 13px;
+        color: #93c5fd !important;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        font-weight: 600;
       }
       /* Panel Box Soal & Box Solid */
       .box.box-success.box-solid {
-        border: 1px solid #1e3c72 !important;
-        border-radius: 6px;
-        box-shadow: 0 3px 14px rgba(30, 60, 114, 0.1);
+        border: none !important;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(15, 23, 42, 0.05) !important;
         overflow: hidden;
+        background: #ffffff !important;
       }
       .box.box-success.box-solid > .box-header {
-        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important;
+        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%) !important;
         color: #ffffff !important;
-        border-bottom: 1px solid rgba(0,0,0,0.1);
+        border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+        padding: 12px 18px !important;
+      }
+      .box.box-success.box-solid > .box-body {
+        padding: 22px 20px !important;
+      }
+      .box.box-success.box-solid > .box-footer {
+        background: #f8fafc !important;
+        border-top: 1px solid #e2e8f0 !important;
+        padding: 14px 18px !important;
       }
       .box.box-success {
-        border-top-color: #1e3c72 !important;
+        border-top: none !important;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(15, 23, 42, 0.05) !important;
       }
-      /* Tombol Utama & Tombol Sukses */
+      /* Tombol Utama & Tombol Navigasi Soal */
       .btn-primary, .btn-success {
-        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important;
-        border-color: #1a3668 !important;
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+        border: none !important;
+        border-radius: 8px !important;
         color: #ffffff !important;
-        box-shadow: 0 2px 6px rgba(30, 60, 114, 0.25);
-        transition: all 0.2s ease;
+        font-weight: 600 !important;
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.28) !important;
+        transition: all 0.2s ease !important;
       }
       .btn-primary:hover, .btn-primary:active, .btn-primary:focus,
       .btn-success:hover, .btn-success:active, .btn-success:focus {
-        background: linear-gradient(135deg, #172f5a 0%, #21437c 100%) !important;
-        border-color: #15294e !important;
-        color: #ffffff !important;
+        background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%) !important;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.38) !important;
+        transform: translateY(-1px);
       }
-      /* Tombol Nomor Soal yang sudah dijawab */
-      button[id^="btn-soal-"].btn-primary, .btn.btn-primary[id^="btn-soal-"] {
-        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important;
-        border-color: #162e58 !important;
+      .btn-default {
+        background: #ffffff !important;
+        border: 1.5px solid #cbd5e1 !important;
+        color: #334155 !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        transition: all 0.2s ease !important;
+      }
+      .btn-default:hover, .btn-default:focus {
+        background: #f8fafc !important;
+        border-color: #94a3b8 !important;
+        color: #0f172a !important;
+      }
+      #btn-ragu {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+        border: none !important;
+        border-radius: 8px !important;
         color: #ffffff !important;
-        font-weight: 600;
-        box-shadow: 0 2px 4px rgba(30, 60, 114, 0.2);
+        font-weight: 600 !important;
+        box-shadow: 0 2px 8px rgba(245, 158, 11, 0.28) !important;
+        transition: all 0.2s ease !important;
+      }
+      /* Tombol Nomor Soal */
+      button[id^="btn-soal-"] {
+        border-radius: 8px !important;
+        font-weight: 700 !important;
+        min-width: 40px !important;
+        height: 38px !important;
+        margin: 3px !important;
+        border: 1.5px solid #cbd5e1 !important;
+        background: #ffffff !important;
+        color: #334155 !important;
+        transition: all 0.15s ease !important;
+      }
+      button[id^="btn-soal-"].btn-primary, .btn.btn-primary[id^="btn-soal-"] {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+        border: none !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3) !important;
       }
       /* Footer */
       .main-footer {
-        border-top: 1px solid #d9e2ec !important;
+        border-top: 1px solid #e2e8f0 !important;
         background: #ffffff !important;
-        color: #486581 !important;
+        color: #64748b !important;
+        font-size: 13px !important;
+        padding: 18px 0 !important;
       }
       .main-footer a {
-        color: #1e3c72 !important;
+        color: #2563eb !important;
         font-weight: 600;
+      }
+      .main-footer a:hover {
+        text-decoration: underline;
       }
       /* Callout Info */
       .callout.callout-info {
-        background-color: #edf2f9 !important;
-        border-left: 4px solid #1e3c72 !important;
-        color: #1e3c72 !important;
-        box-shadow: 0 2px 8px rgba(30, 60, 114, 0.06);
+        background-color: #f0f7ff !important;
+        border-left: 4px solid #2563eb !important;
+        border-radius: 8px !important;
+        color: #1e3a8a !important;
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.06);
       }
       .callout.callout-info h4 {
-        color: #1e3c72 !important;
+        color: #1e3a8a !important;
         font-weight: 700;
       }
       /* Badge Sisa Waktu di Header Soal */
       #sisa-waktu {
-        font-size: 15px;
-        font-weight: bold;
-        background: rgba(255,255,255,0.18);
-        padding: 4px 12px;
-        border-radius: 4px;
-        border: 1px solid rgba(255,255,255,0.3);
-        letter-spacing: 0.5px;
+        font-size: 15px !important;
+        font-weight: 800 !important;
+        font-family: monospace, sans-serif !important;
+        background: rgba(15, 23, 42, 0.6) !important;
+        color: #38bdf8 !important;
+        padding: 5px 14px !important;
+        border-radius: 20px !important;
+        border: 1px solid rgba(56, 189, 248, 0.35) !important;
+        letter-spacing: 1px !important;
       }
       /* Modal Header */
       .modal-header {
-        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-        color: #ffffff;
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+        color: #ffffff !important;
+        border-radius: 6px 6px 0 0;
       }
       .modal-header .close {
-        color: #ffffff;
+        color: #ffffff !important;
         opacity: 0.8;
       }
       .modal-header .close:hover {
@@ -163,8 +235,8 @@
       }
       /* Pagination DataTables */
       .pagination > .active > a, .pagination > .active > span {
-        background-color: #1e3c72 !important;
-        border-color: #1e3c72 !important;
+        background-color: #2563eb !important;
+        border-color: #2563eb !important;
       }
     </style>
 
@@ -208,7 +280,7 @@
         <nav class="navbar navbar-static-top">
           <div class="container">
             <div class="navbar-header">
-              <a href="<?php echo base_url(); ?>" class="navbar-brand"> <b><?php if(!empty($site_name)){ echo $site_name; } ?></b></a>
+              <a href="<?php echo base_url(); ?>" class="navbar-brand"> <b><i class="fa fa-laptop" style="color: #60a5fa; margin-right: 6px;"></i><?php if(!empty($site_name)){ echo $site_name; }else{ echo 'SMART-CBT'; } ?></b></a>
             </div>
 
             <div class="navbar-custom-menu">

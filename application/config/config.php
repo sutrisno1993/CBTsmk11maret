@@ -2,8 +2,8 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 $config['upload_path'] = 'uploads';
-$config['site_name'] = 'Computer Based-Test';
-$config['site_version'] = '2025.12.25';
+$config['site_name'] = 'SMART-CBT';
+$config['site_version'] = '2026.01.01';
 
 /*
 |--------------------------------------------------------------------------

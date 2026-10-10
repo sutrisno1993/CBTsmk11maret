@@ -41,54 +41,102 @@
 
     <script src="<?php echo base_url(); ?>public/app.js" type="text/javascript"></script>
     
-    <!-- Tema Biru Tua Elegan (Ringan & Zero Overhead) -->
+    <!-- Tema Modern Ringan & Zero Overhead (Khusus Ujian Berkecepatan Tinggi) -->
     <style type="text/css">
       body.skin-blue, .content-wrapper, .wrapper {
-        background-color: #f4f6fa !important;
+        background-color: #f1f5f9 !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+        -webkit-font-smoothing: antialiased;
       }
       .skin-blue .main-header .navbar {
-        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important;
-        border-bottom: 2px solid #162d55;
-        box-shadow: 0 2px 10px rgba(15, 34, 64, 0.25);
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+        border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.15) !important;
       }
       .skin-blue .main-header .navbar .navbar-brand {
         color: #ffffff !important;
-        font-weight: 700;
-        letter-spacing: 0.5px;
+        font-weight: 800 !important;
+        letter-spacing: 0.5px !important;
+        font-size: 19px !important;
       }
       .skin-blue .main-header .navbar .nav > li > a {
-        color: #e0e9f8 !important;
+        color: #cbd5e1 !important;
+        font-weight: 500;
       }
       .skin-blue .main-header .navbar .nav > li > a:hover {
-        background: rgba(255, 255, 255, 0.12) !important;
+        background: rgba(255, 255, 255, 0.08) !important;
         color: #ffffff !important;
       }
+      #timestamp {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 13px;
+        color: #93c5fd !important;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        font-weight: 600;
+      }
+      .login-box {
+        margin-top: 35px !important;
+      }
       .login-box-body {
-        border-top: 4px solid #1e3c72 !important;
-        border-radius: 8px !important;
-        box-shadow: 0 6px 24px rgba(30, 60, 114, 0.12) !important;
-        background: #ffffff;
+        border-top: 4px solid #2563eb !important;
+        border-radius: 14px !important;
+        box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.1), 0 0 0 1px rgba(15, 23, 42, 0.04) !important;
+        background: #ffffff !important;
+        padding: 28px !important;
+      }
+      .login-logo {
+        margin-bottom: 20px !important;
       }
       .login-logo b {
-        color: #1e3c72 !important;
+        color: #0f172a !important;
+        font-weight: 800 !important;
+        font-size: 26px !important;
+        letter-spacing: -0.5px;
+      }
+      .form-control {
+        border-radius: 8px !important;
+        border: 1.5px solid #cbd5e1 !important;
+        height: 42px !important;
+        font-size: 14px !important;
+        transition: all 0.2s ease !important;
+        box-shadow: none !important;
+      }
+      .form-control:focus {
+        border-color: #2563eb !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
       }
       .btn-primary {
-        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important;
-        border-color: #1a3668 !important;
-        box-shadow: 0 2px 6px rgba(30, 60, 114, 0.25);
-        transition: all 0.2s ease;
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+        border: none !important;
+        border-radius: 8px !important;
+        height: 42px !important;
+        font-weight: 600 !important;
+        font-size: 14px !important;
+        letter-spacing: 0.3px !important;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28) !important;
+        transition: all 0.2s ease !important;
       }
       .btn-primary:hover, .btn-primary:active, .btn-primary:focus {
-        background: linear-gradient(135deg, #172f5a 0%, #21437c 100%) !important;
-        border-color: #15294e !important;
+        background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%) !important;
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.38) !important;
+        transform: translateY(-1px);
       }
       .main-footer {
-        border-top: 1px solid #d9e2ec !important;
+        border-top: 1px solid #e2e8f0 !important;
         background: #ffffff !important;
-        color: #486581 !important;
+        color: #64748b !important;
+        font-size: 13px !important;
+        padding: 18px 0 !important;
       }
       .main-footer a {
-        color: #1e3c72 !important;
+        color: #2563eb !important;
+        font-weight: 600;
+      }
+      .main-footer a:hover {
+        text-decoration: underline;
       }
     </style>
   </head>
@@ -100,7 +148,7 @@
         <nav class="navbar navbar-static-top">
           <div class="container">
             <div class="navbar-header">
-              <a href="<?php echo base_url(); ?>" class="navbar-brand"> <b><?php if(!empty($site_name)){ echo $site_name; } ?></b></a>
+              <a href="<?php echo base_url(); ?>" class="navbar-brand"> <b><i class="fa fa-graduation-cap" style="color: #60a5fa; margin-right: 6px;"></i><?php if(!empty($site_name)){ echo $site_name; }else{ echo 'SMART-CBT'; } ?></b></a>
             </div>
             <div class="navbar-custom-menu">
               <ul class="nav navbar-nav">
