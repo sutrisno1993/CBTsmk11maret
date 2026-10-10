@@ -92,7 +92,7 @@ class Pengaturan_zyacbt extends Member_Controller {
 			$this->cbt_konfigurasi_model->set_value('cbt_sekolah_radius', !empty($sekolah_radius) ? $sekolah_radius : '200');
 
 			$ip_bypass = $this->input->post('zyacbt-sekolah-ip-bypass', true);
-			$this->cbt_konfigurasi_model->set_value('cbt_sekolah_ip_bypass', !empty($ip_bypass) ? $ip_bypass : '192.168., 10., 172.16., 127.0.0.1');
+			$this->cbt_konfigurasi_model->set_value('cbt_sekolah_ip_bypass', !empty($ip_bypass) ? $ip_bypass : '192.168., 10., 172.16., 158.11., 127.0.0.1');
 
 			$data['konfigurasi_isi'] = $this->input->post('zyacbt-informasi', true);
 			$this->cbt_konfigurasi_model->update('konfigurasi_kode', 'cbt_informasi', $data);
@@ -167,7 +167,13 @@ class Pengaturan_zyacbt extends Member_Controller {
 		$data['sekolah_latitude'] = $this->cbt_konfigurasi_model->get_value('cbt_sekolah_latitude', '-6.175392');
 		$data['sekolah_longitude'] = $this->cbt_konfigurasi_model->get_value('cbt_sekolah_longitude', '106.827153');
 		$data['sekolah_radius'] = $this->cbt_konfigurasi_model->get_value('cbt_sekolah_radius', '200');
-		$data['sekolah_ip_bypass'] = $this->cbt_konfigurasi_model->get_value('cbt_sekolah_ip_bypass', '192.168., 10., 172.16., 127.0.0.1');
+		
+		$sekolah_ip_bypass = $this->cbt_konfigurasi_model->get_value('cbt_sekolah_ip_bypass', '192.168., 10., 172.16., 158.11., 127.0.0.1');
+		if(strpos($sekolah_ip_bypass, '158.11.') === false){
+			$sekolah_ip_bypass = rtrim($sekolah_ip_bypass, ', ') . ', 158.11.';
+			$this->cbt_konfigurasi_model->set_value('cbt_sekolah_ip_bypass', $sekolah_ip_bypass);
+		}
+		$data['sekolah_ip_bypass'] = $sekolah_ip_bypass;
 		
 		echo json_encode($data);
     }

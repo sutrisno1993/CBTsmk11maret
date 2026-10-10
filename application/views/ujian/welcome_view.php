@@ -68,7 +68,12 @@
 					</div>
 					<?php endif; ?>
 
-					<?php if(isset($radius_lock) && $radius_lock == 'ya' && empty($is_ip_bypass)): ?>
+					<?php if(!empty($is_ip_bypass)): ?>
+					<div style="margin-bottom: 15px; padding: 10px 14px; border-radius: 8px; font-size: 12px; background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; display: flex; align-items: center; gap: 8px;">
+						<i class="fa fa-wifi" style="font-size: 15px; color: #059669;"></i>
+						<span><b>Jaringan WiFi / LAN Sekolah Terdeteksi</b> &bull; Akses Bebas Langsung</span>
+					</div>
+					<?php elseif(isset($radius_lock) && $radius_lock == 'ya'): ?>
 					<div id="gps-status-box" style="margin-bottom: 15px; padding: 10px 14px; border-radius: 8px; font-size: 12px; background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; display: flex; align-items: center; justify-content: space-between;">
 						<div style="display: flex; align-items: center; gap: 8px;">
 							<i class="fa fa-spinner fa-spin" id="gps-icon" style="font-size: 15px; color: #2563eb;"></i>
@@ -77,11 +82,6 @@
 						<button type="button" id="btn-retry-gps" class="btn btn-xs btn-primary" style="display: none; margin-left: 8px; border-radius: 4px;" onclick="mintaLokasiSiswa()">
 							<i class="fa fa-refresh"></i> Ulangi
 						</button>
-					</div>
-					<?php elseif(isset($radius_lock) && $radius_lock == 'ya' && !empty($is_ip_bypass)): ?>
-					<div style="margin-bottom: 15px; padding: 10px 14px; border-radius: 8px; font-size: 12px; background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; display: flex; align-items: center; gap: 8px;">
-						<i class="fa fa-wifi" style="font-size: 15px; color: #059669;"></i>
-						<span><b>Jaringan WiFi Sekolah Terdeteksi</b></span>
 					</div>
 					<?php endif; ?>
 

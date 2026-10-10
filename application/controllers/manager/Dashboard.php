@@ -161,7 +161,7 @@ class Dashboard extends Member_Controller {
         }
 
         // Konfigurasi IP Bypass & GPS Sekolah
-        $ip_bypass_str = $this->cbt_konfigurasi_model->get_value('cbt_sekolah_ip_bypass', '192.168., 10., 172.16., 127.0.0.1');
+        $ip_bypass_str = $this->cbt_konfigurasi_model->get_value('cbt_sekolah_ip_bypass', '192.168., 10., 172.16., 158.11., 127.0.0.1');
         $lat_sekolah = (float)$this->cbt_konfigurasi_model->get_value('cbt_sekolah_latitude', '-6.175392');
         $lng_sekolah = (float)$this->cbt_konfigurasi_model->get_value('cbt_sekolah_longitude', '106.827153');
 
@@ -244,18 +244,8 @@ class Dashboard extends Member_Controller {
         $this->template->display_admin('manager/dashboard_view', 'Dashboard', $data);
     }
 
-	private function check_ip_bypass($client_ip, $ip_bypass_str){
-		if(empty($ip_bypass_str) || empty($client_ip) || $client_ip == '-') return false;
-		$list = explode(',', $ip_bypass_str);
-		foreach($list as $ip_entry){
-			$ip_entry = trim($ip_entry);
-			if(!empty($ip_entry)){
-				if(strpos($client_ip, $ip_entry) === 0 || $client_ip === $ip_entry){
-					return true;
-				}
-			}
-		}
-		return false;
+	private function check_ip_bypass($client_ip, $ip_bypass_str = null){
+		return $this->cbt_konfigurasi_model->check_ip_bypass($client_ip, $ip_bypass_str);
 	}
 
 	private function calculate_distance($lat1, $lon1, $lat2, $lon2){

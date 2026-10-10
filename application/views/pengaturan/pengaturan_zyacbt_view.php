@@ -184,7 +184,7 @@
 							<div class="form-group">
 								<label class="col-sm-4 control-label">Bypass IP / Subnet Jaringan Sekolah</label>
 								<div class="col-sm-8">
-									<input type="text" class="form-control input-sm" id="zyacbt-sekolah-ip-bypass" name="zyacbt-sekolah-ip-bypass" placeholder="192.168., 10., 172.16., 127.0.0.1">
+									<input type="text" class="form-control input-sm" id="zyacbt-sekolah-ip-bypass" name="zyacbt-sekolah-ip-bypass" placeholder="192.168., 10., 172.16., 158.11., 127.0.0.1">
 									<p class="help-block">
 										Komputer Lab / Wi-Fi lokal dengan awalan IP di atas otomatis <b>lolos tanpa cek GPS</b> (sangat berguna untuk PC Lab sekolah yang tidak punya modul GPS satelit). Pisahkan dengan tanda koma.
 									</p>

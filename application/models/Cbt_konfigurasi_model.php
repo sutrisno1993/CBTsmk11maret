@@ -120,22 +120,67 @@ class Cbt_konfigurasi_model extends CI_Model{
 	/**
 	 * Cek apakah IP client termasuk jaringan lokal/WiFi sekolah (Bypass)
 	 */
-	function check_ip_bypass($client_ip, $ip_bypass_str = null){
-		if($ip_bypass_str === null){
-			$ip_bypass_str = $this->get_value('cbt_sekolah_ip_bypass', '192.168., 10., 172.16., 127.0.0.1');
+	function check_ip_bypass($client_ip = null, $ip_bypass_str = null){
+		if(empty($client_ip) || $client_ip == '-'){
+			$ci =& get_instance();
+			$client_ip = $ci->input->ip_address();
 		}
-		if(empty($ip_bypass_str) || empty($client_ip)){
-			return false;
+
+		// 1. Cek jika request diakses via Host Lokal / IP Lokal server (misal http://158.11.11.220 atau localhost)
+		// Perangkat luar dengan kuota internet pribadi tidak akan bisa mengakses host IP lokal ini.
+		$http_host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '';
+		$host_only = strtolower(preg_replace('/:[0-9]+$/', '', trim($http_host)));
+		
+		$local_host_prefixes = array('158.11.', '192.168.', '10.', '172.16.', '172.17.', '172.18.', '172.19.', '172.20.', '172.21.', '172.22.', '172.23.', '172.24.', '172.25.', '172.26.', '172.27.', '172.28.', '172.29.', '172.30.', '172.31.', '127.0.0.1', 'localhost');
+		foreach($local_host_prefixes as $lhp){
+			if(strpos($host_only, $lhp) === 0 || $host_only === $lhp){
+				return true;
+			}
 		}
-		$list = explode(',', $ip_bypass_str);
-		foreach($list as $ip_entry){
-			$ip_entry = trim($ip_entry);
-			if(!empty($ip_entry)){
-				if(strpos($client_ip, $ip_entry) === 0 || $client_ip === $ip_entry){
-					return true;
+
+		// 2. Daftar subnet / IP lokal sekolah bawaan (termasuk 158.11. SMK 11 MARET, 192.168., 10., 172.16-31, localhost)
+		$default_bypass = array('127.0.0.1', '::1', 'localhost', '158.11.', '192.168.', '10.', '172.16.', '172.17.', '172.18.', '172.19.', '172.20.', '172.21.', '172.22.', '172.23.', '172.24.', '172.25.', '172.26.', '172.27.', '172.28.', '172.29.', '172.30.', '172.31.');
+		foreach($default_bypass as $dbp){
+			if(!empty($client_ip) && (strpos($client_ip, $dbp) === 0 || $client_ip === $dbp)){
+				return true;
+			}
+		}
+
+		// 3. Cek subnet dari SERVER_ADDR jika server berada di IP lokal
+		if(isset($_SERVER['SERVER_ADDR']) && !empty($_SERVER['SERVER_ADDR'])){
+			$server_ip = $_SERVER['SERVER_ADDR'];
+			if(!empty($client_ip) && $client_ip === $server_ip){
+				return true;
+			}
+			$server_parts = explode('.', $server_ip);
+			if(count($server_parts) === 4){
+				$server_subnet_c = $server_parts[0] . '.' . $server_parts[1] . '.' . $server_parts[2] . '.';
+				$server_subnet_b = $server_parts[0] . '.' . $server_parts[1] . '.';
+				// Jangan samakan jika server IP adalah IP publik sekolah (115.187.)
+				if(strpos($server_ip, '115.187.') !== 0){
+					if(!empty($client_ip) && (strpos($client_ip, $server_subnet_c) === 0 || strpos($client_ip, $server_subnet_b) === 0)){
+						return true;
+					}
 				}
 			}
 		}
+
+		// 4. Cek konfigurasi tambahan dari database (cbt_sekolah_ip_bypass)
+		if($ip_bypass_str === null){
+			$ip_bypass_str = $this->get_value('cbt_sekolah_ip_bypass', '192.168., 10., 172.16., 158.11., 127.0.0.1');
+		}
+		if(!empty($ip_bypass_str) && !empty($client_ip)){
+			$list = explode(',', $ip_bypass_str);
+			foreach($list as $ip_entry){
+				$ip_entry = trim($ip_entry);
+				if(!empty($ip_entry)){
+					if(strpos($client_ip, $ip_entry) === 0 || $client_ip === $ip_entry){
+						return true;
+					}
+				}
+			}
+		}
+
 		return false;
 	}
 }

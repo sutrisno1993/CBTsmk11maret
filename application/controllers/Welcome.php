@@ -70,7 +70,7 @@ class Welcome extends CI_Controller {
 						}
 
 						$client_ip = $this->input->ip_address();
-						$ip_bypass_str = $this->cbt_konfigurasi_model->get_value('cbt_sekolah_ip_bypass', '192.168., 10., 172.16., 127.0.0.1');
+						$ip_bypass_str = $this->cbt_konfigurasi_model->get_value('cbt_sekolah_ip_bypass', '192.168., 10., 172.16., 158.11., 127.0.0.1');
 						$data['is_ip_bypass'] = $this->check_ip_bypass($client_ip, $ip_bypass_str) ? 1 : 0;
 						$data['client_ip'] = $client_ip;
 
@@ -187,7 +187,7 @@ class Welcome extends CI_Controller {
         if($this->form_validation->run() == TRUE){
 
 			$client_ip = $this->input->ip_address();
-			$ip_bypass_str = $this->cbt_konfigurasi_model->get_value('cbt_sekolah_ip_bypass', '192.168., 10., 172.16., 127.0.0.1');
+			$ip_bypass_str = $this->cbt_konfigurasi_model->get_value('cbt_sekolah_ip_bypass', '192.168., 10., 172.16., 158.11., 127.0.0.1');
 			$is_ip_bypass = $this->check_ip_bypass($client_ip, $ip_bypass_str);
 
 			// Pengecekan Izin Akses Data Pribadi (Wajib Scan QR & Maksimal 12 Jam)
@@ -335,20 +335,8 @@ class Welcome extends CI_Controller {
 		}
 	}
 
-	private function check_ip_bypass($client_ip, $ip_bypass_str){
-		if(empty($ip_bypass_str)){
-			return false;
-		}
-		$list = explode(',', $ip_bypass_str);
-		foreach($list as $ip_entry){
-			$ip_entry = trim($ip_entry);
-			if(!empty($ip_entry)){
-				if(strpos($client_ip, $ip_entry) === 0 || $client_ip === $ip_entry){
-					return true;
-				}
-			}
-		}
-		return false;
+	private function check_ip_bypass($client_ip, $ip_bypass_str = null){
+		return $this->cbt_konfigurasi_model->check_ip_bypass($client_ip, $ip_bypass_str);
 	}
 
 	private function calculate_distance($lat1, $lon1, $lat2, $lon2){
