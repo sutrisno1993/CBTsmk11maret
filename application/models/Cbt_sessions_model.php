@@ -57,9 +57,8 @@ class Cbt_sessions_model extends CI_Model{
 	}
 	
 	function delete_by_username($username){
-		$now = date('Y-m-d H:i:s');
 		$tanda = '@ZYACBT@';
-        $this->db->where('(DATE(ts)=DATE("'.$now.'") AND data LIKE "%'.$tanda.$username.$tanda.'%")')
-                 ->delete($this->table);
-    }
+		$this->db->like('data', $tanda.$username.$tanda);
+		$this->db->delete($this->table);
+	}
 }

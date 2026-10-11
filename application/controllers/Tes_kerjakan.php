@@ -27,7 +27,8 @@ class Tes_kerjakan extends Tes_Controller {
 		$this->load->model('cbt_konfigurasi_model');
 
         $this->username = $this->access_tes->get_username();
-        $this->user_id = $this->cbt_user_model->get_by_kolom_limit('user_name', $this->username, 1)->row()->user_id;
+        $query_user = $this->cbt_user_model->get_by_kolom_limit('user_name', $this->username, 1);
+        $this->user_id = $query_user->num_rows() > 0 ? $query_user->row()->user_id : 0;
 	}
     
     public function index($tes_id=null){

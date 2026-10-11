@@ -210,75 +210,61 @@
             cache: false,
             timeout: 10000,
             success:function(respon){
-                var data = $.parseJSON(respon);
-                if(data.data==1){
-                    // Mengubah nilai ragu-ragu di database
-                    if($('#tes-soal-ragu').val()==0){
-                        var ragu=1;
-                    }else{
-                        var ragu=0;
-                    }
-                    $.ajax({
-                            url:'<?php echo site_url().'/'.$url; ?>/update_tes_soal_ragu/'+$('#tes-soal-id').val()+'/'+ragu,
-                            type:"POST",
-                            cache: false,
-                            timeout: 5000,
-                            success:function(respon){
-                                var data = $.parseJSON(respon);
-                                if(data.data==1){
-                                    notify_success('Jawaban Ragu-ragu berhasil diubah');
-                                }
-                            },
-                            error: function(xmlhttprequest, textstatus, message) {
-                                if(textstatus==="timeout") {
+                try {
+                    var data = typeof respon === 'object' ? respon : $.parseJSON(respon);
+                    if(data.data==1){
+                        // Mengubah nilai ragu-ragu di database
+                        var ragu = ($('#tes-soal-ragu').val()==0) ? 1 : 0;
+                        $.ajax({
+                                url:'<?php echo site_url().'/'.$url; ?>/update_tes_soal_ragu/'+$('#tes-soal-id').val()+'/'+ragu,
+                                type:"POST",
+                                cache: false,
+                                timeout: 8000,
+                                success:function(respon2){
+                                    try {
+                                        var data2 = typeof respon2 === 'object' ? respon2 : $.parseJSON(respon2);
+                                        if(data2.data==1){
+                                            notify_success('Jawaban Ragu-ragu berhasil diubah');
+                                        }
+                                    } catch(e) {}
+                                },
+                                error: function(xmlhttprequest, textstatus, message) {
                                     $("#modal-proses").modal('hide');
-                                    notify_error("Gagal mengubah Soal, Silahkan Refresh Halaman");
-                                }else{
-                                    $("#modal-proses").modal('hide');
-                                    notify_error(textstatus);
+                                    notify_error(textstatus==="timeout" ? "Koneksi lambat, silakan coba lagi." : textstatus);
                                 }
-                            }
-                    });
+                        });
 
-                    // Mengubah warna daftar soal dan checkbox pada tombol ragu-ragu
-                    if(data.tessoal_dikerjakan==1){
-                        if($('#tes-soal-ragu').val()==0){
-                            // Membuat menjadi ragu-ragu
-                            $('#btn-soal-'+$('#tes-soal-nomor').val()).removeClass('btn-primary');
-                            $('#btn-soal-'+$('#tes-soal-nomor').val()).addClass('btn-warning');
-                            $('#btn-ragu-checkbox').prop("checked", true);
-                            $('#tes-soal-ragu').val(1);
+                        // Mengubah warna daftar soal dan checkbox pada tombol ragu-ragu
+                        if(data.tessoal_dikerjakan==1){
+                            if($('#tes-soal-ragu').val()==0){
+                                $('#btn-soal-'+$('#tes-soal-nomor').val()).removeClass('btn-primary').addClass('btn-warning');
+                                $('#btn-ragu-checkbox').prop("checked", true);
+                                $('#tes-soal-ragu').val(1);
+                            }else{
+                                $('#btn-soal-'+$('#tes-soal-nomor').val()).removeClass('btn-warning').addClass('btn-primary');
+                                $('#btn-ragu-checkbox').prop("checked", false);
+                                $('#tes-soal-ragu').val(0);
+                            }
                         }else{
-                            $('#btn-soal-'+$('#tes-soal-nomor').val()).removeClass('btn-warning');
-                            $('#btn-soal-'+$('#tes-soal-nomor').val()).addClass('btn-primary');
-                            $('#btn-ragu-checkbox').prop("checked", false);
-                            $('#tes-soal-ragu').val(0);
-                        }
-                    }else{
-                        if($('#tes-soal-ragu').val()==0){
-                            // Membuat menjadi ragu-ragu
-                            $('#btn-soal-'+$('#tes-soal-nomor').val()).removeClass('btn-default');
-                            $('#btn-soal-'+$('#tes-soal-nomor').val()).addClass('btn-warning');
-                            $('#btn-ragu-checkbox').prop("checked", true);
-                            $('#tes-soal-ragu').val(1);
-                        }else{
-                            $('#btn-soal-'+$('#tes-soal-nomor').val()).removeClass('btn-warning');
-                            $('#btn-soal-'+$('#tes-soal-nomor').val()).addClass('btn-default');
-                            $('#btn-ragu-checkbox').prop("checked", false);
-                            $('#tes-soal-ragu').val(0);
+                            if($('#tes-soal-ragu').val()==0){
+                                $('#btn-soal-'+$('#tes-soal-nomor').val()).removeClass('btn-default').addClass('btn-warning');
+                                $('#btn-ragu-checkbox').prop("checked", true);
+                                $('#tes-soal-ragu').val(1);
+                            }else{
+                                $('#btn-soal-'+$('#tes-soal-nomor').val()).removeClass('btn-warning').addClass('btn-default');
+                                $('#btn-ragu-checkbox').prop("checked", false);
+                                $('#tes-soal-ragu').val(0);
+                            }
                         }
                     }
+                } catch(e) {
+                    notify_error("Gagal memproses data ragu-ragu.");
                 }
                 $("#modal-proses").modal('hide');
             },
             error: function(xmlhttprequest, textstatus, message) {
-                if(textstatus==="timeout") {
-                    $("#modal-proses").modal('hide');
-                    notify_error("Gagal mengubah soal, Silahkan Refresh Halaman");
-                }else{
-                    $("#modal-proses").modal('hide');
-                    notify_error(textstatus);
-                }
+                $("#modal-proses").modal('hide');
+                notify_error(textstatus==="timeout" ? "Koneksi lambat, silakan ulangi klik ragu-ragu." : textstatus);
             }
         });
     }
@@ -291,51 +277,46 @@
             cache: false,
             timeout: 10000,
             success:function(respon){
-                var data = $.parseJSON(respon);
-                if(data.data==1){
-                    $('#tes-soal-id').val(data.tes_soal_id);
-                    $('#tes-soal-nomor').val(data.tes_soal_nomor);
-                    $('#isi-tes-soal').html(data.tes_soal);
-                    $('#tes-soal-ragu').val(data.tes_ragu);
-                    $('#judul-soal').html('ke '+data.tes_soal_nomor);
+                try {
+                    var data = typeof respon === 'object' ? respon : $.parseJSON(respon);
+                    if(data.data==1){
+                        $('#tes-soal-id').val(data.tes_soal_id);
+                        $('#tes-soal-nomor').val(data.tes_soal_nomor);
+                        $('#isi-tes-soal').html(data.tes_soal);
+                        $('#tes-soal-ragu').val(data.tes_ragu);
+                        $('#judul-soal').html('ke '+data.tes_soal_nomor);
 
-                    if(data.tes_ragu==0){
-                        // Menghilangkan checkbox ragu-ragu
-                        $('#btn-ragu-checkbox').prop("checked", false);
-                    }else{
-                        // Menambah checkbox ragu-ragu
-                        $('#btn-ragu-checkbox').prop("checked", true);
+                        if(data.tes_ragu==0){
+                            $('#btn-ragu-checkbox').prop("checked", false);
+                        }else{
+                            $('#btn-ragu-checkbox').prop("checked", true);
+                        }
+
+                        var tes_soal_nomor = parseInt($('#tes-soal-nomor').val());
+                        var tes_soal_jml = parseInt($('#tes-soal-jml').val());
+                        var tes_soal_tujuan = data.tes_soal_nomor;
+                        if(tes_soal_tujuan==1){
+                            $('#btn-sebelumnya').addClass('hide');
+                            $('#btn-selanjutnya').removeClass('hide');
+                        }else if(tes_soal_tujuan==tes_soal_jml){
+                            $('#btn-sebelumnya').removeClass('hide');
+                            $('#btn-selanjutnya').addClass('hide');
+                        }else{
+                            $('#btn-sebelumnya').removeClass('hide');
+                            $('#btn-selanjutnya').removeClass('hide');
+                        }
+
+                    }else if(data.data==2){
+                        window.location.reload();
                     }
-
-                    // menghilangkan tombol sebelum jika soal di nomor1
-                    // dan menghilangkan tombol selanjutnya jika disoal terakhir
-                    var tes_soal_nomor = parseInt($('#tes-soal-nomor').val());
-                    var tes_soal_jml = parseInt($('#tes-soal-jml').val());
-                    var tes_soal_tujuan = data.tes_soal_nomor;
-                    if(tes_soal_tujuan==1){
-                        $('#btn-sebelumnya').addClass('hide');
-                        $('#btn-selanjutnya').removeClass('hide');
-                    }else if(tes_soal_tujuan==tes_soal_jml){
-                        $('#btn-sebelumnya').removeClass('hide');
-                        $('#btn-selanjutnya').addClass('hide');
-                    }else{
-                        $('#btn-sebelumnya').removeClass('hide');
-                        $('#btn-selanjutnya').removeClass('hide');
-                    }
-
-                }else if(data.data==2){
-                    window.location.reload();
+                } catch(e) {
+                    notify_error("Gagal memuat soal, silakan coba klik nomor soal lagi.");
                 }
                 $("#modal-proses").modal('hide');
             },
             error: function(xmlhttprequest, textstatus, message) {
-                if(textstatus==="timeout") {
-                    $("#modal-proses").modal('hide');
-                    notify_error("Gagal mengambil Soal, Silahkan Refresh Halaman");
-                }else{
-                    $("#modal-proses").modal('hide');
-                    notify_error(textstatus);
-                }
+                $("#modal-proses").modal('hide');
+                notify_error(textstatus==="timeout" ? "Koneksi lambat saat memuat soal. Silakan klik nomor soal lagi." : textstatus);
             }
         });
     }
@@ -452,27 +433,29 @@
                     cache: false,
                     timeout: 10000,
                     success:function(respon){
-                        var obj = $.parseJSON(respon);
-                        if(obj.status==1){
-                            $("#modal-proses").modal('hide');
-                            notify_success(obj.pesan);
-                            $('#btn-soal-'+obj.nomor_soal).removeClass('btn-default');
-                            $('#btn-soal-'+obj.nomor_soal).removeClass('btn-warning');
-                            $('#btn-soal-'+obj.nomor_soal).addClass('btn-primary');
-                        }else if(obj.status==2){
-                            window.location.reload();
-                        }else{
-                            $("#modal-proses").modal('hide');
-                            notify_error(obj.pesan);
+                        $("#modal-proses").modal('hide');
+                        try {
+                            var obj = typeof respon === 'object' ? respon : $.parseJSON(respon);
+                            if(obj.status==1){
+                                notify_success(obj.pesan);
+                                $('#btn-soal-'+obj.nomor_soal).removeClass('btn-default');
+                                $('#btn-soal-'+obj.nomor_soal).removeClass('btn-warning');
+                                $('#btn-soal-'+obj.nomor_soal).addClass('btn-primary');
+                            }else if(obj.status==2){
+                                window.location.reload();
+                            }else{
+                                notify_error(obj.pesan);
+                            }
+                        } catch(e) {
+                            notify_error("Jawaban belum terverifikasi oleh server, silakan klik pilihan lagi.");
                         }
                     },
                     error: function(xmlhttprequest, textstatus, message) {
+                        $("#modal-proses").modal('hide');
                         if(textstatus==="timeout") {
-                            $("#modal-proses").modal('hide');
-                            notify_error("Gagal menyimpan jawaban, Silahkan Refresh Halaman");
+                            notify_error("Koneksi lambat (timeout). Silakan klik ulang pilihan jawaban Anda.");
                         }else{
-                            $("#modal-proses").modal('hide');
-                            notify_error(textstatus);
+                            notify_error("Koneksi terputus (" + textstatus + "). Silakan klik ulang pilihan jawaban Anda.");
                         }
                     }
             });
@@ -491,21 +474,24 @@
                     cache: false,
                     timeout: 10000,
                     success:function(respon){
-                        var obj = $.parseJSON(respon);
-                        if(obj.status==1){
+                        $("#modal-proses").modal('hide');
+                        try {
+                            var obj = typeof respon === 'object' ? respon : $.parseJSON(respon);
+                            if(obj.status==1){
+                                window.location.reload();
+                            }else{
+                                notify_error(obj.pesan);
+                            }
+                        } catch(e) {
                             window.location.reload();
-                        }else{
-                            $("#modal-proses").modal('hide');
-                            notify_error(obj.pesan);
                         }
                     },
                     error: function(xmlhttprequest, textstatus, message) {
+                        $("#modal-proses").modal('hide');
                         if(textstatus==="timeout") {
-                            $("#modal-proses").modal('hide');
-                            notify_error("Gagal menghentikan Tes, Silahkan Refresh Halaman");
+                            notify_error("Koneksi lambat saat menghentikan tes. Silakan klik tombol kembali.");
                         }else{
-                            $("#modal-proses").modal('hide');
-                            notify_error(textstatus);
+                            notify_error("Gagal menghentikan tes: " + textstatus);
                         }
                     }
             });

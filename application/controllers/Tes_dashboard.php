@@ -82,7 +82,9 @@ class Tes_dashboard extends Tes_Controller {
     			if($tanggal<$tanggal_tes){
     				// Cek terlebih dahulu, apakah sudah pernah memulai tes
     				$username = $this->access_tes->get_username();
-        			$user_id = $this->cbt_user_model->get_by_kolom_limit('user_name', $username, 1)->row()->user_id;
+        			$query_u = $this->cbt_user_model->get_by_kolom_limit('user_name', $username, 1);
+        			if($query_u->num_rows() == 0){ redirect('welcome'); }
+        			$user_id = $query_u->row()->user_id;
 
     				if($this->cbt_tes_user_model->count_by_user_tes($user_id, $query_tes->tes_id)->row()->hasil==0){
     					// Menampilkan konfirmasi Tes
@@ -144,7 +146,9 @@ class Tes_dashboard extends Tes_Controller {
 			$token = $this->input->post('token', TRUE);
 			
 			$username = $this->access_tes->get_username();
-			$user_id = $this->cbt_user_model->get_by_kolom_limit('user_name', $username, 1)->row()->user_id;
+			$query_u = $this->cbt_user_model->get_by_kolom_limit('user_name', $username, 1);
+			if($query_u->num_rows() == 0){ redirect('welcome'); }
+			$user_id = $query_u->row()->user_id;
 
 			$query_tes = $this->cbt_tes_model->get_by_kolom_limit('tes_id', $tes_id, 1);
 			if($query_tes->num_rows()>0){
