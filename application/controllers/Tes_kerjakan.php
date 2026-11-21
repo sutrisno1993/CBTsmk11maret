@@ -123,6 +123,7 @@ class Tes_kerjakan extends Tes_Controller {
 							$cbt_anti_cheating = $query_anti->row()->konfigurasi_isi;
 						}
 						$data['cbt_anti_cheating'] = $cbt_anti_cheating;
+						$data['tes_pelanggaran'] = isset($query_tes->tesuser_pelanggaran) ? intval($query_tes->tesuser_pelanggaran) : 0;
 						
 						$this->template->display_tes($this->kelompok.'/tes_kerjakan_view', 'Kerjakan Tes', $data);
 					}
@@ -224,6 +225,35 @@ class Tes_kerjakan extends Tes_Controller {
             $status['pesan'] = validation_errors();
         }
         
+        echo json_encode($status);
+    }
+
+    /**
+     * Mencatat pelanggaran Anti-Cheating ke database secara real-time (Prioritas 3)
+     */
+    function catat_pelanggaran(){
+        $tesuser_id = intval($this->input->post('tes-user-id', TRUE));
+        $tes_id = intval($this->input->post('tes-id', TRUE));
+        $status = array('status' => 0, 'pelanggaran' => 0, 'terkunci' => 0);
+
+        if($tesuser_id > 0 && $this->user_id > 0){
+            $q_tu = $this->cbt_tes_user_model->get_by_kolom_limit('tesuser_id', $tesuser_id, 1);
+            if($q_tu->num_rows() > 0){
+                $tu = $q_tu->row();
+                if(intval($tu->tesuser_user_id) === intval($this->user_id)){
+                    $cur_p = isset($tu->tesuser_pelanggaran) ? intval($tu->tesuser_pelanggaran) : 0;
+                    $new_p = $cur_p + 1;
+                    $data_upd = array('tesuser_pelanggaran' => $new_p);
+                    if($new_p >= 3){
+                        $data_upd['tesuser_status'] = 3; // 3 = Terkunci Anti-Cheating
+                    }
+                    $this->cbt_tes_user_model->update('tesuser_id', $tesuser_id, $data_upd);
+                    $status['status'] = 1;
+                    $status['pelanggaran'] = $new_p;
+                    $status['terkunci'] = ($new_p >= 3) ? 1 : 0;
+                }
+            }
+        }
         echo json_encode($status);
     }
 
@@ -516,9 +546,11 @@ class Tes_kerjakan extends Tes_Controller {
                     // Soal Ragu-ragu
                     $data['tes_ragu'] = $query_soal->tessoal_ragu;
 
-                    // Mengupdate tessoal_display_time pada table test_log
-                    $data_tes_soal['tessoal_display_time'] = date('Y-m-d H:i:s');
-                    $this->cbt_tes_soal_model->update('tessoal_id', $tessoal_id, $data_tes_soal);
+                    // Mengupdate tessoal_display_time hanya saat soal pertama kali ditampilkan (Optimasi kurangi write lock)
+                    if(empty($query_soal->tessoal_display_time)){
+                        $data_tes_soal['tessoal_display_time'] = date('Y-m-d H:i:s');
+                        $this->cbt_tes_soal_model->update('tessoal_id', $tessoal_id, $data_tes_soal);
+                    }
                     
                     // mengganti [baseurl] ke alamat sesungguhnya
                     $soal = $query_soal->soal_detail;
@@ -563,17 +595,22 @@ class Tes_kerjakan extends Tes_Controller {
                         $query_jawaban = $this->cbt_tes_soal_jawaban_model->get_by_tessoal($query_soal->tessoal_id);
                         if($query_jawaban->num_rows()>0){
                             $query_jawaban = $query_jawaban->result();
+                            $huruf_opsi = array('A', 'B', 'C', 'D', 'E', 'F', 'G');
+                            $idx_opsi = 0;
+                            $soal = $soal.'<div class="cbt-options-list">';
                             foreach ($query_jawaban as $jawaban) {
                                 // mengganti [baseurl] ke alamat sesungguhnya pada tag img / gambars
                                 $temp_jawaban = $jawaban->jawaban_detail;
                                 $temp_jawaban = str_replace("[base_url]", base_url(), $temp_jawaban);
+                                $label_huruf = isset($huruf_opsi[$idx_opsi]) ? $huruf_opsi[$idx_opsi] : chr(65 + $idx_opsi);
+                                $is_selected = ($jawaban->soaljawaban_selected == 1);
+                                $selected_cls = $is_selected ? ' cbt-option-selected' : '';
+                                $checked_attr = $is_selected ? ' checked' : '';
 
-                                if($jawaban->soaljawaban_selected==1){
-                                    $soal = $soal.'<div class="radio"><label><input type="radio" onchange="jawab()" name="soal-jawaban" value="'.$jawaban->soaljawaban_jawaban_id.'" checked> '.$temp_jawaban.'</label></div>';
-                                }else{
-                                    $soal = $soal.'<div class="radio"><label><input type="radio" onchange="jawab()" name="soal-jawaban" value="'.$jawaban->soaljawaban_jawaban_id.'" > '.$temp_jawaban.'</label></div>';
-                                }
+                                $soal = $soal.'<div class="radio" style="margin:0;"><label class="cbt-option-card'.$selected_cls.'"><input type="radio" class="cbt-option-radio" onchange="pilihOpsiRadio(this); jawab();" name="soal-jawaban" value="'.$jawaban->soaljawaban_jawaban_id.'"'.$checked_attr.'><span class="cbt-option-badge">'.$label_huruf.'</span><div class="cbt-option-content">'.$temp_jawaban.'</div></label></div>';
+                                $idx_opsi++;
                             }
+                            $soal = $soal.'</div>';
                         }
                     }else if($query_soal->soal_tipe==2){
                         if(!empty($query_soal->tessoal_jawaban_text)){

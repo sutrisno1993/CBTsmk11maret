@@ -30,7 +30,7 @@ class Pengaturan_zyacbt extends Member_Controller {
 		$this->form_validation->set_rules('zyacbt-anti-cheating', 'Anti-Cheating Browser','required|strip_tags');
 		$this->form_validation->set_rules('zyacbt-tipe-soal-global', 'Tipe Soal Ujian Global','required|strip_tags');
 		$this->form_validation->set_rules('zyacbt-use-token', 'Penggunaan Token Ujian','required|strip_tags');
-		$this->form_validation->set_rules('zyacbt-informasi', 'Informasi Peserta Tes','required');
+		$this->form_validation->set_rules('zyacbt-informasi', 'Informasi Peserta Tes','trim');
         
         if($this->form_validation->run() == TRUE){
             $data['konfigurasi_isi'] = $this->input->post('zyacbt-nama', true);
@@ -94,7 +94,11 @@ class Pengaturan_zyacbt extends Member_Controller {
 			$ip_bypass = $this->input->post('zyacbt-sekolah-ip-bypass', true);
 			$this->cbt_konfigurasi_model->set_value('cbt_sekolah_ip_bypass', !empty($ip_bypass) ? $ip_bypass : '192.168., 10., 172.16., 158.11., 127.0.0.1');
 
-			$data['konfigurasi_isi'] = $this->input->post('zyacbt-informasi', true);
+			$info = $this->input->post('zyacbt-informasi');
+			if(empty($info) || trim($info) === ''){
+				$info = 'Silahkan pilih Tes yang diikuti dari daftar tes yang tersedia dibawah ini. Apabila tes tidak muncul, silahkan menghubungi Operator yang bertugas.';
+			}
+			$data['konfigurasi_isi'] = $info;
 			$this->cbt_konfigurasi_model->update('konfigurasi_kode', 'cbt_informasi', $data);
 
             $status['status'] = 1;

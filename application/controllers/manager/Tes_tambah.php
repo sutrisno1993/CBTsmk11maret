@@ -228,29 +228,33 @@ class Tes_tambah extends Member_Controller {
             	$status['pesan'] = 'Nama Tes sudah digunakan, silahkan menggunakan yang lainnya';
             }else{
                 $is_process = 1;
+                $is_running_tes = 0;
             	// Menyimpan data tes
             	if(empty($tes_id)){
             		$tes_id = $this->cbt_tes_model->save($data);
             	}else{
             		// Cek dulu apakah kondisi tes sudah berjalan
                     if($this->cbt_tes_user_model->count_by_kolom('tesuser_tes_id', $tes_id)->row()->hasil>0){
+                        $is_running_tes = 1;
+                        $data_time['tes_nama'] = $data['tes_nama'];
+                        $data_time['tes_detail'] = $data['tes_detail'];
                         $data_time['tes_begin_time'] = $data['tes_begin_time'];
                         $data_time['tes_end_time'] = $data['tes_end_time'];
+                        $data_time['tes_duration_time'] = $data['tes_duration_time'];
                         $data_time['tes_hari'] = $data['tes_hari'];
                         $data_time['tes_shift'] = $data['tes_shift'];
                         $data_time['tes_jam_ke'] = $data['tes_jam_ke'];
+                        $data_time['tes_results_to_users'] = $data['tes_results_to_users'];
+                        $data_time['tes_detail_to_users'] = $data['tes_detail_to_users'];
+                        $data_time['tes_token'] = $data['tes_token'];
                         $this->cbt_tes_model->update('tes_id', $tes_id, $data_time);
-
-                        $status['status'] = 0;
-                        $status['pesan'] = 'Rentang Waktu, Hari, Shift, dan Jam Ke Tes saja yang dapat diubah, karena Tes masih digunakan.';
-                        $is_process = 0;
                     }else{
                         $this->cbt_tes_model->update('tes_id', $tes_id, $data);
                     }
             	}
 
                 if($is_process==1){
-                    // Menyimpan data group yang mengikuti tes
+                    // Menyimpan data group yang mengikuti tes (Tetap diizinkan walau tes sedang berjalan)
                     $groups = $this->input->post('tambah-group', true);
                     // menghapus data group berdasarkan tes terlebih dahulu
                     $this->cbt_tesgrup_model->delete('tstgrp_tes_id', $tes_id);
@@ -276,7 +280,11 @@ class Tes_tambah extends Member_Controller {
                         $status['status'] = 1;
                         $status['tes_id'] = $tes_id;
                         $status['tes_nama'] = $data['tes_nama'];
-                        $status['pesan'] = 'Tes berhasil disimpan, silahkan mengecek data Soal';
+                        if($is_running_tes == 1){
+                            $status['pesan'] = 'Jadwal, Rentang Waktu, dan Grup/Kelas peserta berhasil diperbarui (Poin soal dikunci karena Tes sedang/sudah dikerjakan).';
+                        }else{
+                            $status['pesan'] = 'Tes berhasil disimpan, silahkan mengecek data Soal';
+                        }
                     }else{
                         $status['status'] = 1;
                         $status['tes_id'] = $tes_id;
@@ -390,10 +398,20 @@ class Tes_tambah extends Member_Controller {
         if(!empty($tes_id)){
             $query_tes = $this->cbt_tes_model->get_by_kolom_limit('tes_id', $tes_id, 1);
             if($query_tes->num_rows()>0){
-                $query_tes = $query_tes->row();
+                $total_soal = 0;
                 $query_soal = $this->cbt_tes_topik_set_model->get_by_kolom('tset_tes_id', $tes_id)->result();
                 foreach ($query_soal as $soal) {
-                    $max_score = $max_score+($soal->tset_jumlah*$query_tes->tes_score_right);
+                    $total_soal += intval($soal->tset_jumlah);
+                }
+
+                if($total_soal > 0){
+                    // Otomatis Kunci ke Skala 100: Poin per butir = 100 / Total Soal
+                    $poin_otomatis = round(100 / $total_soal, 4);
+                    $this->cbt_tes_model->update('tes_id', $tes_id, array(
+                        'tes_score_right' => $poin_otomatis,
+                        'tes_max_score' => 100.00
+                    ));
+                    $max_score = 100.00;
                 }
             }
         }

@@ -269,7 +269,10 @@
 				updateMapLink();
 
 				$('#zyacbt_informasi').val(data.cbt_informasi);
-				$('#zyacbt-informasi').val('');
+				$('#zyacbt-informasi').val(data.cbt_informasi);
+				if(typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.zyacbt_informasi){
+					CKEDITOR.instances.zyacbt_informasi.setData(data.cbt_informasi);
+				}
             }
             $("#modal-proses").modal('hide');
         });
@@ -286,7 +289,17 @@
 
         $('#form-pengaturan').submit(function(){
             $("#modal-proses").modal('show');
-			$('#zyacbt-informasi').val(CKEDITOR.instances.zyacbt_informasi.getData());
+			var editorContent = '';
+			if(typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.zyacbt_informasi){
+				editorContent = CKEDITOR.instances.zyacbt_informasi.getData();
+			}
+			if(!editorContent || editorContent.trim() === ''){
+				editorContent = $('#zyacbt_informasi').val();
+			}
+			if(!editorContent || editorContent.trim() === ''){
+				editorContent = 'Silahkan pilih Tes yang diikuti dari daftar tes yang tersedia dibawah ini. Apabila tes tidak muncul, silahkan menghubungi Operator yang bertugas.';
+			}
+			$('#zyacbt-informasi').val(editorContent);
             $.ajax({
                     url:"<?php echo site_url().'/'.$url; ?>/simpan",
                     type:"POST",

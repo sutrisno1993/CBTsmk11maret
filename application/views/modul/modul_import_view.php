@@ -240,14 +240,14 @@
         }
 
         // Simpan state select2
-        if($('#topik').data('select2')){
-            $('#topik').select2('destroy');
+        if($('#topik').hasClass('select2-hidden-accessible') || $('#topik').data('select2')){
+            try { $('#topik').select2('destroy'); } catch(e){}
         }
 
         $('#topik').html(html);
 
-        // Jika hanya 1 item cocok dan bukan inisialisasi awal, pilih otomatis
-        if(filtered.length === 1 && !isInitial){
+        // Jika nilai lama tidak ada di hasil filter, otomatis pilih topik pertama yang cocok
+        if(filtered.length > 0 && !stillExists){
             $('#topik').val(filtered[0].id);
         }else if(!stillExists){
             $('#topik').val('');

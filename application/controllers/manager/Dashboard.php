@@ -172,20 +172,27 @@ class Dashboard extends Member_Controller {
         $data['siswa_aktif_tes'] = $this->db->where('tesuser_status', 1)->count_all_results('cbt_tes_user');
         $data['siswa_login'] = $this->db->where('user_login', 1)->count_all_results('cbt_user');
 
-        // Monitoring Siswa Ujian Real-Time (IP Publik vs Wi-Fi Sekolah)
-        $this->db->select('cbt_tes_user.*, cbt_user.user_id, cbt_user.user_name, cbt_user.user_firstname, cbt_user.user_ip, cbt_user.user_lat, cbt_user.user_lng, cbt_user_grup.grup_nama, cbt_tes.tes_nama, cbt_tes.tes_duration_time');
+        // Pastikan kolom tesuser_pelanggaran tersedia di cbt_tes_user
+        if(!$this->db->field_exists('tesuser_pelanggaran', 'cbt_tes_user')){
+            $this->db->query("ALTER TABLE cbt_tes_user ADD COLUMN tesuser_pelanggaran INT(11) NOT NULL DEFAULT 0 AFTER tesuser_status");
+        }
+
+        // Monitoring Siswa Ujian Real-Time (IP Publik vs Wi-Fi Sekolah + Pelanggaran Anti-Cheat)
+        $this->db->select('cbt_tes_user.*, cbt_user.user_id, cbt_user.user_name, cbt_user.user_firstname, cbt_user.user_detail, cbt_user.user_ip, cbt_user.user_lat, cbt_user.user_lng, cbt_user_grup.grup_nama, cbt_tes.tes_nama, cbt_tes.tes_duration_time');
         $this->db->from('cbt_tes_user');
         $this->db->join('cbt_user', 'cbt_tes_user.tesuser_user_id = cbt_user.user_id');
         $this->db->join('cbt_user_grup', 'cbt_user.user_grup_id = cbt_user_grup.grup_id', 'left');
         $this->db->join('cbt_tes', 'cbt_tes_user.tesuser_tes_id = cbt_tes.tes_id', 'left');
-        $this->db->where('cbt_tes_user.tesuser_status', 1);
+        $this->db->where('(cbt_tes_user.tesuser_status IN (1, 3) OR cbt_tes_user.tesuser_pelanggaran > 0)');
         $this->db->where('DATE(cbt_tes_user.tesuser_creation_time)', date('Y-m-d'));
-        $this->db->order_by('cbt_tes_user.tesuser_creation_time', 'DESC');
+        $this->db->order_by('cbt_tes_user.tesuser_pelanggaran DESC, cbt_tes_user.tesuser_creation_time DESC');
         $raw_siswa_aktif = $this->db->get()->result();
 
         $siswa_monitoring = array();
         $total_local_ip = 0;
         $total_public_ip = 0;
+        $total_pelanggaran_siswa = 0;
+        $total_terkunci_siswa = 0;
 
         foreach($raw_siswa_aktif as $s){
             $ip = !empty($s->tesuser_ip) ? $s->tesuser_ip : (!empty($s->user_ip) ? $s->user_ip : '-');
@@ -204,18 +211,29 @@ class Dashboard extends Member_Controller {
             }else{
                 $total_public_ip++;
             }
+
+            $jml_p = isset($s->tesuser_pelanggaran) ? intval($s->tesuser_pelanggaran) : 0;
+            if($jml_p > 0 || $s->tesuser_status == 3){
+                $total_pelanggaran_siswa++;
+            }
+            if($s->tesuser_status == 3){
+                $total_terkunci_siswa++;
+            }
             
             $s->display_ip = $ip;
             $s->is_local_ip = $is_local;
             $s->lat = $lat;
             $s->lng = $lng;
             $s->jarak_meter = $jarak;
+            $s->jml_pelanggaran = $jml_p;
             $siswa_monitoring[] = $s;
         }
 
         $data['siswa_monitoring'] = $siswa_monitoring;
         $data['total_local_ip'] = $total_local_ip;
         $data['total_public_ip'] = $total_public_ip;
+        $data['total_pelanggaran_siswa'] = $total_pelanggaran_siswa;
+        $data['total_terkunci_siswa'] = $total_terkunci_siswa;
 
         // Token Aktif Terkini
         $query_token = $this->db->select('token_isi, token_ts')->order_by('token_id', 'DESC')->limit(1)->get('cbt_tes_token');
@@ -291,6 +309,23 @@ class Dashboard extends Member_Controller {
             $status['error'] = validation_errors();
         }
         
+        echo json_encode($status);
+    }
+
+    /**
+     * Endpoint 1-Klik Buka Kunci & Reset Pelanggaran Anti-Cheat langsung dari Dashboard Utama
+     */
+    function reset_pelanggaran($tesuser_id = null){
+        $status = array('status' => 0, 'pesan' => 'ID peserta tes tidak valid.');
+        if(!empty($tesuser_id) && is_numeric($tesuser_id)){
+            $this->db->where('tesuser_id', intval($tesuser_id))
+                     ->update('cbt_tes_user', array(
+                         'tesuser_status' => 1,
+                         'tesuser_pelanggaran' => 0
+                     ));
+            $status['status'] = 1;
+            $status['pesan'] = 'Kunci ujian dibuka & hitungan pelanggaran siswa berhasil di-reset ke 0!';
+        }
         echo json_encode($status);
     }
 }

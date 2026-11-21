@@ -406,14 +406,16 @@
             html = '<option value="">(Tidak ada topik yang sesuai dengan filter)</option>';
         }
 
-        if($('#topik').data('select2')){
-            $('#topik').select2('destroy');
+        if($('#topik').hasClass('select2-hidden-accessible') || $('#topik').data('select2')){
+            try { $('#topik').select2('destroy'); } catch(e){}
         }
 
         $('#topik').html(html);
 
-        if(filtered.length === 1 && !isInitial){
-            $('#topik').val(filtered[0].id);
+        if(filtered.length > 0 && (!stillExists || !isInitial)){
+            if(!stillExists){
+                $('#topik').val(filtered[0].id);
+            }
         }else if(!stillExists){
             $('#topik').val('');
         }

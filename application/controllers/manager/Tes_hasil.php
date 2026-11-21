@@ -82,12 +82,21 @@ class Tes_hasil extends Member_Controller {
         if($query_group->num_rows()>0){
         	$query_group = $query_group->result();
         	foreach ($query_group as $temp) {
-        		$select = $select.'<option value="'.$temp->grup_id.'">'.$temp->grup_nama.'</option>';
+        		$select = $select.'<option value="'.$temp->grup_id.'" data-nama="'.htmlspecialchars($temp->grup_nama).'">'.$temp->grup_nama.'</option>';
         	}
         }else{
         	$select = '<option value="0">Tidak Ada Group</option>';
         }
         $data['select_group'] = $select;
+
+        // Ambil daftar unik Ruang / Sesi dari user_detail (Prioritas 4)
+        $q_ruang = $this->db->select('DISTINCT(user_detail) AS ruang')
+                            ->from('cbt_user')
+                            ->where('user_detail IS NOT NULL')
+                            ->where('user_detail !=', '')
+                            ->order_by('user_detail', 'ASC')
+                            ->get();
+        $data['daftar_ruang'] = ($q_ruang->num_rows() > 0) ? $q_ruang->result() : array();
 
         $query_tes = $this->cbt_tes_user_model->get_by_group();
         $select = '<option value="semua">Semua Tes</option>';
@@ -136,11 +145,12 @@ class Tes_hasil extends Member_Controller {
             	foreach( $tesuser_id as $kunci => $isi ) {
                     if($isi=="on"){
                     	$data_tes['tesuser_status']=1;
+                    	$data_tes['tesuser_pelanggaran']=0;
             			$this->cbt_tes_user_model->update('tesuser_id', $kunci, $data_tes);
                     }
                 }
             	$status['status'] = 1;
-            	$status['pesan'] = 'Tes berhasil dibuka, user bisa mengerjakan kembali';
+            	$status['pesan'] = 'Tes berhasil dibuka & hitungan pelanggaran di-reset ke 0, peserta bisa mengerjakan kembali.';
             }else if($pilihan=='waktu'){
             	foreach( $tesuser_id as $kunci => $isi ) {
                     if($isi=="on"){
@@ -158,6 +168,18 @@ class Tes_hasil extends Member_Controller {
             $status['pesan'] = validation_errors();
         }
         
+        echo json_encode($status);
+    }
+
+    /**
+     * Hitung ulang & normalisasi poin tes ke Skala 100 langsung dari halaman Hasil Tes
+     */
+    function normalisasi_nilai($tes_id = null){
+        $hasil = $this->cbt_tes_model->normalisasi_skala_100($tes_id);
+        $status = array(
+            'status' => 1,
+            'pesan' => 'Skala 100 diterapkan pada '.$hasil['jml_tes'].' Tes dan nilai pada '.$hasil['jml_peserta'].' lembar jawaban peserta berhasil dihitung ulang!'
+        );
         echo json_encode($status);
     }
 
@@ -259,9 +281,9 @@ class Tes_hasil extends Member_Controller {
 		$rows = $this->get_rows();
 
 		// run query to get user listing
-		if($status=='mengerjakan'){
-			$query = $this->cbt_tes_user_model->get_datatable($start, $rows, $tes_id, $grup_id, $urutkan, $tanggal, $keterangan, $search, $topik_id);
-			$iTotal= $this->cbt_tes_user_model->get_datatable_count($tes_id, $grup_id, $urutkan, $tanggal, $keterangan, $search, $topik_id)->row()->hasil;
+		if($status=='mengerjakan' || $status=='melanggar' || $status=='terkunci'){
+			$query = $this->cbt_tes_user_model->get_datatable($start, $rows, $tes_id, $grup_id, $urutkan, $tanggal, $keterangan, $search, $topik_id, $status);
+			$iTotal= $this->cbt_tes_user_model->get_datatable_count($tes_id, $grup_id, $urutkan, $tanggal, $keterangan, $search, $topik_id, $status)->row()->hasil;
 		}else{
 			$query = $this->cbt_user_model->get_datatable_hasiltes($start, $rows, $tes_id, $grup_id, $urutkan, $tanggal, $keterangan, $search, $topik_id);
 			$iTotal= $this->cbt_user_model->get_datatable_hasiltes_count($tes_id, $grup_id, $urutkan, $tanggal, $keterangan, $search, $topik_id)->row()->hasil;
@@ -306,20 +328,25 @@ class Tes_hasil extends Member_Controller {
 			if(empty($temp->tesuser_status)){
 				$record[] = 'Belum memulai';
 			}else{
-				if($temp->tesuser_status==1){
+				$jml_pelanggaran = isset($temp->tesuser_pelanggaran) ? intval($temp->tesuser_pelanggaran) : 0;
+				$badge_pelanggaran = ($jml_pelanggaran > 0) ? ' <span class="label label-warning" title="Terdeteksi keluar layar ujian"><i class="fa fa-exclamation-triangle"></i> '.$jml_pelanggaran.'x Pelanggaran</span>' : '';
+
+				if($temp->tesuser_status == 3){
+					$record[] = '<span class="label label-danger"><i class="fa fa-lock"></i> Terkunci Anti-Cheat ('.$jml_pelanggaran.'x)</span>';
+				}else if($temp->tesuser_status==1){
 					$tanggal = new DateTime();
 					// Cek apakah tes sudah melebihi batas waktu
 					$tanggal_tes = new DateTime($temp->tesuser_creation_time);
 					$tanggal_tes->modify('+'.$temp->tes_duration_time.' minutes');
 					if($tanggal>$tanggal_tes){
-						$record[] = 'Selesai';
+						$record[] = 'Selesai'.$badge_pelanggaran;
 					}else{
 						$tanggal = $tanggal_tes->diff($tanggal);
 						$menit_sisa = ($tanggal->h*60)+($tanggal->i);
-						$record[] = 'Berjalan (-'.$menit_sisa.' menit)';
+						$record[] = 'Berjalan (-'.$menit_sisa.' menit)'.$badge_pelanggaran;
 					}
 				}else{
-					$record[] = 'Selesai';
+					$record[] = 'Selesai'.$badge_pelanggaran;
 				}
 			}
 			

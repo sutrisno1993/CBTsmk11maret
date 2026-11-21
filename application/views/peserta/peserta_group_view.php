@@ -28,13 +28,17 @@
                         <table id="table-group" class="table table-bordered table-hover">
                             <thead>
                                 <tr>
-                                    <th>No.</th>
-                                    <th>Nama Group</th>
-                                    <th>Action</th>
+                                    <th style="width: 35px;">No.</th>
+                                    <th>Nama Group / Rombel Resmi</th>
+                                    <th style="width: 130px;">Jumlah Peserta</th>
+                                    <th style="width: 140px;">Jadwal Tes</th>
+                                    <th style="width: 80px;">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
+                                    <td> </td>
+                                    <td> </td>
                                     <td> </td>
                                     <td> </td>
                                     <td> </td>
@@ -200,14 +204,16 @@
 
         $('#table-group').DataTable({
                   "paging": true,
-                  "iDisplayLength":10,
+                  "iDisplayLength":25,
                   "bProcessing": false,
                   "bServerSide": true, 
                   "searching": true,
                   "aoColumns": [
-    					{"bSearchable": false, "bSortable": false, "sWidth":"20px"},
+    					{"bSearchable": false, "bSortable": false, "sWidth":"35px"},
     					{"bSearchable": false, "bSortable": false},
-                        {"bSearchable": false, "bSortable": false, "sWidth":"30px"}],
+    					{"bSearchable": false, "bSortable": false, "sWidth":"130px"},
+    					{"bSearchable": false, "bSortable": false, "sWidth":"140px"},
+                        {"bSearchable": false, "bSortable": false, "sWidth":"80px"}],
                   "sAjaxSource": "<?php echo site_url().'/'.$url; ?>/get_datatable/",
                   "autoWidth": false
          });          

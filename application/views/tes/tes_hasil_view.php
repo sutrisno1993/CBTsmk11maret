@@ -45,6 +45,17 @@
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Kelas / Group</label>
                             <div class="col-sm-9">
+                                <div style="margin-bottom: 5px; display: flex; flex-wrap: wrap; gap: 3px;">
+                                    <span style="font-size: 11px; color: #555; font-weight: 600; margin-right: 4px;">Filter Cepat:</span>
+                                    <button type="button" class="btn btn-default btn-xs" onclick="filter_cepat_kelas('X')" title="Pilih semua Kelas X">Kelas X</button>
+                                    <button type="button" class="btn btn-default btn-xs" onclick="filter_cepat_kelas('XI')" title="Pilih semua Kelas XI">Kelas XI</button>
+                                    <button type="button" class="btn btn-default btn-xs" onclick="filter_cepat_kelas('XII')" title="Pilih semua Kelas XII">Kelas XII</button>
+                                    <button type="button" class="btn btn-info btn-xs" onclick="filter_cepat_jurusan('TKR')">TKR</button>
+                                    <button type="button" class="btn btn-info btn-xs" onclick="filter_cepat_jurusan('TSM')">TSM</button>
+                                    <button type="button" class="btn btn-info btn-xs" onclick="filter_cepat_jurusan('TKJ')">TKJ</button>
+                                    <button type="button" class="btn btn-info btn-xs" onclick="filter_cepat_jurusan('OTKP')">OTKP</button>
+                                    <button type="button" class="btn btn-info btn-xs" onclick="filter_cepat_jurusan('AK')">AK</button>
+                                </div>
                                 <select name="pilih-group[]" id="pilih-group" class="form-control input-sm" multiple="multiple" style="width: 100%;">
                                     <?php if(!empty($select_group)){ echo $select_group; } ?>
                                 </select>
@@ -76,15 +87,22 @@
                             <label class="col-sm-4 control-label">Status Peserta</label>
                             <div class="col-sm-8">
                                 <select name="pilih-status" id="pilih-status" class="form-control input-sm">
-                                    <option value="mengerjakan">Peserta Mengerjakan Tes</option>
+                                    <option value="mengerjakan">Peserta Mengerjakan Tes (Semua)</option>
+                                    <option value="melanggar">⚠️ Peserta Melanggar Anti-Cheat (1x - 3x)</option>
+                                    <option value="terkunci">🔒 Peserta Terkunci Anti-Cheat (3x - Butuh Dibuka)</option>
 									<option value="tidak">Peserta Belum Mengerjakan Tes</option>
                                 </select>
                             </div>
                         </div>
 						<div class="form-group">
-                            <label class="col-sm-4 control-label">Keterangan Peserta</label>
+                            <label class="col-sm-4 control-label">Ruang / Keterangan</label>
                             <div class="col-sm-8">
-                                <input type="text" name="pilih-keterangan" id="pilih-keterangan" placeholder="Keterangan Peserta Tes" class="form-control input-sm" />
+                                <input type="text" name="pilih-keterangan" id="pilih-keterangan" list="list-ruang-ujian" placeholder="Ketik atau pilih Ruang / Sesi Ujian..." class="form-control input-sm" />
+                                <datalist id="list-ruang-ujian">
+                                    <?php if(!empty($daftar_ruang)){ foreach($daftar_ruang as $r){ ?>
+                                        <option value="<?php echo htmlspecialchars($r->ruang); ?>"></option>
+                                    <?php } } ?>
+                                </datalist>
                             </div>
                         </div>
                         <div class="form-group">
@@ -114,8 +132,11 @@
 				<div class="box-header with-border">
 					<div class="box-title">Daftar Hasil Tes</div>
                     <div class="box-tools pull-right">
+                        <a href="<?php echo site_url('portal_nilai'); ?>" target="_blank" class="btn btn-success btn-xs" style="margin-right: 10px; font-weight: 700;">
+                            <i class="fa fa-file-excel-o"></i> 📥 Portal Download Nilai Guru (Pisah per Kelas)
+                        </a>
                         <div class="dropdown pull-right">
-                            <a  style="cursor: pointer;" onclick="export_excel()">Export ke Excel</a>
+                            <a style="cursor: pointer;" class="btn btn-primary btn-xs" onclick="export_excel()"><i class="fa fa-download"></i> Export Filter Ini ke Excel</a>
                         </div>
                     </div>
 				</div><!-- /.box-header -->
@@ -155,8 +176,9 @@
                     <button type="button" id="btn-edit-pilih" title="Pilih Hasil Tes" class="btn btn-default pull-right">Pilih Semua</button>
                     <button type="button" id="btn-edit-hapus" title="Hapus Hasil" class="btn btn-primary">Hapus</button>
                     <button type="button" id="btn-edit-hentikan" class="btn btn-primary">Hentikan</button>
-                    <button type="button" id="btn-edit-buka-tes" class="btn btn-primary">Buka Tes</button>
+                    <button type="button" id="btn-edit-buka-tes" class="btn btn-success" title="Buka kunci ujian & reset hitungan pelanggaran Anti-Cheat ke 0"><i class="fa fa-unlock"></i> Buka Tes / Reset Pelanggaran</button>
                     <button type="button" id="btn-edit-waktu" class="btn btn-primary">Tambah Waktu</button>
+                    <button type="button" onclick="hitung_ulang_skala_100()" class="btn btn-warning" title="Konversi otomatis nilai tes yang terlanjur maksimal 40 menjadi Skala 100"><i class="fa fa-calculator"></i> ⚡ Hitung Ulang Nilai ke Skala 100</button>
                 </div>
 			</div>
         </div>
@@ -205,6 +227,21 @@
         window.open("<?php echo site_url().'/manager/tes_hasil_detail'; ?>/index/"+tesuser_id);
     }
 
+    function hitung_ulang_skala_100(){
+        var tes = $('#pilih-tes').val() || 'semua';
+        var msg = (tes !== 'semua') ? 'Hitung ulang nilai peserta pada Tes terpilih ke Skala 100 (Poin = 100 / Jumlah Soal)?' : 'Normalisasi semua Jadwal Tes ke Skala 100 (Poin = 100 / Jumlah Soal) dan hitung ulang seluruh nilai peserta?';
+        if(confirm(msg)){
+            $("#modal-proses").modal('show');
+            $.getJSON('<?php echo site_url().'/'.$url; ?>/normalisasi_nilai/' + tes, function(res){
+                $("#modal-proses").modal('hide');
+                if(res.status == 1){
+                    refresh_table();
+                    notify_success(res.pesan);
+                }
+            });
+        }
+    }
+
     function pilih_semua_kelas(){
         $('#pilih-group option').prop('selected', true);
         $('#pilih-group').trigger('change');
@@ -212,6 +249,41 @@
 
     function reset_kelas(){
         $('#pilih-group option').prop('selected', false);
+        $('#pilih-group').trigger('change');
+    }
+
+    function filter_cepat_kelas(tingkat){
+        $('#pilih-group option').prop('selected', false);
+        var regex = new RegExp('\\b' + tingkat + '\\b', 'i');
+        $('#pilih-group option').each(function(){
+            var txt = $(this).text();
+            if(regex.test(txt)){
+                $(this).prop('selected', true);
+            }
+        });
+        $('#pilih-group').trigger('change');
+    }
+
+    function filter_cepat_jurusan(jurusan){
+        $('#pilih-group option').prop('selected', false);
+        var aliases = {
+            'TKR': ['TKR', 'TKRO'],
+            'TSM': ['TSM', 'TBSM'],
+            'TKJ': ['TKJ', 'TJKT'],
+            'OTKP': ['OTKP', 'MP', 'MPLB', 'AP'],
+            'AK': ['AK', 'AKL']
+        };
+        var list = aliases[jurusan] || [jurusan];
+        $('#pilih-group option').each(function(){
+            var txt = $(this).text().toUpperCase();
+            for(var i = 0; i < list.length; i++){
+                var rgx = new RegExp('\\b' + list[i] + '\\b', 'i');
+                if(rgx.test(txt)){
+                    $(this).prop('selected', true);
+                    break;
+                }
+            }
+        });
         $('#pilih-group').trigger('change');
     }
 

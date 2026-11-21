@@ -253,51 +253,74 @@ class Tes_dashboard extends Tes_Controller {
 
 									// Mengambil data soal pada test_log 
 									$query_test_log = $this->cbt_tes_soal_model->get_by_testuser_select($tests_users_id, $subject_set->tset_topik_id, 'tessoal_id, soal_id, soal_tipe')->result();
+									
+									// Optimasi High-Concurrency: Ambil semua jawaban Pilihan Ganda sekaligus dalam 1 Query WHERE IN
+									$pg_soal_ids = array();
 									foreach ($query_test_log as $test_log) {
-										// Jika tipe soal pilihan ganda
-										if($test_log->soal_tipe==1){
-											// Jika jawaban diacak 
-											if($subject_set->tset_acak_jawaban==1){
-												// mendapatkan jawaban dari soal yang ada dengan diacak terlebih dahulu
-												$query_jawaban = $this->cbt_jawaban_model->get_by_soal_limit($test_log->soal_id, $subject_set->tset_jawaban);
-												// Jika jumlah jawaban lebih dari 0
-												if($query_jawaban->num_rows()>0){
-													$query_jawaban = $query_jawaban->result();
-													$i_jawaban = 0;
-													$insert_jawaban = array();
-													foreach ($query_jawaban as $jawaban) {
-														// Menyimpan data soal
-														$data_jawaban['soaljawaban_jawaban_id'] = $jawaban->jawaban_id;
-														$data_jawaban['soaljawaban_order'] = ++$i_jawaban;
-														$data_jawaban['soaljawaban_selected'] = 0;
-														$data_jawaban['soaljawaban_tessoal_id'] = $test_log->tessoal_id;
+										if($test_log->soal_tipe == 1){
+											$pg_soal_ids[] = $test_log->soal_id;
+										}
+									}
 
-														$insert_jawaban[] = $data_jawaban;
-													}
-													//insert batch
-													$this->cbt_tes_soal_jawaban_model->save_batch($insert_jawaban);
+									if(!empty($pg_soal_ids)){
+										$q_all_jawaban = $this->cbt_jawaban_model->get_by_soal_array($pg_soal_ids);
+										$jawaban_by_soal = array();
+										if($q_all_jawaban && $q_all_jawaban->num_rows() > 0){
+											foreach($q_all_jawaban->result() as $jwb){
+												$sid = $jwb->jawaban_soal_id;
+												if(!isset($jawaban_by_soal[$sid])){
+													$jawaban_by_soal[$sid] = array('benar' => array(), 'salah' => array(), 'all' => array());
 												}
-											}else{
-												// Mendapatkan jawaban yang tidak diacak
-												$query_jawaban = $this->cbt_jawaban_model->get_by_soal_tanpa_acak($test_log->soal_id);
-												// Jika jumlah jawaban lebih dari 0
-												if($query_jawaban->num_rows()>0){
-													$query_jawaban = $query_jawaban->result();
-													$i_jawaban = 0;
-													$insert_jawaban = array();
-													foreach ($query_jawaban as $jawaban) {
-														// Menyimpan data soal
-														$data_jawaban['soaljawaban_jawaban_id'] = $jawaban->jawaban_id;
-														$data_jawaban['soaljawaban_order'] = ++$i_jawaban;
-														$data_jawaban['soaljawaban_selected'] = 0;
-														$data_jawaban['soaljawaban_tessoal_id'] = $test_log->tessoal_id;
-
-														$insert_jawaban[] = $data_jawaban;
-													}
-													//insert batch
-													$this->cbt_tes_soal_jawaban_model->save_batch($insert_jawaban);
+												$jawaban_by_soal[$sid]['all'][] = $jwb->jawaban_id;
+												if($jwb->jawaban_benar == 1){
+													$jawaban_by_soal[$sid]['benar'][] = $jwb->jawaban_id;
+												}else{
+													$jawaban_by_soal[$sid]['salah'][] = $jwb->jawaban_id;
 												}
 											}
+										}
+
+										$insert_jawaban_all = array();
+										$limit_jwb = intval($subject_set->tset_jawaban);
+
+										foreach ($query_test_log as $test_log) {
+											if($test_log->soal_tipe == 1 && isset($jawaban_by_soal[$test_log->soal_id])){
+												$pool = $jawaban_by_soal[$test_log->soal_id];
+												$selected_jwb_ids = array();
+
+												if($subject_set->tset_acak_jawaban == 1){
+													// Ambil 1 jawaban benar (jika ada) dan (limit - 1) jawaban pengecoh, lalu acak di memori PHP
+													if(!empty($pool['benar'])){
+														$benar_list = $pool['benar'];
+														shuffle($benar_list);
+														$selected_jwb_ids[] = $benar_list[0];
+													}
+													if(!empty($pool['salah']) && $limit_jwb > 1){
+														$salah_list = $pool['salah'];
+														shuffle($salah_list);
+														$salah_picked = array_slice($salah_list, 0, max(0, $limit_jwb - count($selected_jwb_ids)));
+														$selected_jwb_ids = array_merge($selected_jwb_ids, $salah_picked);
+													}
+													shuffle($selected_jwb_ids);
+												}else{
+													// Tanpa acak: urutan asli jawaban_id ASC
+													$selected_jwb_ids = $pool['all'];
+												}
+
+												$i_jawaban = 0;
+												foreach($selected_jwb_ids as $jid){
+													$insert_jawaban_all[] = array(
+														'soaljawaban_jawaban_id' => $jid,
+														'soaljawaban_order' => ++$i_jawaban,
+														'soaljawaban_selected' => 0,
+														'soaljawaban_tessoal_id' => $test_log->tessoal_id
+													);
+												}
+											}
+										}
+
+										if(!empty($insert_jawaban_all)){
+											$this->cbt_tes_soal_jawaban_model->save_batch($insert_jawaban_all);
 										}
 									}
 								}
@@ -439,7 +462,11 @@ class Tes_dashboard extends Tes_Controller {
 	            	$tanggal_tes = new DateTime($query_test_user->tesuser_creation_time);
 	            	$tanggal_tes->modify('+'.$temp->tes_duration_time.' minutes');
 
-	            	if($tanggal<$tanggal_tes AND $query_test_user->tesuser_status!=4){
+	            	if($query_test_user->tesuser_status == 3){
+	            		// Terkunci oleh sistem Anti-Cheating (3x pelanggaran keluar layar)
+	            		$record[] = '';
+	            		$record[] = '<span class="label label-danger" style="padding: 5px 8px; font-size: 11px;"><i class="fa fa-lock"></i> Terkunci Pelanggaran (Lapor Pengawas)</span>';
+	            	}else if($tanggal<$tanggal_tes AND $query_test_user->tesuser_status!=4){
 	            		// nilai kosong karena masih dalam pengerjaan
 	            		$record[] = '';
 	            		// Jika masih dalam waktu pengerjaan, maka tes dilanjutkan

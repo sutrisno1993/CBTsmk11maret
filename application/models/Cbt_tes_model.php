@@ -21,6 +21,103 @@ class Cbt_tes_model extends CI_Model{
 		}
 	}
 
+    /**
+     * Normalisasi Otomatis Poin Dasar & Max Score ke Skala 100 (Poin = 100 / Total Soal)
+     * Sekaligus menghitung ulang (Recalculate) nilai siswa yang sudah terlanjur mengerjakan tes tersebut.
+     */
+    function normalisasi_skala_100($tes_id = null){
+        // Pastikan kolom mendukung presisi 4 desimal untuk jumlah soal ganjil (misal 30 soal -> 3.3333)
+        $this->db->query("ALTER TABLE `cbt_tes` MODIFY `tes_score_right` DECIMAL(10,4) NULL DEFAULT 1.0000");
+        $this->db->query("ALTER TABLE `cbt_tes_soal` MODIFY `tessoal_nilai` DECIMAL(10,4) NULL DEFAULT NULL");
+
+        $where_tes = '';
+        if(!empty($tes_id) && $tes_id != 'semua' && is_numeric($tes_id)){
+            $where_tes = ' WHERE t.tes_id = '.intval($tes_id);
+        }
+
+        $sql = "
+            SELECT t.tes_id, t.tes_nama, t.tes_score_right, t.tes_score_wrong, t.tes_score_unanswered, t.tes_max_score,
+                   COALESCE(SUM(ts.tset_jumlah), 0) AS total_soal
+            FROM cbt_tes t
+            INNER JOIN cbt_tes_topik_set ts ON ts.tset_tes_id = t.tes_id
+            $where_tes
+            GROUP BY t.tes_id
+            HAVING total_soal > 0
+        ";
+        $tes_list = $this->db->query($sql)->result();
+
+        $jml_tes_diubah = 0;
+        $jml_peserta_dihitung = 0;
+
+        foreach($tes_list as $t){
+            $total_soal = intval($t->total_soal);
+            if($total_soal <= 0) continue;
+
+            $poin_baru = round(100 / $total_soal, 4);
+            $poin_salah = floatval($t->tes_score_wrong);
+            $poin_kosong = floatval($t->tes_score_unanswered);
+
+            // 1. Update tes_score_right dan tes_max_score = 100 di cbt_tes
+            $this->db->where('tes_id', $t->tes_id)->update('cbt_tes', array(
+                'tes_score_right' => $poin_baru,
+                'tes_max_score' => 100.00
+            ));
+            $jml_tes_diubah++;
+
+            // 2. Hitung ulang (Recalculate) tessoal_nilai untuk siswa yang sudah mengerjakan tes ini
+            // a) Soal Pilihan Ganda (soal_tipe = 1) yang dijawab BENAR
+            $sql_recalc_benar = "
+                UPDATE cbt_tes_soal ts
+                INNER JOIN cbt_tes_user tu ON ts.tessoal_tesuser_id = tu.tesuser_id
+                INNER JOIN cbt_soal s ON ts.tessoal_soal_id = s.soal_id
+                INNER JOIN cbt_tes_soal_jawaban tsj ON tsj.soaljawaban_tessoal_id = ts.tessoal_id AND tsj.soaljawaban_selected = 1
+                INNER JOIN cbt_jawaban j ON tsj.soaljawaban_jawaban_id = j.jawaban_id
+                SET ts.tessoal_nilai = ".$this->db->escape($poin_baru)."
+                WHERE tu.tesuser_tes_id = ".intval($t->tes_id)."
+                  AND s.soal_tipe = 1
+                  AND j.jawaban_benar = 1
+            ";
+            $this->db->query($sql_recalc_benar);
+
+            // b) Soal Pilihan Ganda (soal_tipe = 1) yang dijawab SALAH
+            $sql_recalc_salah = "
+                UPDATE cbt_tes_soal ts
+                INNER JOIN cbt_tes_user tu ON ts.tessoal_tesuser_id = tu.tesuser_id
+                INNER JOIN cbt_soal s ON ts.tessoal_soal_id = s.soal_id
+                INNER JOIN cbt_tes_soal_jawaban tsj ON tsj.soaljawaban_tessoal_id = ts.tessoal_id AND tsj.soaljawaban_selected = 1
+                INNER JOIN cbt_jawaban j ON tsj.soaljawaban_jawaban_id = j.jawaban_id
+                SET ts.tessoal_nilai = ".$this->db->escape($poin_salah)."
+                WHERE tu.tesuser_tes_id = ".intval($t->tes_id)."
+                  AND s.soal_tipe = 1
+                  AND j.jawaban_benar = 0
+            ";
+            $this->db->query($sql_recalc_salah);
+
+            // c) Soal Jawaban Singkat (soal_tipe = 3) yang sudah dijawab
+            $sql_recalc_singkat = "
+                UPDATE cbt_tes_soal ts
+                INNER JOIN cbt_tes_user tu ON ts.tessoal_tesuser_id = tu.tesuser_id
+                INNER JOIN cbt_soal s ON ts.tessoal_soal_id = s.soal_id
+                SET ts.tessoal_nilai = CASE
+                    WHEN UPPER(TRIM(ts.tessoal_jawaban_text)) = UPPER(TRIM(s.soal_kunci)) THEN ".$this->db->escape($poin_baru)."
+                    ELSE ".$this->db->escape($poin_salah)."
+                END
+                WHERE tu.tesuser_tes_id = ".intval($t->tes_id)."
+                  AND s.soal_tipe = 3
+                  AND ts.tessoal_change_time IS NOT NULL
+            ";
+            $this->db->query($sql_recalc_singkat);
+
+            $cnt_tu = $this->db->where('tesuser_tes_id', $t->tes_id)->count_all_results('cbt_tes_user');
+            $jml_peserta_dihitung += $cnt_tu;
+        }
+
+        return array(
+            'jml_tes' => $jml_tes_diubah,
+            'jml_peserta' => $jml_peserta_dihitung
+        );
+    }
+
     function save($data){
         $this->db->insert($this->table, $data);
         return $this->db->insert_id();

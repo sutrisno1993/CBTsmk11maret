@@ -76,17 +76,43 @@ class Cbt_konfigurasi_model extends CI_Model{
 	}
 
 	/**
-	 * Validasi token QR siswa (mendukung toleransi slot sebelumnya & berikutnya)
+	 * Validasi token QR siswa (mendukung token penuh 10 karakter, kode pendek 6 karakter untuk input APK, atau URL lengkap, dengan toleransi slot sebelumnya & berikutnya)
 	 * @param string $token
 	 * @return bool
 	 */
 	function is_valid_qr_token($token){
 		if(empty($token)) return false;
-		$token = trim($token);
-		$current = $this->get_qr_token(0);
-		$prev = $this->get_qr_token(-1);
-		$next = $this->get_qr_token(1);
-		return ($token === $current || $token === $prev || $token === $next);
+		$token = strtolower(trim($token));
+
+		// Jika siswa menempelkan URL lengkap (misal ?qr=TOKEN atau /akses/TOKEN), ekstrak tokennya
+		if(strpos($token, 'qr=') !== false){
+			$parts = explode('qr=', $token);
+			$token = trim( end($parts) );
+			if(strpos($token, '&') !== false){
+				$token = substr($token, 0, strpos($token, '&'));
+			}
+		}elseif(strpos($token, '/akses/') !== false){
+			$parts = explode('/akses/', $token);
+			$token = trim( end($parts), "/ \t\n\r\0\x0B" );
+		}
+
+		// Bersihkan spasi atau tanda strip (misal siswa mengetik A1B-2C3)
+		$token = str_replace(array(' ', '-'), '', $token);
+		if(strlen($token) < 6) return false;
+
+		$slots = array(
+			strtolower($this->get_qr_token(0)),
+			strtolower($this->get_qr_token(-1)),
+			strtolower($this->get_qr_token(1))
+		);
+
+		foreach($slots as $valid_full){
+			$valid_short = substr($valid_full, 0, 6);
+			if($token === $valid_full || $token === $valid_short){
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

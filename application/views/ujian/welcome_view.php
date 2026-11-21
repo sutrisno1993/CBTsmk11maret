@@ -16,6 +16,7 @@
 			<input type="hidden" name="latitude" id="latitude" value="">
 			<input type="hidden" name="longitude" id="longitude" value="">
 			<input type="hidden" name="accuracy" id="accuracy" value="">
+			<input type="hidden" name="gps_fallback_qr" id="gps_fallback_qr" value="0">
     	</div>
     	<div class="row">
     		<div class="login-box">
@@ -62,9 +63,22 @@
 						<?php endif; ?>
 					</div>
 					<?php elseif(empty($is_ip_bypass) && empty($is_qr_valid)): ?>
-					<div style="margin-bottom: 15px; padding: 10px 14px; border-radius: 8px; font-size: 12px; background: #fffbeb; color: #92400e; border: 1px solid #fde68a; line-height: 1.4;">
-						<i class="fa fa-info-circle" style="font-size: 15px; color: #d97706;"></i> <b>Perangkat Belum Scan QR Code:</b><br>
-						<span>Jika menggunakan kuota pribadi, Anda wajib memindai QR Code izin dari Pengawas/Proktor di ruang ujian (berlaku 12 jam).</span>
+					<div id="qr-verify-card" style="margin-bottom: 16px; padding: 12px 14px; border-radius: 10px; font-size: 12px; background: #fffbeb; color: #92400e; border: 1.5px solid #fcd34d; line-height: 1.45;">
+						<div style="margin-bottom: 8px;">
+							<i class="fa fa-qrcode" style="font-size: 15px; color: #d97706;"></i> <b>Akses Kuota Mandiri / APK Exam Browser:</b><br>
+							<span>Scan QR Code Pengawas <b>ATAU</b> ketik <b>6 Digit Kode Akses Ruang</b> di layar proyektor:</span>
+						</div>
+						<div class="input-group">
+							<input type="text" id="kode_qr_akses" name="kode_qr_akses" class="form-control" placeholder="Ketik 6 Digit Kode Ruang (Misal: A1B2C3)" maxlength="64" autocomplete="off" style="height: 36px !important; font-size: 13px !important; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; background: #ffffff; border-color: #f59e0b !important;">
+							<span class="input-group-btn">
+								<button type="button" id="btn-verifikasi-kode-qr" onclick="verifikasiKodeQr()" class="btn btn-warning" style="height: 36px; font-weight: 700; font-size: 12px; border-radius: 0 8px 8px 0; background: #d97706; border-color: #b45309;">
+									<i class="fa fa-check-circle"></i> Aktifkan
+								</button>
+							</span>
+						</div>
+						<small style="display: block; margin-top: 5px; color: #b45309; font-size: 11px;">
+							<i class="fa fa-info-circle"></i> Anda juga dapat langsung mengisi Kode di atas bersama Username &amp; Password lalu klik <b>Masuk Ujian</b>.
+						</small>
 					</div>
 					<?php endif; ?>
 
@@ -121,14 +135,15 @@
         if(!isRadiusLock || isIpBypass) return;
 
         if(!navigator.geolocation){
-            $('#gps-icon').removeClass('fa-spinner fa-spin').addClass('fa-exclamation-triangle').css('color', '#dc2626');
-            $('#gps-status-text').html('Browser tidak mendukung pendeteksian lokasi GPS.');
-            $('#gps-status-box').css({'background': '#fef2f2', 'color': '#991b1b', 'border-color': '#fecaca'});
+            $('#gps_fallback_qr').val('1');
+            $('#gps-icon').removeClass('fa-spinner fa-spin').addClass('fa-shield').css('color', '#0284c7');
+            $('#gps-status-text').html('<b>Mode WebView / APK:</b> Verifikasi lokasi menggunakan Kode QR Ruang Ujian.');
+            $('#gps-status-box').css({'background': '#f0f9ff', 'color': '#0369a1', 'border-color': '#bae6fd'});
             return;
         }
 
         $('#btn-retry-gps').hide();
-        $('#gps-icon').removeClass('fa-map-marker fa-check-circle fa-exclamation-triangle').addClass('fa-spinner fa-spin').css('color', '#4338ca');
+        $('#gps-icon').removeClass('fa-map-marker fa-check-circle fa-exclamation-triangle fa-shield').addClass('fa-spinner fa-spin').css('color', '#4338ca');
         $('#gps-status-text').html('Mendeteksi lokasi GPS perangkat...');
         $('#gps-status-box').css({'background': '#eef2ff', 'color': '#3730a3', 'border-color': '#c7d2fe'});
 
@@ -137,27 +152,24 @@
                 $('#latitude').val(pos.coords.latitude);
                 $('#longitude').val(pos.coords.longitude);
                 $('#accuracy').val(pos.coords.accuracy);
+                $('#gps_fallback_qr').val('0');
 
-                $('#gps-icon').removeClass('fa-spinner fa-spin fa-exclamation-triangle').addClass('fa-check-circle').css('color', '#16a34a');
+                $('#gps-icon').removeClass('fa-spinner fa-spin fa-exclamation-triangle fa-shield').addClass('fa-check-circle').css('color', '#16a34a');
                 $('#gps-status-text').html('<b>Lokasi Terdeteksi</b> (Akurasi: ±' + Math.round(pos.coords.accuracy) + 'm)');
                 $('#gps-status-box').css({'background': '#f0fdf4', 'color': '#166534', 'border-color': '#bbf7d0'});
                 $('#btn-retry-gps').show();
             },
             function(err){
-                var errMsg = 'Gagal mendeteksi lokasi GPS.';
-                if(err.code === 1){
-                    errMsg = '<b>Izin Lokasi Ditolak.</b> Wajib aktifkan GPS & izinkan akses lokasi browser.';
-                }else if(err.code === 2){
-                    errMsg = '<b>GPS Tidak Aktif.</b> Mohon nyalakan GPS di pengaturan HP.';
-                }else if(err.code === 3){
-                    errMsg = '<b>Waktu Deteksi Habis.</b> Silakan coba ulangi deteksi lokasi.';
-                }
-                $('#gps-icon').removeClass('fa-spinner fa-spin').addClass('fa-exclamation-triangle').css('color', '#dc2626');
+                // Jika diakses via APK WebView atau HTTP non-SSL (di mana browser memblokir Geolocation API),
+                // aktifkan fallback verifikasi fisik menggunakan Kode QR Ruang Ujian
+                $('#gps_fallback_qr').val('1');
+                var errMsg = '<b>Verifikasi Ruang via QR/Token:</b> Sensor GPS WebView dibatasi, akses divalidasi melalui Kode QR Ruang.';
+                $('#gps-icon').removeClass('fa-spinner fa-spin').addClass('fa-shield').css('color', '#d97706');
                 $('#gps-status-text').html(errMsg);
-                $('#gps-status-box').css({'background': '#fef2f2', 'color': '#991b1b', 'border-color': '#fecaca'});
+                $('#gps-status-box').css({'background': '#fffbeb', 'color': '#92400e', 'border-color': '#fde68a'});
                 $('#btn-retry-gps').show();
             },
-            { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+            { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
         );
     }
 
@@ -168,6 +180,44 @@
       } else {
         x.type = "password";
       }
+    }
+
+    function verifikasiKodeQr(){
+      var kode = $('#kode_qr_akses').val();
+      if(!kode || $.trim(kode) === ''){
+        $('#form-pesan').html(pesan_err('Silakan ketik <b>6 Digit Kode Akses Ruang</b> yang tampil di layar proyektor Pengawas.'));
+        $('#kode_qr_akses').focus();
+        return;
+      }
+      $('#btn-verifikasi-kode-qr').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+      $.ajax({
+        url: "<?php echo site_url('welcome/akses'); ?>",
+        type: "POST",
+        data: { qr: $.trim(kode) },
+        dataType: "json",
+        success: function(res){
+          $('#btn-verifikasi-kode-qr').prop('disabled', false).html('<i class="fa fa-check-circle"></i> Aktifkan');
+          if(res && res.status == 1){
+            $('#qr-verify-card').replaceWith(
+              '<div style="margin-bottom: 15px; padding: 10px 14px; border-radius: 8px; font-size: 12px; background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; display: flex; align-items: center; justify-content: space-between;">' +
+                '<div style="display: flex; align-items: center; gap: 8px;">' +
+                  '<i class="fa fa-check-circle" style="font-size: 16px; color: #059669;"></i>' +
+                  '<span><b>Akses Kuota Mandiri Aktif</b> (Maks 12 Jam)</span>' +
+                '</div>' +
+                '<span class="badge" style="background: #059669; font-size: 11px; padding: 4px 8px; border-radius: 12px;">Terverifikasi</span>' +
+              '</div>'
+            );
+            $('#form-pesan').html('');
+            $('#username').focus();
+          }else{
+            $('#form-pesan').html(pesan_err(res && res.error ? res.error : 'Kode Akses tidak valid.'));
+          }
+        },
+        error: function(){
+          $('#btn-verifikasi-kode-qr').prop('disabled', false).html('<i class="fa fa-check-circle"></i> Aktifkan');
+          $('#form-pesan').html(pesan_err('Gagal memverifikasi kode akses. Periksa koneksi internet Anda.'));
+        }
+      });
     }
 
     $(function () {
@@ -192,10 +242,9 @@
             if(isRadiusLock && !isIpBypass){
                 var lat = $('#latitude').val();
                 var lng = $('#longitude').val();
-                if(!lat || !lng || lat == '0' || lng == '0'){
-                    $('#form-pesan').html(pesan_err('<b>Akses Ditolak: Lokasi GPS Belum Terdeteksi!</b><br>Harap aktifkan GPS di HP dan izinkan akses lokasi di browser untuk dapat login ujian.'));
-                    mintaLokasiSiswa();
-                    return false;
+                var fallbackQr = $('#gps_fallback_qr').val();
+                if((!lat || !lng || lat == '0' || lng == '0') && fallbackQr != '1'){
+                    $('#gps_fallback_qr').val('1');
                 }
             }
 

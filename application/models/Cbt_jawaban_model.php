@@ -36,6 +36,21 @@ class Cbt_jawaban_model extends CI_Model{
     }
     
     /**
+     * Mendapatkan semua jawaban sekaligus untuk daftar soal_id (Optimasi High-Concurrency)
+     */
+    function get_by_soal_array($soal_ids){
+        if(empty($soal_ids) || !is_array($soal_ids)){
+            return FALSE;
+        }
+        $this->db->select('jawaban_id, jawaban_soal_id, jawaban_benar')
+                 ->where_in('jawaban_soal_id', $soal_ids)
+                 ->where('jawaban_aktif', 1)
+                 ->from($this->table)
+                 ->order_by('jawaban_id', 'ASC');
+        return $this->db->get();
+    }
+
+    /**
      * mendapatkan jawaban berdasarkan soal dengan diacak
      */
     function get_by_soal_limit($soal, $limit){

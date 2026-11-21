@@ -6,7 +6,10 @@
                 <i class="fa fa-pencil-square-o" style="color: #2563eb; margin-right: 6px;"></i> Mata Uji: <?php if(!empty($tes_name)){ echo htmlspecialchars($tes_name); } ?>
             </h1>
             <div class="breadcrumb" style="position: static; float: none; background: transparent; padding: 0; margin: 0; display: flex; align-items: center; gap: 6px;">
-                <span style="font-size: 12px; color: #64748b; font-weight: 600;">Font:</span>
+                <button type="button" class="btn btn-xs btn-default" id="btn-toggle-fullscreen" onclick="toggleExamFullscreen()" title="Mode Layar Penuh (Kiosk)" style="border-radius: 6px; font-weight: 700; padding: 3px 10px;">
+                    <i class="fa fa-arrows-alt"></i> <span class="hidden-xs">Layar Penuh</span>
+                </button>
+                <span style="font-size: 12px; color: #64748b; font-weight: 600; margin-left: 4px;">Font:</span>
                 <button type="button" class="btn btn-xs btn-default" onclick="zoomnormal()" title="Ukuran Font Normal" style="border-radius: 6px; font-weight: bold; padding: 3px 10px;">A</button>
                 <button type="button" class="btn btn-xs btn-primary" onclick="zoombesar()" title="Ukuran Font Lebih Besar" style="border-radius: 6px; font-weight: bold; padding: 3px 10px; font-size: 13px;">A+</button>
             </div>
@@ -24,10 +27,15 @@
             <input type="hidden" name="tes-soal-jml" id="tes-soal-jml" value="<?php if(!empty($tes_soal_jml)){ echo $tes_soal_jml; } ?>">
             <input type="hidden" name="tes-soal-ragu" id="tes-soal-ragu" value="<?php if(!empty($tes_ragu)){ echo $tes_ragu; } ?>">
     		<div class="box box-success box-solid" style="border-radius: 12px; overflow: hidden; margin-bottom: 20px;">
-                <div class="box-header with-border" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 18px;">
-                    <h3 class="box-title" style="font-size: 16px; font-weight: 700; margin: 0;">
-                        <i class="fa fa-question-circle" style="margin-right: 6px;"></i> Soal <span id="judul-soal"><?php if(!empty($tes_soal_nomor)){ echo 'Nomor '.$tes_soal_nomor; } ?></span>
-                    </h3>
+                <div class="box-header with-border" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; padding: 12px 18px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <h3 class="box-title" style="font-size: 16px; font-weight: 700; margin: 0;">
+                            <i class="fa fa-question-circle" style="margin-right: 6px;"></i> Soal <span id="judul-soal"><?php if(!empty($tes_soal_nomor)){ echo 'ke '.$tes_soal_nomor; } ?></span>
+                        </h3>
+                        <span id="save-status-badge" style="display: none; font-size: 11.5px; font-weight: 700; padding: 3px 10px; border-radius: 12px; background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(110, 231, 183, 0.35);">
+                            <i class="fa fa-check"></i> Tersimpan
+                        </span>
+                    </div>
                     <div class="box-tools pull-right" style="position: static; margin: 0;">
                         <div id="sisa-waktu"></div>
                     </div>
@@ -37,7 +45,7 @@
                         <?php if(!empty($tes_soal)){ echo $tes_soal; } ?>
                     </div>
                 </div><!-- /.box-body -->
-                <div class="box-footer" style="padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div class="box-footer cbt-nav-footer-mobile" style="padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                     <div>
                         <button type="button" class="btn btn-default hide" id="btn-sebelumnya" style="border-radius: 8px; padding: 8px 18px; font-weight: 600;">
                             <i class="fa fa-chevron-left" style="margin-right: 5px;"></i> Soal Sebelumnya
@@ -108,9 +116,9 @@
                             </div>
                             <div class="form-group">
                                 <label>Nama Tes</label>
-                                <input type="hidden" name="hentikan-tes-id" id="hentikan-tes-id" >
-                                <input type="hidden" name="hentikan-tes-user-id" id="hentikan-tes-user-id" >
-                                <input type="text" class="form-control" id="hentikan-tes-nama" name="hentikan-tes-nama" readonly>
+                                <input type="hidden" name="hentikan-tes-id" id="hentikan-tes-id" value="<?php if(!empty($tes_id)){ echo $tes_id; } ?>" >
+                                <input type="hidden" name="hentikan-tes-user-id" id="hentikan-tes-user-id" value="<?php if(!empty($tes_user_id)){ echo $tes_user_id; } ?>" >
+                                <input type="text" class="form-control" id="hentikan-tes-nama" name="hentikan-tes-nama" value="<?php if(!empty($tes_name)){ echo htmlspecialchars($tes_name); } ?>" readonly>
                             </div>
 
                             <div class="form-group">
@@ -199,6 +207,28 @@
     function zoomnormal(){
         $('#isi-tes-soal').css("font-size", "15px");
         $('#isi-tes-soal').css("line-height", "110%");
+    }
+
+    function pilihOpsiRadio(el){
+        $('.cbt-option-card').removeClass('cbt-option-selected');
+        $(el).closest('.cbt-option-card').addClass('cbt-option-selected');
+    }
+
+    function toggleExamFullscreen(){
+        var doc = window.document;
+        var docEl = doc.documentElement;
+        var requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+        var cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
+
+        if(!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
+            if(requestFullScreen){
+                requestFullScreen.call(docEl);
+            }
+        } else {
+            if(cancelFullScreen){
+                cancelFullScreen.call(doc);
+            }
+        }
     }
 
     function ragu(){
@@ -399,13 +429,28 @@
     }
 
     $(function () {
-        var sisa_detik = <?php if(!empty($detik_sisa)){ echo $detik_sisa; } ?>;
+        var sisa_detik = <?php echo !empty($detik_sisa) ? intval($detik_sisa) : 0; ?>;
+        function renderSisaWaktu() {
+            if (sisa_detik < 0) sisa_detik = 0;
+            var hrs = Math.floor(sisa_detik / 3600);
+            var mins = Math.floor((sisa_detik % 3600) / 60);
+            var secs = sisa_detik % 60;
+            var strTime = (hrs > 0 ? (hrs < 10 ? "0" + hrs : hrs) + ":" : "") +
+                          (mins < 10 ? "0" + mins : mins) + ":" +
+                          (secs < 10 ? "0" + secs : secs);
+            $("#sisa-waktu").html('<i class="fa fa-clock-o"></i> ' + strTime);
+            if (sisa_detik <= 300) {
+                $("#sisa-waktu").addClass("cbt-timer-urgent");
+            } else {
+                $("#sisa-waktu").removeClass("cbt-timer-urgent");
+            }
+        }
+        renderSisaWaktu();
         setInterval(function() {
-            var sisa_menit = Math.round(sisa_detik/60);
-            sisa_detik = sisa_detik-1;
-            $("#sisa-waktu").html("Sisa Waktu : "+sisa_menit+" menit");
+            sisa_detik = sisa_detik - 1;
+            renderSisaWaktu();
 
-            if(sisa_detik<1){
+            if(sisa_detik < 1){
                 window.location.reload();
             }
         }, 1000);
@@ -422,10 +467,15 @@
             hentikan_tes();
         });
         /**
-         * Submit form soal saat sudah menjawab
+         * Submit form soal saat sudah menjawab (Non-blocking di HP dengan indikator status real-time)
          */
         $('#form-kerjakan').submit(function(){
-            $("#modal-proses").modal('show');
+            $('#save-status-badge').stop(true, true).show().css({
+                'background': 'rgba(245, 158, 11, 0.25)',
+                'color': '#fde68a',
+                'border-color': 'rgba(253, 230, 138, 0.4)'
+            }).html('<i class="fa fa-spinner fa-spin"></i> Menyimpan...');
+
             $.ajax({
                     url:"<?php echo site_url().'/'.$url; ?>/simpan_jawaban",
                     type:"POST",
@@ -437,13 +487,22 @@
                         try {
                             var obj = typeof respon === 'object' ? respon : $.parseJSON(respon);
                             if(obj.status==1){
-                                notify_success(obj.pesan);
+                                $('#save-status-badge').css({
+                                    'background': 'rgba(16, 185, 129, 0.25)',
+                                    'color': '#6ee7b7',
+                                    'border-color': 'rgba(110, 231, 183, 0.45)'
+                                }).html('<i class="fa fa-check-circle"></i> Tersimpan');
                                 $('#btn-soal-'+obj.nomor_soal).removeClass('btn-default');
                                 $('#btn-soal-'+obj.nomor_soal).removeClass('btn-warning');
                                 $('#btn-soal-'+obj.nomor_soal).addClass('btn-primary');
                             }else if(obj.status==2){
                                 window.location.reload();
                             }else{
+                                $('#save-status-badge').css({
+                                    'background': 'rgba(239, 68, 68, 0.3)',
+                                    'color': '#fca5a5',
+                                    'border-color': '#f87171'
+                                }).html('<i class="fa fa-warning"></i> Gagal Simpan');
                                 notify_error(obj.pesan);
                             }
                         } catch(e) {
@@ -452,6 +511,11 @@
                     },
                     error: function(xmlhttprequest, textstatus, message) {
                         $("#modal-proses").modal('hide');
+                        $('#save-status-badge').css({
+                            'background': 'rgba(239, 68, 68, 0.3)',
+                            'color': '#fca5a5',
+                            'border-color': '#f87171'
+                        }).html('<i class="fa fa-warning"></i> Koneksi Lambat');
                         if(textstatus==="timeout") {
                             notify_error("Koneksi lambat (timeout). Silakan klik ulang pilihan jawaban Anda.");
                         }else{
@@ -530,48 +594,129 @@
             }
         });
 
-        // 2. State & Toleransi Waktu (Grace Period 7 Detik)
+        // 2. Anti-Cheating Monitoring & State (Sinkron dengan Database Server)
         var storage_key = 'cbt_cheat_count_' + $('#tes-id').val() + '_' + $('#tes-user-id').val();
         var max_pelanggaran = 3;
-        var toleransi_detik = 7;
         var leave_time = null;
+        var leave_type = null;
+        var is_user_away = false;
         var is_offline_mode = false;
+        var original_title = document.title;
 
-        var cur_violation = parseInt(sessionStorage.getItem(storage_key)) || 0;
+        // Sinkronisasi jumlah pelanggaran dari database server (agar jika di-reset Proktor, localStorage ikut ter-reset ke 0)
+        var server_violation = <?php echo isset($tes_pelanggaran) ? intval($tes_pelanggaran) : 0; ?>;
+        var cur_violation = server_violation;
+        sessionStorage.setItem(storage_key, cur_violation);
+        localStorage.setItem(storage_key, cur_violation);
+        if(cur_violation > 0){
+            $('#cheating-count').text(cur_violation);
+        }
+
+        // Minta izin Notifikasi Desktop jika browser mendukung
+        if('Notification' in window && Notification.permission === 'default'){
+            try {
+                Notification.requestPermission();
+            } catch(e){}
+        }
+
+        function play_warning_beep(){
+            try {
+                var AudioContext = window.AudioContext || window.webkitAudioContext;
+                if(AudioContext){
+                    var ctx = new AudioContext();
+                    var osc = ctx.createOscillator();
+                    var gain = ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(880, ctx.currentTime);
+                    osc.frequency.setValueAtTime(440, ctx.currentTime + 0.15);
+                    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.35);
+                }
+            } catch(e) {}
+        }
 
         $('#btn-tutup-cheating-warning').click(function(){
             $('#modal-cheating-warning').modal('hide');
         });
 
-        function record_leave(){
-            if(leave_time === null){
+        function record_leave(type){
+            if(!is_user_away){
+                is_user_away = true;
                 leave_time = new Date().getTime();
+                leave_type = type || 'tab';
+                document.title = '⚠️ [PERINGATAN] KEMBALI KE UJIAN!';
+
+                if('Notification' in window && Notification.permission === 'granted'){
+                    try {
+                        new Notification('SMART-CBT SMK 11 MARET', {
+                            body: 'PERINGATAN: Segera kembali ke layar ujian! Meninggalkan ujian terhitung pelanggaran.',
+                            icon: '<?php echo base_url(); ?>public/images/avatar.png'
+                        });
+                    } catch(e){}
+                }
             }
         }
 
         function record_return(){
-            if(leave_time !== null){
+            if(is_user_away && leave_time !== null){
                 var duration = (new Date().getTime() - leave_time) / 1000;
+                var current_leave_type = leave_type;
+                is_user_away = false;
                 leave_time = null;
+                leave_type = null;
+                document.title = original_title;
 
                 if(is_offline_mode){
                     return;
                 }
 
-                if(duration > toleransi_detik){
+                // Pindah tab terdeteksi seketika sebagai pelanggaran.
+                // Jika blur jendela, toleransi 0.4 detik untuk menghindari false positive klik minor.
+                if(current_leave_type === 'tab' || duration >= 0.4){
                     cur_violation++;
                     sessionStorage.setItem(storage_key, cur_violation);
+                    localStorage.setItem(storage_key, cur_violation);
                     $('#cheating-count').text(cur_violation);
 
+                    play_warning_beep();
+                    notify_error('PERINGATAN: Terdeteksi meninggalkan layar ujian! (Pelanggaran ke-' + cur_violation + ' dari ' + max_pelanggaran + ')');
+
+                    // Kirim catatan pelanggaran secara real-time ke server agar terlihat di layar Pengawas/Proktor
+                    $.ajax({
+                        url: "<?php echo site_url().'/'.$url; ?>/catat_pelanggaran",
+                        type: "POST",
+                        data: {
+                            'tes-id': $('#tes-id').val(),
+                            'tes-user-id': $('#tes-user-id').val()
+                        },
+                        cache: false,
+                        success: function(res){
+                            try {
+                                var rObj = typeof res === 'object' ? res : $.parseJSON(res);
+                                if(rObj && rObj.status == 1){
+                                    cur_violation = parseInt(rObj.pelanggaran);
+                                    sessionStorage.setItem(storage_key, cur_violation);
+                                    localStorage.setItem(storage_key, cur_violation);
+                                    $('#cheating-count').text(cur_violation);
+                                    if(rObj.terkunci == 1){
+                                        alert('PERINGATAN TERAKHIR: Anda telah mencapai batas maksimal meninggalkan layar ujian (' + cur_violation + '/' + max_pelanggaran + '). Ujian Anda dikunci secara otomatis! Silakan lapor ke Pengawas Ruang.');
+                                        window.location.reload();
+                                    }
+                                }
+                            } catch(e){}
+                        }
+                    });
+
                     if(cur_violation >= max_pelanggaran){
-                        alert('PERINGATAN TERAKHIR: Anda telah melanggar batas maksimal meninggalkan layar ujian (' + cur_violation + '/' + max_pelanggaran + '). Ujian Anda dihentikan secara otomatis!');
-                        $('#hentikan-centang').prop('checked', true);
-                        $('#form-hentikan').submit();
+                        alert('PERINGATAN TERAKHIR: Anda telah mencapai batas maksimal meninggalkan layar ujian (' + cur_violation + '/' + max_pelanggaran + '). Ujian Anda dikunci secara otomatis! Silakan lapor ke Pengawas Ruang.');
+                        window.location.reload();
                     } else {
                         $('#modal-cheating-warning').modal('show');
                     }
-                } else {
-                    notify_success('Kembali ke lembar ujian.');
                 }
             }
         }
@@ -579,14 +724,14 @@
         // Event Deteksi Tab Pindah / Layar Blur
         document.addEventListener('visibilitychange', function(){
             if(document.visibilityState === 'hidden'){
-                record_leave();
+                record_leave('tab');
             } else if(document.visibilityState === 'visible'){
                 record_return();
             }
         });
 
         window.addEventListener('blur', function(){
-            record_leave();
+            record_leave('window');
         });
 
         window.addEventListener('focus', function(){

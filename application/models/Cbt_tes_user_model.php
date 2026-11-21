@@ -8,6 +8,17 @@
 class Cbt_tes_user_model extends CI_Model{
 	public $table = 'cbt_tes_user';
 	
+	function __construct(){
+		parent::__construct();
+		$this->check_kolom();
+	}
+
+	function check_kolom(){
+		$fields = $this->db->list_fields($this->table);
+		if(!in_array('tesuser_pelanggaran', $fields)){
+			$this->db->query("ALTER TABLE `".$this->table."` ADD `tesuser_pelanggaran` INT(11) NOT NULL DEFAULT 0 AFTER `tesuser_status`");
+		}
+	}
 	
     function save($data){
         $this->db->insert($this->table, $data);
@@ -167,7 +178,7 @@ class Cbt_tes_user_model extends CI_Model{
 			$sql = $sql.' AND user_detail LIKE "%'.$keterangan.'%"';
 		}
 
-        $this->db->select('cbt_tes_user.*, cbt_tes.*, cbt_user.*, cbt_user_grup.grup_nama, SUM(`cbt_tes_soal`.`tessoal_nilai`) AS nilai ')
+        $this->db->select('cbt_tes_user.*, cbt_tes.*, cbt_user.*, cbt_user_grup.grup_nama, IF(ROUND(SUM(`cbt_tes_soal`.`tessoal_nilai`), 1) >= 99.9, 100, ROUND(SUM(`cbt_tes_soal`.`tessoal_nilai`), 2)) AS nilai ')
                  ->where('( '.$sql.' )')
                  ->from($this->table)
                  ->join('cbt_user', 'cbt_tes_user.tesuser_user_id = cbt_user.user_id', 'right')
@@ -193,7 +204,7 @@ class Cbt_tes_user_model extends CI_Model{
     }
 
     function get_nilai_by_tes_user($tes_id, $user_id){
-        $this->db->select('SUM(`cbt_tes_soal`.`tessoal_nilai`) AS nilai')
+        $this->db->select('IF(ROUND(SUM(`cbt_tes_soal`.`tessoal_nilai`), 1) >= 99.9, 100, ROUND(SUM(`cbt_tes_soal`.`tessoal_nilai`), 2)) AS nilai')
                  ->where('(tesuser_tes_id="'.$tes_id.'" AND tesuser_user_id="'.$user_id.'")')
                  ->from($this->table)
                  ->join('cbt_tes_soal', 'cbt_tes_soal.tessoal_tesuser_id = cbt_tes_user.tesuser_id');
@@ -204,9 +215,15 @@ class Cbt_tes_user_model extends CI_Model{
 	* datatable untuk hasil tes yang sudah mengerjakan
 	*
 	*/
-	function get_datatable($start, $rows, $tes_id, $grup_id, $urutkan, $tanggal, $keterangan, $search, $topik_id='semua'){
+	function get_datatable($start, $rows, $tes_id, $grup_id, $urutkan, $tanggal, $keterangan, $search, $topik_id='semua', $filter_status='mengerjakan'){
         $sql = 'tesuser_creation_time>="'.$tanggal[0].'" AND tesuser_creation_time<="'.$tanggal[1].'" AND user_firstname LIKE "%'.$search.'%"';
 		
+        if($filter_status == 'melanggar'){
+            $sql .= ' AND (tesuser_pelanggaran > 0 OR tesuser_status = 3)';
+        }else if($filter_status == 'terkunci'){
+            $sql .= ' AND tesuser_status = 3';
+        }
+
         if($tes_id!='semua'){
             $sql = $sql.' AND tesuser_tes_id="'.$tes_id.'"';
         }
@@ -246,7 +263,7 @@ class Cbt_tes_user_model extends CI_Model{
 			$sql = $sql.' AND user_detail LIKE "%'.$keterangan.'%"';
 		}
 
-		$this->db->select('cbt_tes_user.*,cbt_user_grup.grup_nama, cbt_tes.*, cbt_user.*, SUM(`cbt_tes_soal`.`tessoal_nilai`) AS nilai ')
+		$this->db->select('cbt_tes_user.*,cbt_user_grup.grup_nama, cbt_tes.*, cbt_user.*, IF(ROUND(SUM(`cbt_tes_soal`.`tessoal_nilai`), 1) >= 99.9, 100, ROUND(SUM(`cbt_tes_soal`.`tessoal_nilai`), 2)) AS nilai ')
                  ->where('( '.$sql.' )')
                  ->from($this->table)
                  ->join('cbt_user', 'cbt_tes_user.tesuser_user_id = cbt_user.user_id')
@@ -259,9 +276,15 @@ class Cbt_tes_user_model extends CI_Model{
         return $this->db->get();
 	}
     
-    function get_datatable_count($tes_id, $grup_id, $urutkan, $tanggal, $keterangan, $search, $topik_id='semua'){
+    function get_datatable_count($tes_id, $grup_id, $urutkan, $tanggal, $keterangan, $search, $topik_id='semua', $filter_status='mengerjakan'){
         $sql = 'tesuser_creation_time>="'.$tanggal[0].'" AND tesuser_creation_time<="'.$tanggal[1].'" AND user_firstname LIKE "%'.$search.'%"';
 		
+        if($filter_status == 'melanggar'){
+            $sql .= ' AND (tesuser_pelanggaran > 0 OR tesuser_status = 3)';
+        }else if($filter_status == 'terkunci'){
+            $sql .= ' AND tesuser_status = 3';
+        }
+
         if($tes_id!='semua'){
             $sql = $sql.' AND tesuser_tes_id="'.$tes_id.'"';
         }

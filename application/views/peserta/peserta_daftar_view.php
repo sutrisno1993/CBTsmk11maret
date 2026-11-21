@@ -21,11 +21,19 @@
 
                     <div class="box-body">
                         <div class="form-group">
-                            <label>Group</label>
+                            <label>Group / Kelas</label>
                             <div id="data-kelas">
                                 <select name="group" id="group" class="form-control input-sm">
                                     <option value="semua">Semua Group</option>
                                     <?php if(!empty($select_group)){ echo $select_group; } ?>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Ruang / Sesi (Keterangan)</label>
+                            <div id="data-keterangan">
+                                <select name="keterangan" id="keterangan" class="form-control input-sm">
+                                    <?php if(!empty($select_keterangan)){ echo $select_keterangan; } else { echo '<option value="semua">Semua Ruang / Sesi</option>'; } ?>
                                 </select>
                             </div>
                         </div>
@@ -288,7 +296,7 @@
 			showpassword();
 		});
 		
-        $("#group").change(function(){
+        $("#group, #keterangan").change(function(){
             refresh_table();
         });
 
@@ -409,6 +417,7 @@
                   "responsive": true,
                   "fnServerParams": function ( aoData ) {
                     aoData.push( { "name": "group", "value": $('#group').val()} );
+                    aoData.push( { "name": "keterangan", "value": $('#keterangan').val()} );
                   }
          });          
     });

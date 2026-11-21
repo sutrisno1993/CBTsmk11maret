@@ -68,15 +68,16 @@ class Modul_import_json extends Member_Controller {
                         $jml_soal = $this->cbt_soal_model->count_by_kolom('soal_topik_id', $topik->topik_id)->row()->hasil;
 
                         $hari = '';
-                        if(preg_match('/\[(SENIN|SELASA|RABU|KAMIS|JUMAT)/i', $topik->topik_nama, $m_hari)){
+                        if(preg_match('/\[(SENIN|SELASA|RABU|KAMIS|JUMAT|SABTU|MINGGU)/i', $topik->topik_nama, $m_hari)){
                             $hari = strtoupper($m_hari[1]);
                         }
+                        $gabung_nama = $topik->modul_nama . ' ' . $topik->topik_nama;
                         $grade = '';
-                        if(preg_match('/\b(XII)\b/i', $topik->topik_nama)){
+                        if(preg_match('/\b(XII|12)\b/i', $gabung_nama)){
                             $grade = 'XII';
-                        }else if(preg_match('/\b(XI)\b/i', $topik->topik_nama)){
+                        }else if(preg_match('/\b(XI|11)\b/i', $gabung_nama)){
                             $grade = 'XI';
-                        }else if(preg_match('/\b(X)\b/i', $topik->topik_nama)){
+                        }else if(preg_match('/\b(X|10)\b/i', $gabung_nama)){
                             $grade = 'X';
                         }
 
@@ -101,15 +102,16 @@ class Modul_import_json extends Member_Controller {
                                 $jml_soal = $this->cbt_soal_model->count_by_kolom('soal_topik_id', $topik->topik_id)->row()->hasil;
 
                                 $hari = '';
-                                if(preg_match('/\[(SENIN|SELASA|RABU|KAMIS|JUMAT)/i', $topik->topik_nama, $m_hari)){
+                                if(preg_match('/\[(SENIN|SELASA|RABU|KAMIS|JUMAT|SABTU|MINGGU)/i', $topik->topik_nama, $m_hari)){
                                     $hari = strtoupper($m_hari[1]);
                                 }
+                                $gabung_nama = $temp->modul_nama . ' ' . $topik->topik_nama;
                                 $grade = '';
-                                if(preg_match('/\b(XII)\b/i', $topik->topik_nama)){
+                                if(preg_match('/\b(XII|12)\b/i', $gabung_nama)){
                                     $grade = 'XII';
-                                }else if(preg_match('/\b(XI)\b/i', $topik->topik_nama)){
+                                }else if(preg_match('/\b(XI|11)\b/i', $gabung_nama)){
                                     $grade = 'XI';
-                                }else if(preg_match('/\b(X)\b/i', $topik->topik_nama)){
+                                }else if(preg_match('/\b(X|10)\b/i', $gabung_nama)){
                                     $grade = 'X';
                                 }
 

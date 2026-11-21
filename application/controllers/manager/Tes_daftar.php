@@ -58,6 +58,115 @@ class Tes_daftar extends Member_Controller {
         echo json_encode($status);
     }
 
+    /**
+     * Normalisasi Poin Dasar & Max Score ke Skala 100 sekaligus Hitung Ulang Nilai Siswa
+     */
+    function normalisasi_skala_100($tes_id = null){
+        $hasil = $this->cbt_tes_model->normalisasi_skala_100($tes_id);
+        $status = array(
+            'status' => 1,
+            'pesan' => 'Berhasil menormalisasi '.$hasil['jml_tes'].' Jadwal Tes ke Skala 100 (Poin = 100 / Jumlah Soal) dan menghitung ulang nilai pada '.$hasil['jml_peserta'].' lembar ujian peserta!'
+        );
+        echo json_encode($status);
+    }
+
+    function duplikat_tes(){
+        $this->load->library('form_validation');
+
+        $this->form_validation->set_rules('duplikat-id', 'ID Tes Asal', 'required|integer|strip_tags');
+        $this->form_validation->set_rules('duplikat-nama', 'Nama Tes Baru', 'required|strip_tags');
+        $this->form_validation->set_rules('duplikat-deskripsi', 'Deskripsi Tes', 'required|strip_tags');
+        $this->form_validation->set_rules('duplikat-rentang-waktu', 'Rentang Waktu', 'required|strip_tags');
+
+        if($this->form_validation->run() == TRUE){
+            $tes_id_asal = $this->input->post('duplikat-id', true);
+            $nama_baru = trim($this->input->post('duplikat-nama', true));
+            $deskripsi_baru = $this->input->post('duplikat-deskripsi', true);
+            $rentang_waktu = $this->input->post('duplikat-rentang-waktu', true);
+            $hari = $this->input->post('duplikat-hari', true);
+            $shift = $this->input->post('duplikat-shift', true);
+            $jam_ke = $this->input->post('duplikat-jam-ke', true);
+
+            if($this->cbt_tes_model->count_by_kolom('tes_nama', $nama_baru)->row()->hasil > 0){
+                $status['status'] = 0;
+                $status['pesan'] = 'Nama Tes Baru sudah digunakan, silakan gunakan nama lain (misal tambahkan keterangan Shift Siang / Susulan).';
+            }else{
+                $q_asal = $this->cbt_tes_model->get_by_kolom_limit('tes_id', $tes_id_asal, 1);
+                if($q_asal->num_rows() > 0){
+                    $asal = $q_asal->row();
+                    $tanggal = explode(" - ", $rentang_waktu);
+
+                    $this->db->trans_start();
+
+                    $data_baru = array(
+                        'tes_nama' => $nama_baru,
+                        'tes_detail' => $deskripsi_baru,
+                        'tes_begin_time' => isset($tanggal[0]) ? $tanggal[0] : $asal->tes_begin_time,
+                        'tes_end_time' => isset($tanggal[1]) ? $tanggal[1] : $asal->tes_end_time,
+                        'tes_duration_time' => $asal->tes_duration_time,
+                        'tes_ip_range' => $asal->tes_ip_range,
+                        'tes_results_to_users' => $asal->tes_results_to_users,
+                        'tes_detail_to_users' => isset($asal->tes_detail_to_users) ? $asal->tes_detail_to_users : 0,
+                        'tes_score_right' => $asal->tes_score_right,
+                        'tes_score_wrong' => $asal->tes_score_wrong,
+                        'tes_score_unanswered' => $asal->tes_score_unanswered,
+                        'tes_max_score' => $asal->tes_max_score,
+                        'tes_token' => $asal->tes_token,
+                        'tes_hari' => !empty($hari) ? $hari : $asal->tes_hari,
+                        'tes_shift' => !empty($shift) ? $shift : $asal->tes_shift,
+                        'tes_jam_ke' => !empty($jam_ke) ? $jam_ke : $asal->tes_jam_ke
+                    );
+                    if($this->db->field_exists('tes_user_id', 'cbt_tes') && isset($asal->tes_user_id)){
+                        $data_baru['tes_user_id'] = $asal->tes_user_id;
+                    }
+
+                    $new_tes_id = $this->cbt_tes_model->save($data_baru);
+
+                    // Salin daftar grup / rombel
+                    $q_grup = $this->cbt_tesgrup_model->get_by_kolom('tstgrp_tes_id', $tes_id_asal);
+                    if($q_grup->num_rows() > 0){
+                        foreach($q_grup->result() as $g){
+                            $this->cbt_tesgrup_model->save(array(
+                                'tstgrp_tes_id' => $new_tes_id,
+                                'tstgrp_grup_id' => $g->tstgrp_grup_id
+                            ));
+                        }
+                    }
+
+                    // Salin komposisi topik soal
+                    $q_topik = $this->cbt_tes_topik_set_model->get_by_kolom('tset_tes_id', $tes_id_asal);
+                    if($q_topik->num_rows() > 0){
+                        foreach($q_topik->result() as $tset){
+                            $this->cbt_tes_topik_set_model->save(array(
+                                'tset_tes_id' => $new_tes_id,
+                                'tset_topik_id' => $tset->tset_topik_id,
+                                'tset_tipe' => $tset->tset_tipe,
+                                'tset_difficulty' => $tset->tset_difficulty,
+                                'tset_jumlah' => $tset->tset_jumlah,
+                                'tset_jawaban' => $tset->tset_jawaban,
+                                'tset_acak_jawaban' => $tset->tset_acak_jawaban,
+                                'tset_acak_soal' => $tset->tset_acak_soal
+                            ));
+                        }
+                    }
+
+                    $this->db->trans_complete();
+
+                    $status['status'] = 1;
+                    $status['pesan'] = 'Tes berhasil diduplikasi menjadi "'.$nama_baru.'" beserta komposisi soal dan rombelnya.';
+                }else{
+                    $status['status'] = 0;
+                    $status['pesan'] = 'Data Tes asal tidak ditemukan.';
+                }
+            }
+        }else{
+            $status['status'] = 0;
+            $status['pesan'] = validation_errors();
+        }
+
+        echo json_encode($status);
+    }
+
     function hapus_daftar_tes(){
     	$this->load->library('form_validation');
         
@@ -171,7 +280,11 @@ class Tes_daftar extends Member_Controller {
             }
 
             $record[] = !empty($temp->tes_jam_ke) ? '<span class="label label-primary">'.$temp->tes_jam_ke.'</span>' : '<span class="text-muted">-</span>';
-            $record[] = $temp->tes_max_score;
+            if(floatval($temp->tes_max_score) == 100){
+                $record[] = '<span class="badge bg-green">100</span>';
+            }else{
+                $record[] = '<a href="javascript:void(0)" onclick="normalisasi_semua_skala_100(\''.$temp->tes_id.'\')" title="Klik untuk normalisasi tes ini ke Skala 100"><span class="badge bg-red"><i class="fa fa-warning"></i> '.$temp->tes_max_score.' (Fix 100)</span></a>';
+            }
             $record[] = $temp->tes_begin_time;
             $record[] = $temp->tes_end_time;
             $record[] = $temp->tes_duration_time.' Menit';
@@ -238,8 +351,9 @@ class Tes_daftar extends Member_Controller {
 			}
 			
             $record[] = '
-            	<a onclick="edit(\''.$temp->tes_id.'\')" style="cursor: pointer;" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-edit"></span></a>
-            	<a onclick="hapus(\''.$temp->tes_id.'\')" style="cursor: pointer;" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-remove"></a>
+            	<a onclick="edit(\''.$temp->tes_id.'\')" style="cursor: pointer;" class="btn btn-default btn-xs" title="Ubah Tes"><span class="glyphicon glyphicon-edit"></span></a>
+            	<a onclick="duplikat(\''.$temp->tes_id.'\')" style="cursor: pointer;" class="btn btn-info btn-xs" title="Duplikat / Gandakan Tes (Shift Lain / Susulan)"><span class="glyphicon glyphicon-duplicate"></span></a>
+            	<a onclick="hapus(\''.$temp->tes_id.'\')" style="cursor: pointer;" class="btn btn-default btn-xs" title="Hapus Tes"><span class="glyphicon glyphicon-remove"></span></a>
             ';
 
             $record[] = '<input type="checkbox" name="edit-tes-id['.$temp->tes_id.']" >';

@@ -101,7 +101,7 @@ class Cbt_tes_soal_model extends CI_Model{
     }
 
     function get_nilai($tessoal_id){
-        $sql = 'SELECT SUM(tessoal_nilai) AS hasil, COUNT(CASE  WHEN tessoal_nilai=0 THEN 1 END) AS jawaban_salah, COUNT(*) AS total_soal FROM cbt_tes_soal WHERE tessoal_tesuser_id="'.$tessoal_id.'"';
+        $sql = 'SELECT IF(ROUND(SUM(tessoal_nilai), 1) >= 99.9, 100, ROUND(SUM(tessoal_nilai), 2)) AS hasil, COUNT(CASE WHEN tessoal_nilai=0 THEN 1 END) AS jawaban_salah, COUNT(*) AS total_soal FROM cbt_tes_soal WHERE tessoal_tesuser_id="'.$tessoal_id.'"';
         return $this->db->query($sql);
     }
 	

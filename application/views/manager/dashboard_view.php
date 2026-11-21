@@ -144,6 +144,9 @@
                         <i class="fa fa-bolt text-yellow" style="margin-right: 6px;"></i> Aksi Cepat Operator &amp; Panitia
                     </h3>
                     <div class="box-tools pull-right">
+                        <a href="<?php echo site_url('portal_nilai'); ?>" target="_blank" class="btn btn-xs btn-success" style="font-weight: 700; margin-right: 6px;">
+                            <i class="fa fa-file-excel-o"></i> Portal Download Nilai Guru (Per Kelas)
+                        </a>
                         <a href="<?php echo site_url('monitoring_soal'); ?>" target="_blank" class="btn btn-xs btn-primary" style="font-weight: 700; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); border: none;">
                             <i class="fa fa-external-link"></i> Portal Telaah Guru (Publik)
                         </a>
@@ -355,35 +358,38 @@
         </div>
     </div>
 
-    <!-- 4. PANEL MONITORING LIVE KONEKSI SISWA (IP PUBLIK VS WI-FI SEKOLAH) -->
-    <div class="row">
+    <!-- 4. PANEL MONITORING LIVE KONEKSI SISWA & PELANGGARAN ANTI-CHEAT -->
+    <div class="row" id="panel-monitoring-live">
         <div class="col-xs-12">
             <div class="box box-solid" style="border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 25px;">
                 <div class="box-header with-border" style="padding: 16px 20px; background: #fafbfc; border-radius: 12px 12px 0 0;">
                     <div class="row" style="display: flex; align-items: center; flex-wrap: wrap;">
-                        <div class="col-md-7 col-xs-12">
+                        <div class="col-md-6 col-xs-12">
                             <h3 class="box-title" style="font-size: 16px; font-weight: 700; color: #1e293b;">
-                                <i class="fa fa-globe text-primary" style="margin-right: 8px;"></i>
-                                Monitoring Live Siswa Ujian (IP Publik vs Wi-Fi Sekolah)
+                                <i class="fa fa-shield text-red" style="margin-right: 8px;"></i>
+                                Monitoring Live Siswa Ujian &amp; Pelanggaran Anti-Cheat
                             </h3>
                             <p style="margin: 3px 0 0 0; font-size: 12px; color: #64748b;">
-                                Memantau siswa yang sedang mengerjakan ujian, mendeteksi jalur koneksi (Wi-Fi Sekolah vs Kuota HP) serta verifikasi jarak lokasi GPS.
+                                Pantau siswa yang keluar layar/pindah tab (Anti-Cheat), buka kunci ujian 1-klik, serta cek jalur koneksi Wi-Fi vs Kuota.
                             </p>
                         </div>
-                        <div class="col-md-5 col-xs-12 text-right" style="margin-top: 6px;">
-                            <a href="<?php echo site_url('manager/tes_qr_akses'); ?>" class="btn btn-sm btn-purple" style="background: #9333ea; border-color: #7e22ce; color: #fff; font-weight: 700; margin-right: 6px; box-shadow: 0 2px 6px rgba(147,51,234,0.3);">
-                                <i class="fa fa-qrcode"></i> Layar QR Proyektor
+                        <div class="col-md-6 col-xs-12 text-right" style="margin-top: 6px;">
+                            <a href="<?php echo site_url('manager/tes_hasil'); ?>" class="btn btn-sm btn-warning" style="font-weight: 700; margin-right: 6px;">
+                                <i class="fa fa-list-alt"></i> Menu Hasil &amp; Kontrol Tes
                             </a>
                             <!-- Filter Tabs -->
                             <div class="btn-group btn-group-sm" id="btn-group-filter-ip">
                                 <button type="button" class="btn btn-primary active" onclick="filterMonitoringIp('semua', this)">
                                     Semua (<span id="cnt-semua"><?php echo !empty($siswa_monitoring) ? count($siswa_monitoring) : 0; ?></span>)
                                 </button>
+                                <button type="button" class="btn btn-default" onclick="filterMonitoringIp('pelanggaran', this)">
+                                    <span class="text-red" style="font-weight:700;"><i class="fa fa-exclamation-triangle"></i> Melanggar / Terkunci (<span id="cnt-pelanggaran"><?php echo !empty($total_pelanggaran_siswa) ? $total_pelanggaran_siswa : 0; ?></span>)</span>
+                                </button>
                                 <button type="button" class="btn btn-default" onclick="filterMonitoringIp('public', this)">
-                                    <span class="text-blue"><i class="fa fa-signal"></i> Kuota / IP Publik (<span id="cnt-public"><?php echo !empty($total_public_ip) ? $total_public_ip : 0; ?></span>)</span>
+                                    <span class="text-blue"><i class="fa fa-signal"></i> Kuota (<span id="cnt-public"><?php echo !empty($total_public_ip) ? $total_public_ip : 0; ?></span>)</span>
                                 </button>
                                 <button type="button" class="btn btn-default" onclick="filterMonitoringIp('local', this)">
-                                    <span class="text-green"><i class="fa fa-wifi"></i> Wi-Fi Sekolah (<span id="cnt-local"><?php echo !empty($total_local_ip) ? $total_local_ip : 0; ?></span>)</span>
+                                    <span class="text-green"><i class="fa fa-wifi"></i> Wi-Fi (<span id="cnt-local"><?php echo !empty($total_local_ip) ? $total_local_ip : 0; ?></span>)</span>
                                 </button>
                             </div>
                             <a href="<?php echo site_url('manager/dashboard'); ?>" class="btn btn-sm btn-default" title="Segarkan Data" style="margin-left: 6px;">
@@ -398,14 +404,14 @@
                             <table class="table table-hover table-striped" id="table-monitoring-ip" style="margin-bottom: 0;">
                                 <thead>
                                     <tr style="background: #f8fafc; font-size: 12px; color: #475569;">
-                                        <th style="width: 50px;" class="text-center">No</th>
+                                        <th style="width: 45px;" class="text-center">No</th>
                                         <th>Nama Peserta / Username</th>
-                                        <th>Kelas / Grup</th>
+                                        <th>Kelas &amp; Ruang</th>
                                         <th>Mata Pelajaran / Tes</th>
+                                        <th class="text-center">Status &amp; Pelanggaran Anti-Cheat</th>
                                         <th class="text-center">Jalur Koneksi</th>
-                                        <th>Alamat IP</th>
-                                        <th>Status Lokasi GPS</th>
                                         <th>Waktu Mulai</th>
+                                        <th class="text-center">Aksi Pengawas</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -413,8 +419,11 @@
                                     $no = 1;
                                     foreach($siswa_monitoring as $sm){ 
                                         $row_type = $sm->is_local_ip ? 'local' : 'public';
+                                        $jml_p = isset($sm->jml_pelanggaran) ? intval($sm->jml_pelanggaran) : 0;
+                                        $is_melanggar = ($jml_p > 0 || $sm->tesuser_status == 3) ? 'row-pelanggaran' : '';
+                                        $row_bg = ($sm->tesuser_status == 3) ? 'background-color: #fef2f2;' : (($jml_p > 0) ? 'background-color: #fffbeb;' : '');
                                     ?>
-                                        <tr class="row-monitoring row-<?php echo $row_type; ?>">
+                                        <tr class="row-monitoring row-<?php echo $row_type; ?> <?php echo $is_melanggar; ?>" style="<?php echo $row_bg; ?>" id="row-dash-tu-<?php echo $sm->tesuser_id; ?>">
                                             <td class="text-center" style="font-size: 12px; color: #64748b;"><?php echo $no++; ?></td>
                                             <td>
                                                 <div style="font-weight: 700; color: #1e293b; font-size: 13px;">
@@ -424,40 +433,50 @@
                                             </td>
                                             <td style="font-size: 12px; font-weight: 600; color: #475569;">
                                                 <span class="label label-default" style="font-size: 11px;"><?php echo !empty($sm->grup_nama) ? htmlspecialchars($sm->grup_nama) : '-'; ?></span>
+                                                <?php if(!empty($sm->user_detail)){ ?>
+                                                    <div style="font-size: 11px; color: #64748b; margin-top: 2px;"><i class="fa fa-map-pin"></i> <?php echo htmlspecialchars($sm->user_detail); ?></div>
+                                                <?php } ?>
                                             </td>
                                             <td style="font-size: 12px; color: #334155;">
                                                 <b><?php echo !empty($sm->tes_nama) ? htmlspecialchars($sm->tes_nama) : '-'; ?></b>
                                             </td>
-                                            <td class="text-center">
-                                                <?php if($sm->is_local_ip){ ?>
-                                                    <span class="label label-success" style="font-size: 11px; padding: 4px 8px; border-radius: 4px;">
-                                                        <i class="fa fa-wifi"></i> Wi-Fi / LAN Sekolah
+                                            <td class="text-center" id="status-cell-<?php echo $sm->tesuser_id; ?>">
+                                                <?php if($sm->tesuser_status == 3){ ?>
+                                                    <span class="label label-danger" style="font-size: 11.5px; padding: 4px 8px;">
+                                                        <i class="fa fa-lock"></i> TERKUNCI ANTI-CHEAT (<?php echo $jml_p; ?>/3)
+                                                    </span>
+                                                <?php } else if($jml_p > 0){ ?>
+                                                    <span class="label label-warning" style="font-size: 11.5px; padding: 4px 8px;">
+                                                        <i class="fa fa-exclamation-triangle"></i> Melanggar <?php echo $jml_p; ?>/3x
                                                     </span>
                                                 <?php } else { ?>
-                                                    <span class="label label-primary" style="font-size: 11px; padding: 4px 8px; border-radius: 4px; background-color: #2563eb !important;">
-                                                        <i class="fa fa-signal"></i> Kuota / IP Publik
+                                                    <span class="label label-success" style="font-size: 11px; padding: 4px 8px;">
+                                                        <i class="fa fa-check-circle"></i> Aman (0 Pelanggaran)
                                                     </span>
                                                 <?php } ?>
                                             </td>
-                                            <td style="font-family: monospace; font-size: 12px; font-weight: 600; color: #0f172a;">
-                                                <?php echo htmlspecialchars($sm->display_ip); ?>
-                                            </td>
-                                            <td style="font-size: 12px;">
+                                            <td class="text-center">
                                                 <?php if($sm->is_local_ip){ ?>
-                                                    <span class="text-green" title="Bypass Lokasi GPS karena terhubung ke jaringan sekolah">
-                                                        <i class="fa fa-check-circle"></i> Jaringan Sekolah
+                                                    <span class="label label-success" style="font-size: 10.5px;">
+                                                        <i class="fa fa-wifi"></i> Wi-Fi (<?php echo htmlspecialchars($sm->display_ip); ?>)
                                                     </span>
-                                                <?php } else if(!empty($sm->jarak_meter) || $sm->jarak_meter === 0){ ?>
-                                                    <span class="text-primary" style="font-weight: 600;">
-                                                        <i class="fa fa-map-marker text-red"></i> ~<?php echo $sm->jarak_meter; ?>m dari Sekolah
-                                                    </span>
-                                                    <br><small class="text-muted">(GPS Terverifikasi)</small>
                                                 <?php } else { ?>
-                                                    <span class="text-muted"><i class="fa fa-map-marker"></i> Terverifikasi</span>
+                                                    <span class="label label-primary" style="font-size: 10.5px; background-color: #2563eb !important;">
+                                                        <i class="fa fa-signal"></i> Kuota (<?php echo htmlspecialchars($sm->display_ip); ?>)
+                                                    </span>
                                                 <?php } ?>
                                             </td>
                                             <td style="font-size: 12px; color: #64748b;">
                                                 <i class="fa fa-clock-o"></i> <?php echo date('H:i:s', strtotime($sm->tesuser_creation_time)); ?>
+                                            </td>
+                                            <td class="text-center" id="action-cell-<?php echo $sm->tesuser_id; ?>">
+                                                <?php if($sm->tesuser_status == 3 || $jml_p > 0){ ?>
+                                                    <button type="button" onclick="resetPelanggaranDash(<?php echo $sm->tesuser_id; ?>, '<?php echo htmlspecialchars(addslashes($sm->user_firstname)); ?>')" class="btn btn-xs btn-success" style="font-weight: 700;" title="Buka kunci ujian & reset hitungan pelanggaran ke 0">
+                                                        <i class="fa fa-unlock"></i> Buka &amp; Reset (0)
+                                                    </button>
+                                                <?php } else { ?>
+                                                    <span class="text-muted" style="font-size: 11px;">-</span>
+                                                <?php } ?>
                                             </td>
                                         </tr>
                                     <?php } ?>
@@ -468,7 +487,7 @@
                         <div class="text-center text-muted" style="padding: 40px 20px;">
                             <i class="fa fa-users" style="font-size: 38px; color: #cbd5e1; margin-bottom: 10px;"></i>
                             <p style="font-size: 13px; margin: 0; color: #64748b;">
-                                Saat ini belum ada siswa yang sedang aktif mengerjakan ujian hari ini.
+                                Saat ini belum ada siswa yang sedang aktif mengerjakan ujian atau melanggar hari ini.
                             </p>
                         </div>
                     <?php } ?>
@@ -698,12 +717,32 @@
         
         if(type === 'semua'){
             $('.row-monitoring').show();
+        }else if(type === 'pelanggaran'){
+            $('.row-monitoring').hide();
+            $('.row-pelanggaran').show();
         }else if(type === 'public'){
             $('.row-monitoring').hide();
             $('.row-public').show();
         }else if(type === 'local'){
             $('.row-monitoring').hide();
             $('.row-local').show();
+        }
+    }
+
+    function resetPelanggaranDash(tesuser_id, nama){
+        if(confirm('Buka kunci ujian dan reset hitungan pelanggaran Anti-Cheat ke 0 untuk peserta: ' + nama + '?')){
+            $.getJSON('<?php echo site_url("manager/dashboard/reset_pelanggaran"); ?>/' + tesuser_id, function(res){
+                if(res.status == 1){
+                    $('#status-cell-' + tesuser_id).html('<span class="label label-success" style="font-size: 11px; padding: 4px 8px;"><i class="fa fa-check-circle"></i> Aman (0 Pelanggaran)</span>');
+                    $('#action-cell-' + tesuser_id).html('<span class="text-green" style="font-size: 11px; font-weight:600;"><i class="fa fa-check"></i> Sudah Direset</span>');
+                    $('#row-dash-tu-' + tesuser_id).css('background-color', '').removeClass('row-pelanggaran');
+                    var curP = parseInt($('#cnt-pelanggaran').text()) || 0;
+                    if(curP > 0) $('#cnt-pelanggaran').text(curP - 1);
+                    notify_success(res.pesan);
+                }else{
+                    alert(res.pesan);
+                }
+            });
         }
     }
 

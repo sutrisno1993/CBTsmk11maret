@@ -108,10 +108,10 @@
                         </h5>
                         <ul style="margin: 0; padding-left: 20px; color: #721c24; font-size: 13.5px;">
                             <li style="margin-bottom: 8px;">
-                                <strong>⚠️ Peringatan Pertama:</strong> Jika sistem mendeteksi Anda keluar dari browser, meminimalkan layar, atau mencoba mengakses data dari luar, <strong>seluruh progres pengerjaan ujian Anda akan langsung di-RESET oleh sistem</strong>.
+                                <strong>⚠️ Peringatan ke-1 &amp; ke-2:</strong> Setiap kali Anda berpindah tab, membuka aplikasi lain, membagi layar (<em>split-screen</em>), atau meminimalkan halaman ujian, <strong>pelanggaran Anda langsung tercatat secara <em>real-time</em> di layar Pengawas / Proktor</strong>.
                             </li>
                             <li>
-                                <strong>🚫 Peringatan Kedua:</strong> Jika pelanggaran terulang untuk kedua kalinya, ujian Anda akan <strong>langsung DIHENTIKAN SECARA PERMANEN, sesi dikunci, dan Anda dianggap SELESAI dengan NILAI POIN 0</strong>.
+                                <strong>🔒 Pelanggaran ke-3 (Batas Maksimal):</strong> Jika tercatat melanggar sebanyak <strong>3 kali</strong>, sesi ujian Anda akan <strong>otomatis DIKUNCI oleh sistem</strong> (jawaban yang sudah tersimpan tetap aman) dan hanya dapat dibuka kembali setelah Anda melapor ke Pengawas Ruang.
                             </li>
                         </ul>
                     </div>

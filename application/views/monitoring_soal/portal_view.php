@@ -409,6 +409,9 @@
                 </div>
             </a>
             <div>
+                <a href="<?php echo site_url('portal_nilai'); ?>" class="btn btn-sm btn-success" style="border-radius: 8px; font-weight: 700; font-size: 12px; margin-right: 6px; box-shadow: 0 2px 6px rgba(16,185,129,0.3);">
+                    <i class="fa fa-file-excel-o"></i> Download Nilai Siswa per Kelas
+                </a>
                 <a href="<?php echo site_url('manager/welcome'); ?>" class="btn btn-sm btn-default" style="border-radius: 8px; font-weight: 600; font-size: 12px; background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3);">
                     <i class="fa fa-lock"></i> Area Operator / Admin
                 </a>

@@ -66,22 +66,39 @@ class Cbt_user_model extends CI_Model{
         return ($query->num_rows() > 0) ? $query->row() : FALSE;
     }
 	
-	function get_datatable($start, $rows, $kolom, $isi, $group){
-        $query = '';
-        if($group!='semua'){
-            $query = 'AND user_grup_id='.$group;
-        }
-		$this->db->where('('.$kolom.' LIKE "%'.$isi.'%" '.$query.')')
+	function get_distinct_detail(){
+        $this->db->select('DISTINCT(user_detail) AS detail')
                  ->from($this->table)
+                 ->where('user_detail IS NOT NULL')
+                 ->where('user_detail !=', '')
+                 ->order_by('user_detail', 'ASC');
+        return $this->db->get();
+    }
+
+	function get_datatable($start, $rows, $kolom, $isi, $group, $keterangan='semua'){
+        $query = '';
+        if($group!='semua' && !empty($group)){
+            $query .= ' AND user_grup_id="'.intval($group).'"';
+        }
+        if($keterangan!='semua' && !empty($keterangan)){
+            $query .= ' AND user_detail="'.$this->db->escape_str($keterangan).'"';
+        }
+		$this->db->select('cbt_user.*, cbt_user_grup.grup_nama')
+                 ->where('('.$kolom.' LIKE "%'.$isi.'%" '.$query.')')
+                 ->from($this->table)
+                 ->join('cbt_user_grup', 'cbt_user.user_grup_id = cbt_user_grup.grup_id', 'left')
 				 ->order_by($kolom, 'ASC')
                  ->limit($rows, $start);
         return $this->db->get();
 	}
     
-    function get_datatable_count($kolom, $isi, $group){
+    function get_datatable_count($kolom, $isi, $group, $keterangan='semua'){
         $query = '';
-        if($group!='semua'){
-            $query = 'AND user_grup_id='.$group;
+        if($group!='semua' && !empty($group)){
+            $query .= ' AND user_grup_id="'.intval($group).'"';
+        }
+        if($keterangan!='semua' && !empty($keterangan)){
+            $query .= ' AND user_detail="'.$this->db->escape_str($keterangan).'"';
         }
 		$this->db->select('COUNT(*) AS hasil')
                  ->where('('.$kolom.' LIKE "%'.$isi.'%" '.$query.')')

@@ -76,8 +76,8 @@ Struktur JSON yang diinginkan:
                 <div class="box-body" style="padding: 20px;">
                     <!-- Filter Bantu Pemilihan Topik -->
                     <div class="row" style="background: #f8fafc; padding: 15px 10px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
-                        <div class="col-md-3 col-xs-6">
-                            <label style="font-size: 11px; text-transform: uppercase; color: #64748b;">Filter Hari Ujian:</label>
+                        <div class="col-md-2 col-sm-4 col-xs-6" style="margin-bottom: 8px;">
+                            <label style="font-size: 11px; text-transform: uppercase; color: #64748b;"><i class="fa fa-calendar text-blue"></i> Filter Hari:</label>
                             <select id="filter-hari" class="form-control input-sm">
                                 <option value="">-- Semua Hari --</option>
                                 <option value="SENIN">Senin</option>
@@ -87,8 +87,8 @@ Struktur JSON yang diinginkan:
                                 <option value="JUMAT">Jumat</option>
                             </select>
                         </div>
-                        <div class="col-md-3 col-xs-6">
-                            <label style="font-size: 11px; text-transform: uppercase; color: #64748b;">Filter Tingkat Kelas:</label>
+                        <div class="col-md-2 col-sm-4 col-xs-6" style="margin-bottom: 8px;">
+                            <label style="font-size: 11px; text-transform: uppercase; color: #64748b;"><i class="fa fa-graduation-cap text-green"></i> Tingkat Kelas:</label>
                             <select id="filter-grade" class="form-control input-sm">
                                 <option value="">-- Semua Tingkat --</option>
                                 <option value="X">Kelas X</option>
@@ -96,10 +96,22 @@ Struktur JSON yang diinginkan:
                                 <option value="XII">Kelas XII</option>
                             </select>
                         </div>
-                        <div class="col-md-6 col-xs-12" style="margin-top: 5px;">
-                            <label style="font-weight: 700; color: #1e293b;">
-                                <i class="fa fa-folder-open text-primary"></i> Pilih Topik Mata Pelajaran Tujuan: <span class="text-danger">*</span>
-                            </label>
+                        <div class="col-md-3 col-sm-4 col-xs-12" style="margin-bottom: 8px;">
+                            <label style="font-size: 11px; text-transform: uppercase; color: #64748b;"><i class="fa fa-book text-yellow"></i> Filter Mata Pelajaran:</label>
+                            <select id="filter-mapel" class="form-control input-sm">
+                                <option value="">-- Semua Mata Pelajaran --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-5 col-sm-12 col-xs-12" style="margin-bottom: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                <label style="font-weight: 700; color: #1e293b; margin-bottom: 0;">
+                                    <i class="fa fa-folder-open text-primary"></i> Pilih Topik Mata Pelajaran Tujuan: <span class="text-danger">*</span>
+                                </label>
+                                <div>
+                                    <span id="badge-topik-count" class="badge bg-aqua" style="font-size: 10px; margin-right: 4px;"></span>
+                                    <button type="button" id="btn-reset-filter-json" class="btn btn-default btn-xs" title="Reset Filter Topik"><i class="fa fa-undo text-blue"></i> Reset</button>
+                                </div>
+                            </div>
                             <select name="topik" id="topik" class="form-control input-sm" style="width: 100%;">
                                 <?php if(!empty($select_topik)){ echo $select_topik; } ?>
                             </select>
@@ -285,36 +297,156 @@ Struktur JSON yang diinginkan:
         $('#json-char-count').text(len.toLocaleString() + ' karakter');
     }
 
-    $(function(){
+    var originalTopikList = [];
+
+    function escapeHtml(text) {
+        return (text || '').toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
+    function initFilterTopik(){
+        originalTopikList = [];
+        var mapelMap = {};
+
+        $('#topik option').each(function(){
+            var val = $(this).val();
+            if(!val || val === 'kosong') return;
+            var text = $(this).text().trim();
+            var modul = $(this).attr('data-modul') || '';
+            var hari = ($(this).attr('data-hari') || '').toUpperCase();
+            var grade = ($(this).attr('data-grade') || '').toUpperCase();
+
+            if(!hari){
+                var mHari = text.match(/\[(SENIN|SELASA|RABU|KAMIS|JUMAT|SABTU|MINGGU)/i);
+                if(mHari) hari = mHari[1].toUpperCase();
+            }
+
+            if(!grade){
+                if(/\b(XII|12)\b/i.test(text)){
+                    grade = 'XII';
+                }else if(/\b(XI|11)\b/i.test(text)){
+                    grade = 'XI';
+                }else if(/\b(X|10)\b/i.test(text)){
+                    grade = 'X';
+                }
+            }
+
+            if(!modul){
+                var optgroup = $(this).closest('optgroup');
+                if(optgroup.length){
+                    modul = optgroup.attr('label').replace(/^Modul\s+/i, '').trim();
+                }else{
+                    var parts = text.split(' - ');
+                    if(parts.length > 1) modul = parts[0].trim();
+                }
+            }
+
+            if(modul){
+                mapelMap[modul] = true;
+            }
+
+            originalTopikList.push({
+                id: val,
+                text: text,
+                modul: modul,
+                hari: hari,
+                grade: grade
+            });
+        });
+
+        var mapelKeys = Object.keys(mapelMap).sort();
+        $('#filter-mapel').html('<option value="">-- Semua Mata Pelajaran (' + mapelKeys.length + ') --</option>');
+        for(var i = 0; i < mapelKeys.length; i++){
+            $('#filter-mapel').append('<option value="' + escapeHtml(mapelKeys[i]) + '">' + escapeHtml(mapelKeys[i]) + '</option>');
+        }
+
+        applyFilterTopik(true);
+    }
+
+    function applyFilterTopik(isInitial){
+        var selectedHari = ($('#filter-hari').val() || '').toUpperCase();
+        var selectedGrade = ($('#filter-grade').val() || '').toUpperCase();
+        var selectedMapel = $('#filter-mapel').val() || '';
+        var currentSelectedVal = $('#topik').val();
+
+        var filtered = originalTopikList.filter(function(item){
+            if(selectedHari && item.hari !== selectedHari) return false;
+            if(selectedGrade && item.grade !== selectedGrade) return false;
+            if(selectedMapel && item.modul !== selectedMapel) return false;
+            return true;
+        });
+
+        if(filtered.length === originalTopikList.length){
+            $('#badge-topik-count').text(filtered.length + ' Topik');
+        }else{
+            $('#badge-topik-count').text(filtered.length + ' dari ' + originalTopikList.length + ' Topik');
+        }
+
+        var groups = {};
+        for(var i = 0; i < filtered.length; i++){
+            var item = filtered[i];
+            var mName = item.modul || 'Lainnya';
+            if(!groups[mName]) groups[mName] = [];
+            groups[mName].push(item);
+        }
+
+        var html = '';
+        var stillExists = false;
+
+        var groupKeys = Object.keys(groups).sort();
+        for(var g = 0; g < groupKeys.length; g++){
+            var grpName = groupKeys[g];
+            html += '<optgroup label="Modul ' + escapeHtml(grpName) + '">';
+            var items = groups[grpName];
+            for(var k = 0; k < items.length; k++){
+                var it = items[k];
+                var isSel = (it.id === currentSelectedVal);
+                if(isSel) stillExists = true;
+                html += '<option value="' + it.id + '"' + (isSel ? ' selected' : '') + '>' + escapeHtml(it.text) + '</option>';
+            }
+            html += '</optgroup>';
+        }
+
+        if(filtered.length === 0){
+            html = '<option value="kosong">(Tidak ada topik yang cocok dengan filter — klik Reset)</option>';
+        }
+
+        // Hancurkan instance Select2 lama sebelum memperbarui DOM option
+        if($('#topik').hasClass('select2-hidden-accessible') || $('#topik').data('select2')){
+            try {
+                $('#topik').select2('destroy');
+            } catch(e){}
+        }
+
+        $('#topik').html(html);
+
+        if(filtered.length > 0 && !stillExists){
+            // Otomatis pilih topik pertama yang cocok dengan filter
+            $('#topik').val(filtered[0].id);
+        }
+
         $('#topik').select2({
             width: '100%',
-            placeholder: "🔍 Ketik untuk mencari topik mata pelajaran..."
+            placeholder: "🔍 Ketik atau klik untuk memilih topik mata pelajaran..."
         });
+    }
+
+    $(function(){
+        initFilterTopik();
 
         $('#json-input').on('input propertychange', function(){
             update_char_count();
         });
 
-        // Filter Dropdown Topik
-        $('#filter-hari, #filter-grade').on('change', function(){
-            var hari = $('#filter-hari').val().toUpperCase();
-            var grade = $('#filter-grade').val().toUpperCase();
+        // Filter Dropdown Topik (Hari, Tingkat Kelas, & Mata Pelajaran)
+        $('#filter-hari, #filter-grade, #filter-mapel').on('change', function(){
+            applyFilterTopik(false);
+        });
 
-            $('#topik option').each(function(){
-                var opt_hari = ($(this).attr('data-hari') || '').toUpperCase();
-                var opt_grade = ($(this).attr('data-grade') || '').toUpperCase();
-
-                var match_hari = (hari === '' || opt_hari === hari);
-                var match_grade = (grade === '' || opt_grade === grade);
-
-                if(match_hari && match_grade){
-                    $(this).removeAttr('disabled');
-                } else {
-                    $(this).attr('disabled', 'disabled');
-                }
-            });
-
-            $('#topik').select2();
+        $('#btn-reset-filter-json').on('click', function(){
+            $('#filter-hari').val('');
+            $('#filter-grade').val('');
+            $('#filter-mapel').val('');
+            applyFilterTopik(false);
         });
 
         // 1. AJAX Validasi & Pratinjau

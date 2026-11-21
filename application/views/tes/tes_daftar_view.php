@@ -18,8 +18,11 @@
                     <div class="box-header with-border">
 						<div class="box-title">Daftar Tes</div>
     					<div class="box-tools pull-right">
+                            <button type="button" onclick="normalisasi_semua_skala_100()" class="btn btn-warning btn-xs" style="margin-right: 10px; font-weight: 700;" title="Set otomatis Poin Dasar = 100 / Jumlah Soal & Hitung Ulang Nilai Siswa ke Skala 100">
+                                <i class="fa fa-calculator"></i> ⚡ Normalisasi Semua Tes &amp; Nilai ke Skala 100
+                            </button>
 							<div class="dropdown pull-right">
-								<a href="<?php echo site_url(); ?>/manager/tes_tambah">Tambah Tes</a>
+								<a href="<?php echo site_url(); ?>/manager/tes_tambah" class="btn btn-primary btn-xs"><i class="fa fa-plus"></i> Tambah Tes</a>
     						</div>
     					</div>
                     </div><!-- /.box-header -->
@@ -121,6 +124,84 @@
         </div>
     </div>
 
+    <div class="modal" id="modal-duplikat" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="basicModal" aria-hidden="true">
+    <?php echo form_open($url.'/duplikat_tes','id="form-duplikat"'); ?>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" style="background-color: #00c0ef; color: #fff;">
+                    <button class="close" type="button" data-dismiss="modal" style="color: #fff; opacity: 0.9;">&times;</button>
+                    <h4 class="modal-title"><i class="fa fa-copy"></i> Duplikat / Gandakan Tes (Shift Lain / Susulan)</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row-fluid">
+                        <div class="box-body">
+                            <div id="form-pesan-duplikat"></div>
+                            <input type="hidden" name="duplikat-id" id="duplikat-id">
+                            <div class="form-group">
+                                <label>Nama Tes Baru</label>
+                                <input type="text" class="form-control" id="duplikat-nama" name="duplikat-nama" placeholder="Masukkan nama tes baru...">
+                                <p class="help-block" style="font-size: 11px; margin-bottom: 0;">Komposisi soal, poin, dan daftar kelas peserta akan otomatis disalin.</p>
+                            </div>
+                            <div class="form-group">
+                                <label>Deskripsi</label>
+                                <input type="text" class="form-control" id="duplikat-deskripsi" name="duplikat-deskripsi">
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label>Hari</label>
+                                        <select name="duplikat-hari" id="duplikat-hari" class="form-control input-sm">
+                                            <option value="">- Pilih Hari -</option>
+                                            <option value="Senin">Senin</option>
+                                            <option value="Selasa">Selasa</option>
+                                            <option value="Rabu">Rabu</option>
+                                            <option value="Kamis">Kamis</option>
+                                            <option value="Jumat">Jumat</option>
+                                            <option value="Sabtu">Sabtu</option>
+                                            <option value="Minggu">Minggu</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label>Shift</label>
+                                        <select name="duplikat-shift" id="duplikat-shift" class="form-control input-sm">
+                                            <option value="">- Pilih Shift -</option>
+                                            <option value="Pagi">Shift Pagi</option>
+                                            <option value="Siang">Shift Siang</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label>Jam Ke</label>
+                                        <select name="duplikat-jam-ke" id="duplikat-jam-ke" class="form-control input-sm">
+                                            <option value="">- Pilih Jam Ke -</option>
+                                            <option value="Jam Ke-1">Jam Ke-1</option>
+                                            <option value="Jam Ke-2">Jam Ke-2</option>
+                                            <option value="Jam Ke-3">Jam Ke-3</option>
+                                            <option value="Jam Ke-4">Jam Ke-4</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Rentang Waktu Pelaksanaan</label>
+                                <input type="text" class="form-control" id="duplikat-rentang-waktu" name="duplikat-rentang-waktu">
+                                <p class="help-block" style="font-size: 11px; margin-bottom: 0;">Format: <code>YYYY-MM-DD HH:mm - YYYY-MM-DD HH:mm</code></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" id="btn-duplikat-simpan" class="btn btn-info"><i class="fa fa-copy"></i> Buat Duplikat Tes</button>
+                    <a href="#" class="btn btn-default" data-dismiss="modal">Batal</a>
+                </div>
+            </div>
+        </div>
+    </form>
+    </div>
+
     <div class="modal" id="modal-hapus" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="basicModal" aria-hidden="true">
     <?php echo form_open($url.'/hapus_tes','id="form-hapus"'); ?>
         <div class="modal-dialog">
@@ -198,8 +279,44 @@
         $('#table-tes').dataTable().fnReloadAjax();
     }
 
+    function normalisasi_semua_skala_100(tes_id){
+        var url_target = '<?php echo site_url().'/'.$url; ?>/normalisasi_skala_100' + (tes_id ? '/' + tes_id : '');
+        var msg = tes_id ? 'Normalisasi Poin tes ini ke Skala 100 (Poin = 100 / Jumlah Soal) dan hitung ulang nilai peserta?' : 'Normalisasi SELURUH Jadwal Tes ke Skala 100 (Poin = 100 / Jumlah Soal) sekaligus hitung ulang nilai siswa yang sudah mengerjakan?';
+        if(confirm(msg)){
+            $("#modal-proses").modal('show');
+            $.getJSON(url_target, function(res){
+                $("#modal-proses").modal('hide');
+                if(res.status == 1){
+                    refresh_table();
+                    notify_success(res.pesan);
+                }else{
+                    notify_error('Gagal menormalisasi skor.');
+                }
+            });
+        }
+    }
+
     function edit(id){
         window.open("<?php echo site_url(); ?>/manager/tes_tambah/index/"+id, "_self");
+    }
+
+    function duplikat(id){
+        $("#modal-proses").modal('show');
+        $('#form-pesan-duplikat').html('');
+        $.getJSON('<?php echo site_url().'/'.$url; ?>/get_by_id/'+id+'', function(data){
+            if(data.data==1){
+                $('#duplikat-id').val(data.id);
+                $('#duplikat-nama').val(data.nama + ' (SUSULAN / SHIFT 2)');
+                $('#duplikat-deskripsi').val(data.deskripsi);
+                $('#duplikat-hari').val(data.hari);
+                $('#duplikat-shift').val(data.shift);
+                $('#duplikat-jam-ke').val(data.jam_ke);
+                $('#duplikat-rentang-waktu').val(data.rentang_waktu);
+
+                $("#modal-duplikat").modal('show');
+            }
+            $("#modal-proses").modal('hide');
+        });
     }
 
     function hapus(id){
@@ -246,6 +363,29 @@
             }else{
                 $('#centang').val('0');
             }
+        });
+
+        $('#form-duplikat').submit(function(){
+            $("#modal-proses").modal('show');
+            $.ajax({
+                    url:"<?php echo site_url().'/'.$url; ?>/duplikat_tes",
+                    type:"POST",
+                    data:$('#form-duplikat').serialize(),
+                    cache: false,
+                    success:function(respon){
+                        var obj = $.parseJSON(respon);
+                        if(obj.status==1){
+                            refresh_table();
+                            $("#modal-proses").modal('hide');
+                            $("#modal-duplikat").modal('hide');
+                            notify_success(obj.pesan);
+                        }else{
+                            $("#modal-proses").modal('hide');
+                            $('#form-pesan-duplikat').html(pesan_err(obj.pesan));
+                        }
+                    }
+            });
+            return false;
         });
 
         $('#form-hapus').submit(function(){
@@ -304,7 +444,7 @@
                         {"bSearchable": false, "bSortable": false},
 						{"bSearchable": false, "bSortable": false},
 						{"bSearchable": false, "bSortable": false},
-                        {"bSearchable": false, "bSortable": false, "sWidth":"45px"},
+                        {"bSearchable": false, "bSortable": false, "sWidth":"80px"},
                         {"bSearchable": false, "bSortable": false, "sWidth":"20px"}],
                   "sAjaxSource": "<?php echo site_url().'/'.$url; ?>/get_datatable/",
                   "autoWidth": false,

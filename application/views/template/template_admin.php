@@ -36,6 +36,102 @@
 
     <!-- select2 -->
     <link href="<?php echo base_url(); ?>public/plugins/select2-4.0.5/css/select2.min.css" rel="stylesheet" type="text/css" />
+    <!-- Google Font Plus Jakarta Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- SMART-CBT Modern UI Theme Override -->
+    <style type="text/css">
+      body, h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6, .main-header .logo {
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+      }
+      .content-wrapper, .right-side {
+        background-color: #f1f5f9 !important;
+      }
+      /* Header & Sidebar Modern Navy-Emerald */
+      .skin-green .main-header .navbar {
+        background: linear-gradient(90deg, #0f766e 0%, #1e3a8a 100%) !important;
+        box-shadow: 0 2px 12px rgba(15, 23, 42, 0.15);
+      }
+      .skin-green .main-header .logo {
+        background-color: #0f172a !important;
+        color: #34d399 !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.5px;
+        border-right: 1px solid rgba(255,255,255,0.08);
+      }
+      .skin-green .main-header .logo:hover {
+        background-color: #1e293b !important;
+      }
+      .skin-green .wrapper, .skin-green .main-sidebar, .skin-green .left-side {
+        background-color: #0f172a !important;
+      }
+      .skin-green .sidebar-menu > li.header {
+        color: #64748b !important;
+        background: #0b1120 !important;
+        font-weight: 700;
+        font-size: 11px;
+        letter-spacing: 0.6px;
+      }
+      .skin-green .sidebar-menu > li:hover > a, .skin-green .sidebar-menu > li.active > a {
+        color: #ffffff !important;
+        background: #1e293b !important;
+        border-left-color: #10b981 !important;
+      }
+      .skin-green .sidebar-menu > li > .treeview-menu {
+        background: #131c31 !important;
+      }
+      /* Box / Card Modern Styling */
+      .box {
+        border-radius: 12px !important;
+        border: 1px solid #e2e8f0 !important;
+        border-top: 3px solid #0f766e !important;
+        box-shadow: 0 2px 12px rgba(15, 23, 42, 0.04) !important;
+      }
+      .box.box-primary { border-top-color: #2563eb !important; }
+      .box.box-success { border-top-color: #059669 !important; }
+      .box.box-warning { border-top-color: #d97706 !important; }
+      .box.box-danger  { border-top-color: #dc2626 !important; }
+      .box-header.with-border {
+        border-bottom: 1px solid #f1f5f9 !important;
+        padding: 14px 18px !important;
+      }
+      .box-header .box-title {
+        font-weight: 700 !important;
+        font-size: 15.5px !important;
+        color: #0f172a !important;
+      }
+      /* Buttons & Badges */
+      .btn {
+        border-radius: 7px !important;
+        font-weight: 600 !important;
+        transition: all 0.15s ease;
+      }
+      .label, .badge {
+        border-radius: 5px !important;
+        font-weight: 600 !important;
+      }
+      /* Tables */
+      .table > thead > tr > th {
+        background-color: #f8fafc;
+        color: #334155;
+        font-weight: 700;
+        border-bottom: 2px solid #e2e8f0 !important;
+      }
+      /* Modals */
+      .modal-content {
+        border-radius: 12px !important;
+        overflow: hidden;
+        box-shadow: 0 15px 35px rgba(15, 23, 42, 0.25) !important;
+      }
+      .form-control {
+        border-radius: 7px !important;
+        border-color: #cbd5e1 !important;
+      }
+      .form-control:focus {
+        border-color: #2563eb !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+      }
+    </style>
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->

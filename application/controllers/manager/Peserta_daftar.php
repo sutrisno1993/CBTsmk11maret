@@ -30,6 +30,15 @@ class Peserta_daftar extends Member_Controller {
         	$select = '<option value="100000">KOSONG</option>';
         }
         $data['select_group'] = $select;
+
+        $q_ket = $this->cbt_user_model->get_distinct_detail();
+        $select_ket = '<option value="semua">Semua Ruang / Sesi</option>';
+        if($q_ket->num_rows() > 0){
+            foreach($q_ket->result() as $k){
+                $select_ket .= '<option value="'.htmlspecialchars($k->detail).'">'.htmlspecialchars($k->detail).'</option>';
+            }
+        }
+        $data['select_keterangan'] = $select_ket;
         
         $this->template->display_admin($this->kelompok.'/peserta_daftar_view', 'Daftar Peserta', $data);
     }
@@ -163,6 +172,10 @@ class Peserta_daftar extends Member_Controller {
     function get_datatable(){
 		// variable initialization
 		$group = $this->input->get('group');
+		$keterangan = $this->input->get('keterangan');
+		if(empty($keterangan)){
+			$keterangan = 'semua';
+		}
 
 		$search = "";
 		$start = 0;
@@ -178,10 +191,10 @@ class Peserta_daftar extends Member_Controller {
 		$rows = $this->get_rows();
 
 		// run query to get user listing
-		$query = $this->cbt_user_model->get_datatable($start, $rows, 'user_firstname', $search, $group);
+		$query = $this->cbt_user_model->get_datatable($start, $rows, 'user_firstname', $search, $group, $keterangan);
 		$iFilteredTotal = $query->num_rows();
 		
-		$iTotal= $this->cbt_user_model->get_datatable_count('user_firstname', $search, $group)->row()->hasil;
+		$iTotal= $this->cbt_user_model->get_datatable_count('user_firstname', $search, $group, $keterangan)->row()->hasil;
 	    
 		$output = array(
 			"sEcho" => intval($_GET['sEcho']),
@@ -200,9 +213,7 @@ class Peserta_daftar extends Member_Controller {
             $record[] = $temp->user_name;
             $record[] = stripslashes($temp->user_firstname);
 
-            $query_group = $this->cbt_user_grup_model->get_by_kolom_limit('grup_id', $temp->user_grup_id, 1)->row();
-
-            $record[] = $query_group->grup_nama;
+            $record[] = !empty($temp->grup_nama) ? $temp->grup_nama : '-';
 			$record[] = $temp->user_detail;
 
             $record[] = '<a onclick="edit(\''.$temp->user_id.'\')" style="cursor: pointer;" class="btn btn-default btn-xs">Edit</a>';

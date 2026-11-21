@@ -125,8 +125,17 @@
                     </div>
 
                     <div style="margin-bottom: 15px;">
+                        <div style="background: #eff6ff; border: 1.5px dashed #3b82f6; border-radius: 10px; padding: 10px 16px; display: inline-block; margin-bottom: 10px;">
+                            <div style="font-size: 11px; font-weight: 700; color: #1d4ed8; text-transform: uppercase; letter-spacing: 0.5px;">
+                                <i class="fa fa-key"></i> Kode Akses APK / Input Manual (6 Digit):
+                            </div>
+                            <div id="label-short-code" style="font-size: 26px; font-weight: 900; letter-spacing: 4px; color: #1e3a8a; font-family: monospace; margin-top: 2px;">
+                                <?php echo strtoupper(substr($current_token, 0, 6)); ?>
+                            </div>
+                        </div>
+                        <br>
                         <span class="label label-primary" style="font-size: 12px; padding: 4px 10px;">
-                            Token: <b id="label-token"><?php echo $current_token; ?></b>
+                            Token Penuh: <b id="label-token"><?php echo $current_token; ?></b>
                         </span>
                         <span class="label label-default" style="font-size: 12px; padding: 4px 10px; margin-left: 5px;">
                             Berlaku Hingga: <b id="label-valid-until"><?php echo $valid_until; ?></b>
@@ -273,6 +282,14 @@
                         <i class="fa fa-clock-o"></i> <span id="projector-countdown-text">Masa berlaku 12 jam</span>
                     </span>
                 </div>
+                <div style="margin-top: 14px; background: rgba(30, 58, 138, 0.55); border: 2px dashed #60a5fa; border-radius: 14px; padding: 12px 24px; display: inline-block;">
+                    <div style="font-size: 12px; font-weight: 700; color: #93c5fd; text-transform: uppercase; letter-spacing: 1px;">
+                        <i class="fa fa-mobile"></i> Kode Akses APK Exam Browser / Input Manual:
+                    </div>
+                    <div id="projector-short-code" style="font-size: 36px; font-weight: 900; letter-spacing: 6px; color: #facc15; font-family: monospace; margin-top: 2px;">
+                        <?php echo strtoupper(substr($current_token, 0, 6)); ?>
+                    </div>
+                </div>
                 <div style="margin-top: 8px; font-size: 13px; color: #cbd5e1;">
                     URL: <code id="projector-url-text" style="background: rgba(0,0,0,0.4); color: #38bdf8; font-size: 14px; padding: 4px 8px; border-radius: 4px;"><?php echo htmlspecialchars($access_url); ?></code>
                 </div>
@@ -413,6 +430,9 @@
             if(res.status == 1){
                 expiresInSeconds = res.expires_in;
                 $('#label-token').text(res.token);
+                var shortCode = (res.token || '').substring(0, 6).toUpperCase();
+                $('#label-short-code').text(shortCode);
+                $('#projector-short-code').text(shortCode);
                 $('#label-valid-until').text(res.valid_until);
                 renderQrCodes(res.access_url);
                 startTimer();

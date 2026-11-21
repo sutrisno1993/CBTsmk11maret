@@ -269,8 +269,11 @@
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Poin Dasar</label>
                             <div class="col-sm-9">
-                                <input type="text" name="tambah-poin" id="tambah-poin" class="form-control input-sm" value="2.5" />
-                                <p class="help-block">Poin per butir soal (Default: 2.5 x 40 butir = 100)</p>
+                                <div class="input-group">
+                                    <input type="text" name="tambah-poin" id="tambah-poin" class="form-control input-sm" value="2.5" readonly style="background-color: #eef9f2; font-weight: bold; color: #00a65a;" />
+                                    <span class="input-group-addon" style="background-color: #00a65a; color: #fff; font-weight: 600;"><i class="fa fa-lock"></i> Auto Skala 100</span>
+                                </div>
+                                <p class="help-block" style="color: #00a65a; font-weight: 600;"><i class="fa fa-check-circle"></i> Otomatis dikunci ke Nilai Maksimal 100 (Poin = 100 &divide; Jumlah Soal saat Topik ditambahkan)</p>
                             </div>
                         </div>
                         <div class="form-group">

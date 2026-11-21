@@ -204,7 +204,19 @@ class Guru_ulangan extends Member_Controller {
                 $tes_token_flag = 1;
             }
 
-            // 1. Simpan Data Tes di cbt_tes
+            // Hitung terlebih dahulu jumlah soal yang tersedia pada topik agar Poin Dasar otomatis Skala 100
+            if($tset_tipe == 1){
+                $jml_soal_tersedia = $this->db->where('soal_topik_id', $topik_id)->where('soal_tipe', 1)->from('cbt_soal')->count_all_results();
+            } else if($tset_tipe == 2){
+                $jml_soal_tersedia = $this->db->where('soal_topik_id', $topik_id)->where('soal_tipe', 2)->from('cbt_soal')->count_all_results();
+            } else {
+                $jml_soal_tersedia = $this->db->where('soal_topik_id', $topik_id)->from('cbt_soal')->count_all_results();
+            }
+
+            $jml_soal_aktif = ($jml_soal_tersedia > 0) ? $jml_soal_tersedia : 1;
+            $poin_skala_100 = round(100 / $jml_soal_aktif, 4);
+
+            // 1. Simpan Data Tes di cbt_tes (Otomatis Skala 100)
             $data_tes = array(
                 'tes_nama' => $nama_ulangan,
                 'tes_detail' => 'Ulangan Harian Mandiri Guru',
@@ -214,7 +226,7 @@ class Guru_ulangan extends Member_Controller {
                 'tes_ip_range' => '*.*.*.*',
                 'tes_results_to_users' => 1,
                 'tes_detail_to_users' => 1,
-                'tes_score_right' => 1.00,
+                'tes_score_right' => $poin_skala_100,
                 'tes_score_wrong' => 0.00,
                 'tes_score_unanswered' => 0.00,
                 'tes_max_score' => 100.00,
@@ -234,22 +246,12 @@ class Guru_ulangan extends Member_Controller {
             }
 
             // 3. Pasang Soal Topik di cbt_tes_topik_set
-            // Sesuai permintaan user: "soal ulangan semuanya pilihan ganda gaada essay yaa"
-            // Hitung hanya soal yang sesuai dengan tipe yang dipilih (Pilihan Ganda Saja, Essay Saja, atau Campuran)
-            if($tset_tipe == 1){
-                $jml_soal_tersedia = $this->db->where('soal_topik_id', $topik_id)->where('soal_tipe', 1)->from('cbt_soal')->count_all_results();
-            } else if($tset_tipe == 2){
-                $jml_soal_tersedia = $this->db->where('soal_topik_id', $topik_id)->where('soal_tipe', 2)->from('cbt_soal')->count_all_results();
-            } else {
-                $jml_soal_tersedia = $this->db->where('soal_topik_id', $topik_id)->from('cbt_soal')->count_all_results();
-            }
-
             $data_tset = array(
                 'tset_tes_id' => $tes_id,
                 'tset_topik_id' => $topik_id,
                 'tset_tipe' => $tset_tipe,
                 'tset_difficulty' => 1,
-                'tset_jumlah' => ($jml_soal_tersedia > 0) ? $jml_soal_tersedia : 1,
+                'tset_jumlah' => $jml_soal_aktif,
                 'tset_jawaban' => 5,
                 'tset_acak_soal' => 1,
                 'tset_acak_jawaban' => 1

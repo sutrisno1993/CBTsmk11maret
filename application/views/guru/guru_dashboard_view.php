@@ -104,8 +104,11 @@
                         </p>
                     </div>
                     <div>
-                        <a href="<?php echo site_url('manager/tes_hasil'); ?>" class="btn btn-primary btn-lg btn-block" style="border-radius: 8px; font-weight: 700; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); border: none; padding: 11px; box-shadow: 0 4px 10px rgba(30,60,114,0.25);">
-                            <i class="fa fa-download"></i> Buka Hasil & Unduh Excel &rarr;
+                        <a href="<?php echo site_url('portal_nilai'); ?>" target="_blank" class="btn btn-success btn-lg btn-block" style="border-radius: 8px; font-weight: 700; margin-bottom: 8px; padding: 11px;">
+                            <i class="fa fa-file-excel-o"></i> Download Nilai per Kelas (Excel) &rarr;
+                        </a>
+                        <a href="<?php echo site_url('manager/tes_hasil'); ?>" class="btn btn-primary btn-sm btn-block" style="border-radius: 8px; font-weight: 600;">
+                            <i class="fa fa-list"></i> Buka Tabel Hasil &amp; Kontrol Tes
                         </a>
                     </div>
                 </div>

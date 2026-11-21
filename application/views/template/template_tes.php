@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title><?php if(!empty($site_name)){ echo $site_name; } ?> | <?php echo $title; ?></title>
     <!-- Tell the browser to be responsive to screen width -->
-    <meta content='width=device-width, initial-scale=0.9, minimum-scale=0.1, maximum-scale=10, user-scalable=yes' name='viewport' />
+    <meta content='width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes' name='viewport' />
 	<meta name="description" content="Aplikasi Ujian Online SMART-CBT" />
 	<meta name="keywords" content="Aplikasi Ujian Online SMART-CBT" />
 	<meta name="author" content="ICT-TIM-SMK11MARET" />
@@ -213,12 +213,121 @@
         font-size: 15px !important;
         font-weight: 800 !important;
         font-family: monospace, sans-serif !important;
-        background: rgba(15, 23, 42, 0.6) !important;
+        background: rgba(15, 23, 42, 0.72) !important;
         color: #38bdf8 !important;
         padding: 5px 14px !important;
         border-radius: 20px !important;
-        border: 1px solid rgba(56, 189, 248, 0.35) !important;
-        letter-spacing: 1px !important;
+        border: 1px solid rgba(56, 189, 248, 0.4) !important;
+        letter-spacing: 0.8px !important;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      #sisa-waktu.cbt-timer-urgent {
+        background: #dc2626 !important;
+        color: #ffffff !important;
+        border-color: #fca5a5 !important;
+        animation: cbtPulseUrgent 1s infinite alternate;
+      }
+      @keyframes cbtPulseUrgent {
+        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.6); }
+        100% { transform: scale(1.04); box-shadow: 0 0 12px 3px rgba(220, 38, 38, 0.45); }
+      }
+      /* Touch-Friendly Option Cards (A, B, C, D, E) untuk WebView & HP */
+      .cbt-options-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 12px;
+      }
+      .cbt-option-card {
+        display: flex !important;
+        align-items: flex-start !important;
+        gap: 14px !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 13px 16px !important;
+        background: #f8fafc !important;
+        border: 1.5px solid #cbd5e1 !important;
+        border-radius: 12px !important;
+        cursor: pointer !important;
+        transition: all 0.16s ease !important;
+        font-weight: 500 !important;
+        color: #1e293b !important;
+        position: relative;
+      }
+      .cbt-option-card:hover {
+        background: #f1f5f9 !important;
+        border-color: #94a3b8 !important;
+      }
+      .cbt-option-card.cbt-option-selected {
+        background: #eff6ff !important;
+        border: 2px solid #2563eb !important;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.14) !important;
+        color: #0f172a !important;
+      }
+      .cbt-option-radio {
+        position: absolute;
+        opacity: 0;
+        width: 1px;
+        height: 1px;
+        pointer-events: none;
+      }
+      .cbt-option-badge {
+        width: 34px;
+        height: 34px;
+        min-width: 34px;
+        border-radius: 9px;
+        background: #ffffff;
+        border: 1.5px solid #cbd5e1;
+        color: #475569;
+        font-weight: 800;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.16s ease;
+        margin-top: -1px;
+      }
+      .cbt-option-card.cbt-option-selected .cbt-option-badge {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        border-color: #1d4ed8;
+        color: #ffffff;
+        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
+      }
+      .cbt-option-content {
+        flex: 1;
+        font-size: 15px;
+        line-height: 1.55;
+        word-break: break-word;
+        padding-top: 3px;
+      }
+      .cbt-option-content p:first-child {
+        margin-top: 0 !important;
+      }
+      .cbt-option-content p:last-child {
+        margin-bottom: 0 !important;
+      }
+      @media (max-width: 767px) {
+        .container {
+          padding-left: 10px !important;
+          padding-right: 10px !important;
+        }
+        .box.box-success.box-solid > .box-body {
+          padding: 16px 14px !important;
+        }
+        .cbt-option-card {
+          padding: 12px 13px !important;
+          gap: 11px !important;
+        }
+        .cbt-nav-footer-mobile {
+          position: sticky;
+          bottom: 0;
+          z-index: 99;
+          background: rgba(255, 255, 255, 0.96) !important;
+          backdrop-filter: blur(8px);
+          box-shadow: 0 -4px 14px rgba(15, 23, 42, 0.08) !important;
+        }
       }
       /* Modal Header */
       .modal-header {
